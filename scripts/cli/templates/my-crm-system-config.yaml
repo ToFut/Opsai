@@ -1,0 +1,236 @@
+app:
+  name: my-crm-system
+  displayName: My Crm System
+  description: Customer Relationship Management system with lead tracking and sales pipeline - Generated for my-crm-system
+  version: 1.0.0
+  author: CORE Platform
+  license: MIT
+database:
+  type: postgresql
+  entities:
+    - name: contact
+      displayName: Contacts
+      description: Customer and prospect contacts
+      fields:
+        id:
+          type: string
+          required: true
+          unique: true
+        firstName:
+          type: string
+          required: true
+          ui:
+            label: First Name
+        lastName:
+          type: string
+          required: true
+          ui:
+            label: Last Name
+        email:
+          type: string
+          required: true
+          unique: true
+          validation:
+            pattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+          ui:
+            label: Email Address
+        phone:
+          type: string
+          ui:
+            label: Phone Number
+        company:
+          type: string
+          ui:
+            label: Company
+        jobTitle:
+          type: string
+          ui:
+            label: Job Title
+        status:
+          type: string
+          required: true
+          default: new
+          validation:
+            enum:
+              - new
+              - qualified
+              - customer
+              - inactive
+          ui:
+            widget: select
+            options:
+              - label: New Lead
+                value: new
+              - label: Qualified Lead
+                value: qualified
+              - label: Customer
+                value: customer
+              - label: Inactive
+                value: inactive
+        source:
+          type: string
+          validation:
+            enum:
+              - website
+              - referral
+              - advertisement
+              - cold-call
+              - social-media
+          ui:
+            widget: select
+            options:
+              - label: Website
+                value: website
+              - label: Referral
+                value: referral
+              - label: Advertisement
+                value: advertisement
+              - label: Cold Call
+                value: cold-call
+              - label: Social Media
+                value: social-media
+        notes:
+          type: string
+          ui:
+            widget: textarea
+            label: Notes
+        createdAt:
+          type: date
+          required: true
+    - name: deal
+      displayName: Deals
+      description: Sales opportunities and deals
+      fields:
+        id:
+          type: string
+          required: true
+          unique: true
+        title:
+          type: string
+          required: true
+          ui:
+            label: Deal Title
+        contactId:
+          type: relation
+          required: true
+          relation:
+            entity: contact
+            type: one-to-one
+            foreignKey: contactId
+        value:
+          type: number
+          required: true
+          ui:
+            label: Deal Value ($)
+        stage:
+          type: string
+          required: true
+          default: prospecting
+          validation:
+            enum:
+              - prospecting
+              - qualification
+              - proposal
+              - negotiation
+              - closed-won
+              - closed-lost
+          ui:
+            widget: select
+            options:
+              - label: Prospecting
+                value: prospecting
+              - label: Qualification
+                value: qualification
+              - label: Proposal
+                value: proposal
+              - label: Negotiation
+                value: negotiation
+              - label: Closed Won
+                value: closed-won
+              - label: Closed Lost
+                value: closed-lost
+        probability:
+          type: number
+          validation:
+            min: 0
+            max: 100
+          ui:
+            label: Win Probability (%)
+        expectedCloseDate:
+          type: date
+          ui:
+            label: Expected Close Date
+        notes:
+          type: string
+          ui:
+            widget: textarea
+        createdAt:
+          type: date
+          required: true
+integrations:
+  - name: email-service
+    type: rest
+    config:
+      baseUrl: https://api.emailservice.com
+    endpoints:
+      - name: send-email
+        method: POST
+        path: /send
+workflows:
+  - name: new-lead-notification
+    displayName: New Lead Notification
+    description: Send notification when new lead is created
+    trigger:
+      type: event
+      config:
+        event: contact.created
+    steps:
+      - name: send-notification
+        type: api-call
+        config:
+          integration: email-service
+          endpoint: send-email
+ui:
+  theme: default
+  pages:
+    - name: contacts
+      path: /contacts
+      title: Contacts
+      layout: list
+      components:
+        - type: table
+          config:
+            entity: contact
+            columns:
+              - firstName
+              - lastName
+              - email
+              - company
+              - status
+            actions:
+              - create
+              - edit
+              - delete
+    - name: deals
+      path: /deals
+      title: Deals
+      layout: list
+      components:
+        - type: table
+          config:
+            entity: deal
+            columns:
+              - title
+              - value
+              - stage
+              - probability
+              - expectedCloseDate
+            actions:
+              - create
+              - edit
+              - delete
+features:
+  authentication: true
+  multiTenancy: true
+  notifications: true
+  analytics: true

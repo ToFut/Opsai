@@ -1,0 +1,1 @@
+{"version":3,"file":"base-connector.js","sourceRoot":"","sources":["../../src/connectors/base-connector.ts"],"names":[],"mappings":";;;AAEA,MAAsB,aAAa;IAGjC,YAAY,MAAuB;QACjC,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;IACvB,CAAC;IAiBD;;OAEG;IACH,eAAe;QACb,OAAO,IAAI,CAAC,MAAM,CAAC,YAAY,CAAC;IAClC,CAAC;IAED;;OAEG;IACH,UAAU;QACR,OAAO,IAAI,CAAC,MAAM,CAAC,OAAO,CAAC;IAC7B,CAAC;CACF;AAnCD,sCAmCC"}

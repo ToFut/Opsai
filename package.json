@@ -1,0 +1,75 @@
+{
+  "name": "opsai-core",
+  "version": "1.0.0",
+  "description": "CORE Platform - Business Application Generator",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "turbo run test:e2e",
+    "test:watch": "turbo run test:watch",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean",
+    "dev:setup": "bash scripts/development/setup-dev.sh",
+    "db:migrate": "turbo run db:migrate",
+    "db:seed": "turbo run db:seed",
+    "db:reset": "bash scripts/development/reset-db.sh",
+    "cli": "tsx scripts/cli/core.ts",
+    "generate": "pnpm cli generate",
+    "deploy": "pnpm cli deploy",
+    "publish:packages": "turbo run publish",
+    "version:bump": "changeset version",
+    "build:packages": "turbo run build --filter=./packages/*",
+    "build:verticals": "turbo run build --filter=./apps/*",
+    "test:coverage": "turbo run test:coverage",
+    "security:scan": "turbo run security:scan"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-jest": "^27.6.0",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.1.0",
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0",
+    "tsx": "^4.6.0",
+    "@changesets/cli": "^2.26.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.0",
+    "commander": "^11.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/company/opsai-core.git"
+  },
+  "keywords": [
+    "saas",
+    "business-applications",
+    "api-generator",
+    "vertical-saas",
+    "automation"
+  ],
+  "author": "OpsAI Team",
+  "license": "MIT"
+} 

@@ -1,0 +1,36 @@
+{
+  "name": "@opsai/workflow",
+  "version": "1.0.0",
+  "description": "Business process automation for CORE Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opsai/auth": "workspace:*",
+    "@opsai/database": "workspace:*",
+    "@opsai/shared": "workspace:*",
+    "@temporalio/activity": "^1.12.1",
+    "@temporalio/client": "^1.8.0",
+    "@temporalio/worker": "^1.8.0",
+    "@temporalio/workflow": "^1.8.0",
+    "axios": "^1.6.0",
+    "bullmq": "^5.0.0",
+    "node-cron": "^3.0.3",
+    "redis": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node-cron": "^3.0.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.3.0"
+  }
+}

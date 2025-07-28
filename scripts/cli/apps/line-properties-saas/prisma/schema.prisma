@@ -1,0 +1,79 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations to other models
+  propertys Property[]
+  reservations Reservation[]
+  guests Guest[]
+
+  @@map("tenants")
+}
+model Property {
+  id String @id @default(cuid())
+  title String
+  address String
+  city String
+  price Float
+  bedrooms Float
+  bathrooms Float
+  amenities Json?
+  images Json?
+  status String @default("available")
+  createdAt DateTime @map("created_at")
+  reservations Reservation[]
+  tenantId  String
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  updatedAt DateTime @updatedAt
+
+  @@map("property")
+  @@index([tenantId])
+}
+
+model Reservation {
+  id String @id @default(cuid())
+  propertyId String
+  property Property @relation(fields: [propertyId], references: [id])
+  guestId String
+  guest Guest @relation(fields: [guestId], references: [id])
+  checkIn DateTime @map("check_in")
+  checkOut DateTime @map("check_out")
+  totalPrice Float @map("total_price")
+  status String @default("pending")
+  createdAt DateTime @map("created_at")
+  tenantId  String
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  updatedAt DateTime @updatedAt
+
+  @@map("reservation")
+  @@index([tenantId])
+}
+
+model Guest {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  phone String?
+  createdAt DateTime @map("created_at")
+  reservations Reservation[]
+  tenantId  String
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  updatedAt DateTime @updatedAt
+
+  @@map("guest")
+  @@index([tenantId])
+}

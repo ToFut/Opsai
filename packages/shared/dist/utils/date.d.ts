@@ -1,0 +1,28 @@
+export declare function isValidDate(date: any): boolean;
+export declare function parseDate(dateString: string): Date;
+export declare function formatDateWithPattern(date: Date, formatString?: string): string;
+export declare function formatDateDistance(date: Date, baseDate?: Date): string;
+export declare function formatDateRelative(date: Date, baseDate?: Date): string;
+export declare function getDaysDifference(date1: Date, date2: Date): number;
+export declare function getHoursDifference(date1: Date, date2: Date): number;
+export declare function getMinutesDifference(date1: Date, date2: Date): number;
+export declare function getSecondsDifference(date1: Date, date2: Date): number;
+export declare function addDays(date: Date, days: number): Date;
+export declare function addHours(date: Date, hours: number): Date;
+export declare function addMinutes(date: Date, minutes: number): Date;
+export declare function startOfDay(date: Date): Date;
+export declare function endOfDay(date: Date): Date;
+export declare function startOfWeek(date: Date): Date;
+export declare function endOfWeek(date: Date): Date;
+export declare function startOfMonth(date: Date): Date;
+export declare function endOfMonth(date: Date): Date;
+export declare function isToday(date: Date): boolean;
+export declare function isYesterday(date: Date): boolean;
+export declare function isThisWeek(date: Date): boolean;
+export declare function isThisMonth(date: Date): boolean;
+export declare function getAge(birthDate: Date): number;
+export declare function getWeekNumber(date: Date): number;
+export declare function getQuarter(date: Date): number;
+export declare function isLeapYear(year: number): boolean;
+export declare function getDaysInMonth(year: number, month: number): number;
+//# sourceMappingURL=date.d.ts.map

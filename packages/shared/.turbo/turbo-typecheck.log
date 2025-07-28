@@ -1,0 +1,65 @@
+
+> @opsai/shared@1.0.0 typecheck /Users/segevbin/Desktop/Opsai/packages/shared
+> tsc --noEmit
+
+[96msrc/types/index.ts[0m:[93m9[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './api' has already exported a member named 'APIConfig'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m9[0m export * from './vertical';
+[7m [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/types/index.ts[0m:[93m9[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './database' has already exported a member named 'DatabaseConfig'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m9[0m export * from './vertical';
+[7m [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/utils/index.ts[0m:[93m4[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './formatting' has already exported a member named 'formatDate'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m4[0m export * from './date';
+[7m [0m [91m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/utils/index.ts[0m:[93m5[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './crypto' has already exported a member named 'generateRandomString'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m5[0m export * from './string';
+[7m [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/utils/index.ts[0m:[93m5[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './formatting' has already exported a member named 'slugify'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m5[0m export * from './string';
+[7m [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/utils/index.ts[0m:[93m5[0m:[93m1[0m - [91merror[0m[90m TS2308: [0mModule './formatting' has already exported a member named 'toTitleCase'. Consider explicitly re-exporting to resolve the ambiguity.
+
+[7m5[0m export * from './string';
+[7m [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/utils/object.ts[0m:[93m195[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType 'Partial<T>' is not assignable to type 'T'.
+  'Partial<T>' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'object'.
+
+[7m195[0m   return sources.reduce((result, source) => {
+[7m   [0m [91m  ~~~~~~[0m
+
+[96msrc/utils/object.ts[0m:[93m206[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType 'Partial<T>' is not assignable to type 'T'.
+  'Partial<T>' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'object'.
+
+[7m206[0m   return sources.reduce((result, source) => {
+[7m   [0m [91m  ~~~~~~[0m
+
+[96msrc/utils/string.ts[0m:[93m69[0m:[93m15[0m - [91merror[0m[90m TS2584: [0mCannot find name 'document'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+
+[7m69[0m   const div = document.createElement('div');
+[7m  [0m [91m              ~~~~~~~~[0m
+
+[96msrc/utils/string.ts[0m:[93m75[0m:[93m15[0m - [91merror[0m[90m TS2584: [0mCannot find name 'document'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.
+
+[7m75[0m   const div = document.createElement('div');
+[7m  [0m [91m              ~~~~~~~~[0m
+
+
+Found 10 errors in 4 files.
+
+Errors  Files
+     2  src/types/index.ts[90m:9[0m
+     4  src/utils/index.ts[90m:4[0m
+     2  src/utils/object.ts[90m:195[0m
+     2  src/utils/string.ts[90m:69[0m
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 2.[39m

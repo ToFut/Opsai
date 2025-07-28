@@ -1,0 +1,326 @@
+vertical:
+  name: insurance
+  description: Insurance management SaaS
+  version: 1.0.0
+
+database:
+  models:
+    - name: Policy
+      fields:
+        - name: policyNumber
+          type: string
+          required: true
+          unique: true
+        - name: premium
+          type: decimal
+          required: true
+        - name: effectiveDate
+          type: datetime
+          required: true
+        - name: expirationDate
+          type: datetime
+          required: true
+        - name: status
+          type: string
+          required: true
+          defaultValue: "active"
+      relationships:
+        - type: hasMany
+          model: Claim
+          foreign_key: policyId
+
+    - name: Quote
+      fields:
+        - name: premium
+          type: decimal
+          required: true
+        - name: validUntil
+          type: datetime
+          required: true
+        - name: status
+          type: string
+          required: true
+          defaultValue: "pending"
+      relationships:
+        - type: belongsTo
+          model: Policy
+          foreign_key: policyId
+
+    - name: Claim
+      fields:
+        - name: claimNumber
+          type: string
+          required: true
+          unique: true
+        - name: amount
+          type: decimal
+          required: true
+        - name: status
+          type: string
+          required: true
+          defaultValue: "pending"
+        - name: filedDate
+          type: datetime
+          required: true
+
+apis:
+  integrations:
+    - name: progressive
+      type: rest
+      base_url: https://api.progressive.com
+      authentication:
+        type: api_key
+        header: X-API-Key
+        secret_name: progressive_api_key
+      endpoints:
+        - name: create_quote
+          path: /quotes
+          method: POST
+          request_schema:
+            type: object
+            properties:
+              applicant_info: { type: object }
+              coverage_details: { type: object }
+          response_schema:
+            type: object
+            properties:
+              quote_id: { type: string }
+              premium: { type: number }
+      rate_limits:
+        requests_per_minute: 60
+        burst_limit: 10
+
+    - name: geico
+      type: rest
+      base_url: https://api.geico.com
+      authentication:
+        type: oauth
+        client_id: ${secrets.geico_client_id}
+        client_secret: ${secrets.geico_client_secret}
+      endpoints:
+        - name: get_quote
+          path: /quotes
+          method: GET
+          request_schema:
+            type: object
+            properties:
+              zip_code: { type: string }
+              vehicle_info: { type: object }
+          response_schema:
+            type: object
+            properties:
+              quote_id: { type: string }
+              premium: { type: number }
+
+workflows:
+  - name: quote_generation
+    description: Generate insurance quote from application
+    trigger:
+      type: api_call
+      endpoint: /api/quotes
+      method: POST
+    steps:
+      - name: validate_application
+        activity: validate_data
+        config:
+          schema: application_schema.json
+        timeout: 30s
+        retry_policy:
+          max_attempts: 3
+          backoff: exponential
+
+      - name: call_carrier_api
+        activity: http_request
+        config:
+          integration: progressive
+          endpoint: create_quote
+        timeout: 2m
+        retry_policy:
+          max_attempts: 5
+          backoff: exponential
+
+      - name: save_quote
+        activity: database_insert
+        config:
+          table: quotes
+
+      - name: send_notification
+        activity: send_email
+        config:
+          template: quote_generated
+
+  - name: claim_processing
+    description: Process insurance claim
+    trigger:
+      type: api_call
+      endpoint: /api/claims
+      method: POST
+    steps:
+      - name: validate_claim
+        activity: validate_data
+        config:
+          schema: claim_schema.json
+
+      - name: assign_claim
+        activity: assign_task
+        config:
+          assignee: claims_processor
+
+      - name: review_claim
+        activity: human_approval
+        config:
+          approver: claims_manager
+
+      - name: process_payment
+        activity: payment_processing
+        config:
+          provider: stripe
+
+ui:
+  theme:
+    primary_color: "#1e40af"
+    secondary_color: "#64748b"
+    logo: "/assets/insurance-logo.png"
+    
+  pages:
+    - name: dashboard
+      path: /dashboard
+      components:
+        - type: stats_cards
+          data_source: policies_summary
+        - type: chart
+          chart_type: line
+          data_source: premiums_over_time
+          
+    - name: policies
+      path: /policies
+      components:
+        - type: data_table
+          data_source: policies
+          columns:
+            - field: policyNumber
+              label: Policy #
+              sortable: true
+            - field: premium
+              label: Premium
+              type: currency
+            - field: status
+              label: Status
+              type: status
+          actions:
+            - label: View
+              action: navigate
+              target: /policies/{id}
+            - label: Edit
+              action: modal
+              component: edit_policy_form
+
+    - name: quotes
+      path: /quotes
+      components:
+        - type: data_table
+          data_source: quotes
+          columns:
+            - field: id
+              label: Quote ID
+              sortable: true
+            - field: premium
+              label: Premium
+              type: currency
+            - field: validUntil
+              label: Valid Until
+              type: date
+            - field: status
+              label: Status
+              type: status
+
+    - name: claims
+      path: /claims
+      components:
+        - type: data_table
+          data_source: claims
+          columns:
+            - field: claimNumber
+              label: Claim #
+              sortable: true
+            - field: amount
+              label: Amount
+              type: currency
+            - field: status
+              label: Status
+              type: status
+            - field: filedDate
+              label: Filed Date
+              type: date
+
+alerts:
+  rules:
+    - name: policy_expiring_soon
+      description: Alert when policy expires within 30 days
+      conditions:
+        - field: expirationDate
+          operator: less_than
+          value: "now() + 30 days"
+      actions:
+        - type: email
+          template: policy_renewal_reminder
+          to: policy.customerEmail
+        - type: workflow
+          workflow: renewal_process
+      cooldown: 24h
+      priority: medium
+
+    - name: high_value_claim
+      description: Alert for claims over $10,000
+      conditions:
+        - field: amount
+          operator: greater_than
+          value: 10000
+      actions:
+        - type: email
+          template: high_value_claim_alert
+          to: ["claims@company.com", "manager@company.com"]
+        - type: slack
+          channel: "#claims"
+          template: high_value_claim_slack
+      cooldown: 1h
+      priority: high
+
+deployment:
+  environment: production
+  resources:
+    api:
+      cpu: 0.5
+      memory: 1Gi
+      replicas: 2
+    database:
+      instance_type: db.t3.micro
+      storage: 20Gi
+    redis:
+      memory: 256Mi
+  
+  environment_variables:
+    - name: PROGRESSIVE_API_KEY
+      secret: true
+    - name: GEICO_CLIENT_ID
+      secret: true
+    - name: GEICO_CLIENT_SECRET
+      secret: true
+    - name: SMTP_HOST
+      value: smtp.resend.com
+    - name: STRIPE_SECRET_KEY
+      secret: true
+  
+  secrets:
+    - name: progressive_api_key
+      description: Progressive Insurance API Key
+      type: api_key
+    - name: geico_client_id
+      description: Geico OAuth Client ID
+      type: oauth
+    - name: geico_client_secret
+      description: Geico OAuth Client Secret
+      type: oauth
+    - name: stripe_secret_key
+      description: Stripe Secret Key for payments
+      type: api_key 

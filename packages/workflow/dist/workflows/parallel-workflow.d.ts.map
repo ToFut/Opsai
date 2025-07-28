@@ -1,0 +1,1 @@
+{"version":3,"file":"parallel-workflow.d.ts","sourceRoot":"","sources":["../../src/workflows/parallel-workflow.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,MAAM,iBAAiB,CAAC;AAE/C,qBAAa,gBAAiB,SAAQ,YAAY;IAC1C,OAAO,CAAC,KAAK,EAAE,GAAG,GAAG,OAAO,CAAC,GAAG,CAAC;CAKxC"}

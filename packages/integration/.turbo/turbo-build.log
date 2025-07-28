@@ -1,0 +1,93 @@
+
+> @opsai/integration@1.0.0 build /Users/segevbin/Desktop/Opsai/packages/integration
+> tsc
+
+[96msrc/services/integration-service.ts[0m:[93m97[0m:[93m23[0m - [91merror[0m[90m TS2339: [0mProperty 'dispose' does not exist on type 'BaseConnector'.
+
+[7m97[0m       await connector.dispose?.();
+[7m  [0m [91m                      ~~~~~~~[0m
+
+[96msrc/services/integration-service.ts[0m:[93m163[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'lastTestedAt' does not exist in type '(Without<IntegrationUpdateInput, IntegrationUncheckedUpdateInput> & IntegrationUncheckedUpdateInput) | (Without<...> & IntegrationUpdateInput)'.
+
+[7m163[0m           lastTestedAt: new Date()
+[7m   [0m [91m          ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/index.d.ts[0m:[93m12485[0m:[93m5[0m
+    [7m12485[0m     data: XOR<IntegrationUpdateInput, IntegrationUncheckedUpdateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: IntegrationSelect<DefaultArgs>; include?: IntegrationInclude<DefaultArgs>; data: (Without<IntegrationUpdateInput, IntegrationUncheckedUpdateInput> & IntegrationUncheckedUpdateInput) | (Without<...> & IntegrationUpdateInput); where: IntegrationWhereUniqueInput; }'
+
+[96msrc/services/integration-service.ts[0m:[93m202[0m:[93m22[0m - [91merror[0m[90m TS2551: [0mProperty 'integrationLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'integration'?
+
+[7m202[0m         await prisma.integrationLog.create({
+[7m   [0m [91m                     ~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/index.d.ts[0m:[93m318[0m:[93m7[0m
+    [7m318[0m   get integration(): Prisma.IntegrationDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~[0m
+    'integration' is declared here.
+
+[96msrc/services/integration-service.ts[0m:[93m220[0m:[93m22[0m - [91merror[0m[90m TS2551: [0mProperty 'integrationLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'integration'?
+
+[7m220[0m         await prisma.integrationLog.create({
+[7m   [0m [91m                     ~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/index.d.ts[0m:[93m318[0m:[93m7[0m
+    [7m318[0m   get integration(): Prisma.IntegrationDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~[0m
+    'integration' is declared here.
+
+[96msrc/services/integration-service.ts[0m:[93m248[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'tenantId' does not exist in type '(Without<SyncJobCreateInput, SyncJobUncheckedCreateInput> & SyncJobUncheckedCreateInput) | (Without<...> & SyncJobCreateInput)'.
+
+[7m248[0m         tenantId,
+[7m   [0m [91m        ~~~~~~~~[0m
+
+  [96m../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/index.d.ts[0m:[93m13496[0m:[93m5[0m
+    [7m13496[0m     data: XOR<SyncJobCreateInput, SyncJobUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: SyncJobSelect<DefaultArgs>; include?: SyncJobInclude<DefaultArgs>; data: (Without<SyncJobCreateInput, SyncJobUncheckedCreateInput> & SyncJobUncheckedCreateInput) | (Without<...> & SyncJobCreateInput); }'
+
+[96msrc/services/integration-service.ts[0m:[93m292[0m:[93m31[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'tenantId' does not exist in type 'SyncJobWhereInput'.
+
+[7m292[0m       where: { integrationId, tenantId },
+[7m   [0m [91m                              ~~~~~~~~[0m
+
+  [96m../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/index.d.ts[0m:[93m13453[0m:[93m5[0m
+    [7m13453[0m     where?: SyncJobWhereInput
+    [7m     [0m [96m    ~~~~~[0m
+    The expected type comes from property 'where' which is declared here on type '{ select?: SyncJobSelect<DefaultArgs>; include?: SyncJobInclude<DefaultArgs>; where?: SyncJobWhereInput; ... 4 more ...; distinct?: SyncJobScalarFieldEnum | SyncJobScalarFieldEnum[]; }'
+
+[96msrc/services/integration-service.ts[0m:[93m327[0m:[93m14[0m - [91merror[0m[90m TS2551: [0mProperty 'integrationLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'integration'?
+
+[7m327[0m       prisma.integrationLog.findMany({ where: whereClause }),
+[7m   [0m [91m             ~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/index.d.ts[0m:[93m318[0m:[93m7[0m
+    [7m318[0m   get integration(): Prisma.IntegrationDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~[0m
+    'integration' is declared here.
+
+[96msrc/services/integration-service.ts[0m:[93m331[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'tenantId' does not exist in type 'SyncJobWhereInput'.
+
+[7m331[0m           tenantId,
+[7m   [0m [91m          ~~~~~~~~[0m
+
+  [96m../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client/index.d.ts[0m:[93m13453[0m:[93m5[0m
+    [7m13453[0m     where?: SyncJobWhereInput
+    [7m     [0m [96m    ~~~~~[0m
+    The expected type comes from property 'where' which is declared here on type '{ select?: SyncJobSelect<DefaultArgs>; include?: SyncJobInclude<DefaultArgs>; where?: SyncJobWhereInput; ... 4 more ...; distinct?: SyncJobScalarFieldEnum | SyncJobScalarFieldEnum[]; }'
+
+[96msrc/services/integration-service.ts[0m:[93m367[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'dispose' does not exist on type 'BaseConnector'.
+
+[7m367[0m       await existingConnector.dispose?.();
+[7m   [0m [91m                              ~~~~~~~[0m
+
+[96msrc/services/integration-service.ts[0m:[93m522[0m:[93m23[0m - [91merror[0m[90m TS2339: [0mProperty 'dispose' does not exist on type 'BaseConnector'.
+
+[7m522[0m       await connector.dispose?.();
+[7m   [0m [91m                      ~~~~~~~[0m
+
+
+Found 10 errors in the same file, starting at: src/services/integration-service.ts[90m:97[0m
+
+[41m[30m ELIFECYCLE [39m[49m [31mCommand failed with exit code 2.[39m
