@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { GenerateCommand } from './commands/generate';
 import { DeployCommand } from './commands/deploy';
 import { TestCommand } from './commands/test';
+import { TestIntegrationsCommand } from './commands/test-integrations';
 import { BackupCommand } from './commands/backup';
 
 const program = new Command();
@@ -22,6 +23,7 @@ program
   .option('-c, --config <path>', 'Configuration file path')
   .option('-o, --output <path>', 'Output directory')
   .option('-n, --name <name>', 'Application name (for templates)')
+  .option('--test-integrations', 'Test integrations during generation')
   .action(async (type, name, options) => {
     const generateCommand = new GenerateCommand();
     await generateCommand.execute(type, name, options);
@@ -40,7 +42,7 @@ program
   });
 
 // Test command
-program
+program  
   .command('test')
   .description('Run tests')
   .argument('[type]', 'Type of tests (unit, integration, e2e)')
@@ -49,6 +51,19 @@ program
   .action(async (type, options) => {
     const testCommand = new TestCommand();
     await testCommand.execute(type, options);
+  });
+
+// Test integrations command
+program
+  .command('test-integrations')
+  .description('Test API integrations for authentication and data flow')
+  .argument('<config>', 'Configuration file path')
+  .option('--skip-env-check', 'Skip environment variable validation')
+  .option('--continue-on-failure', 'Continue even if some tests fail')
+  .option('-o, --output <path>', 'Save test report to file')
+  .action(async (config, options) => {
+    const testIntegrationsCommand = new TestIntegrationsCommand();
+    await testIntegrationsCommand.execute(config, options);
   });
 
 // Database commands

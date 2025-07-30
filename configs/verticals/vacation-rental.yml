@@ -1,0 +1,505 @@
+app:
+  name: line-properties
+  displayName: Line Properties Vacation Rental Platform
+  description: Complete vacation rental management SaaS with property management, bookings, and guest services
+  version: 2.0.0
+
+database:
+  type: sqlite
+  entities:
+    - name: Property
+      displayName: Properties
+      description: Vacation rental properties
+      fields:
+        title:
+          type: string
+          required: true
+          label: Property Title
+          placeholder: Beautiful beachfront villa
+        address:
+          type: string
+          required: true
+          label: Address
+        city:
+          type: string
+          required: true
+          label: City
+        price:
+          type: number
+          required: true
+          label: Nightly Rate
+          validation:
+            min: 0
+        bedrooms:
+          type: number
+          required: true
+          label: Bedrooms
+          validation:
+            min: 1
+        bathrooms:
+          type: number
+          required: true
+          label: Bathrooms
+          validation:
+            min: 1
+        amenities:
+          type: json
+          label: Amenities
+          description: WiFi, Pool, Kitchen, etc.
+        images:
+          type: json
+          label: Property Images
+        status:
+          type: string
+          required: true
+          defaultValue: available
+          label: Status
+        description:
+          type: text
+          label: Description
+      relationships:
+        - type: hasMany
+          model: Reservation
+          foreign_key: propertyId
+
+    - name: Guest
+      displayName: Guests
+      description: Guest information and contact details
+      fields:
+        name:
+          type: string
+          required: true
+          label: Full Name
+        email:
+          type: email
+          required: true
+          label: Email Address
+        phone:
+          type: string
+          label: Phone Number
+        preferences:
+          type: json
+          label: Guest Preferences
+      relationships:
+        - type: hasMany
+          model: Reservation
+          foreign_key: guestId
+
+    - name: Reservation
+      displayName: Reservations
+      description: Property bookings and reservations
+      fields:
+        checkIn:
+          type: date
+          required: true
+          label: Check-in Date
+        checkOut:
+          type: date
+          required: true
+          label: Check-out Date
+        totalPrice:
+          type: number
+          required: true
+          label: Total Price
+          validation:
+            min: 0
+        status:
+          type: string
+          required: true
+          defaultValue: pending
+          label: Status
+        guests:
+          type: number
+          required: true
+          label: Number of Guests
+          validation:
+            min: 1
+        specialRequests:
+          type: text
+          label: Special Requests
+      relationships:
+        - type: belongsTo
+          model: Property
+          foreign_key: propertyId
+        - type: belongsTo
+          model: Guest
+          foreign_key: guestId
+
+integrations:
+  - name: guesty
+    type: rest
+    provider: guesty
+    baseUrl: https://api.guesty.com/v1
+    authentication:
+      type: api_key
+      header: Authorization
+      secret_name: guesty_api_key
+    endpoints:
+      - name: get_properties
+        path: /listings
+        method: GET
+        response_schema:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+      - name: create_reservation
+        path: /reservations
+        method: POST
+        request_schema:
+          type: object
+          properties:
+            listing_id: { type: string }
+            check_in: { type: string }
+            check_out: { type: string }
+            guest_count: { type: number }
+    transformations:
+      - name: map_properties
+        type: field_mapping
+        mappings:
+          - source: data[].title
+            target: title
+          - source: data[].address
+            target: address
+          - source: data[].bedrooms
+            target: bedrooms
+
+  - name: airbnb
+    type: rest
+    provider: airbnb
+    baseUrl: https://api.airbnb.com/v2
+    authentication:
+      type: oauth
+      client_id: ${secrets.airbnb_client_id}
+      client_secret: ${secrets.airbnb_client_secret}
+    endpoints:
+      - name: sync_listings
+        path: /listings
+        method: GET
+      - name: sync_reservations
+        path: /reservations
+        method: GET
+
+workflows:
+  - name: booking_confirmation
+    description: Process new booking and send confirmations
+    trigger:
+      type: api_call
+      endpoint: /api/reservations
+      method: POST
+    steps:
+      - name: validate_booking
+        activity: validate_data
+        config:
+          schema: reservation_schema.json
+        timeout: 30s
+        retry_policy:
+          max_attempts: 3
+          backoff: exponential
+
+      - name: check_availability
+        activity: database_query
+        config:
+          table: reservations
+          query: check_property_availability
+        timeout: 30s
+
+      - name: create_reservation
+        activity: database_insert
+        config:
+          table: reservations
+        timeout: 30s
+
+      - name: sync_to_guesty
+        activity: http_request
+        config:
+          integration: guesty
+          endpoint: create_reservation
+        timeout: 2m
+        retry_policy:
+          max_attempts: 5
+          backoff: exponential
+
+      - name: send_confirmation_email
+        activity: send_email
+        config:
+          template: booking_confirmation
+          to: guest.email
+
+      - name: notify_property_owner
+        activity: send_email
+        config:
+          template: owner_notification
+          to: property.owner_email
+
+  - name: property_sync
+    description: Sync properties from external platforms
+    trigger:
+      type: schedule
+      cron: "0 */6 * * *"  # Every 6 hours
+    steps:
+      - name: sync_guesty_properties
+        activity: http_request
+        config:
+          integration: guesty
+          endpoint: get_properties
+        timeout: 5m
+
+      - name: transform_property_data
+        activity: transform_data
+        config:
+          transformation: map_properties
+
+      - name: update_database
+        activity: database_insert
+        config:
+          table: properties
+          mode: upsert
+
+ui:
+  theme:
+    primary_color: "#0EA5E9"
+    secondary_color: "#64748B"
+    logo: "/assets/line-properties-logo.png"
+    font: "Inter"
+
+  features:
+    authentication: true
+    dashboard: true
+    notifications: true
+    search: true
+
+  layout:
+    header: true
+    sidebar: true
+    footer: true
+
+  pages:
+    - name: dashboard
+      path: /dashboard
+      title: Dashboard
+      components:
+        - type: stats_cards
+          data_source: dashboard_stats
+        - type: chart
+          name: Revenue Trend
+          chart_type: line
+          data_source: revenue_over_time
+        - type: chart
+          name: Occupancy Rate
+          chart_type: bar
+          data_source: occupancy_rate
+
+    - name: properties
+      path: /properties
+      title: Property Management
+      components:
+        - type: data_table
+          data_source: properties
+          columns:
+            - field: title
+              label: Property Name
+              sortable: true
+            - field: city
+              label: Location
+              sortable: true
+            - field: price
+              label: Nightly Rate
+              type: currency
+              sortable: true
+            - field: status
+              label: Status
+              type: status
+          actions:
+            - label: View
+              action: navigate
+              target: /properties/{id}
+            - label: Edit
+              action: modal
+              component: edit_property_form
+            - label: Calendar
+              action: navigate
+              target: /properties/{id}/calendar
+
+    - name: reservations
+      path: /reservations
+      title: Reservations
+      components:
+        - type: data_table
+          data_source: reservations
+          columns:
+            - field: id
+              label: Booking ID
+              sortable: true
+            - field: property.title
+              label: Property
+              sortable: true
+            - field: guest.name
+              label: Guest
+              sortable: true
+            - field: checkIn
+              label: Check-in
+              type: date
+              sortable: true
+            - field: checkOut
+              label: Check-out
+              type: date
+              sortable: true
+            - field: totalPrice
+              label: Total
+              type: currency
+              sortable: true
+            - field: status
+              label: Status
+              type: status
+          actions:
+            - label: View Details
+              action: navigate
+              target: /reservations/{id}
+            - label: Modify
+              action: modal
+              component: edit_reservation_form
+            - label: Cancel
+              action: workflow
+              workflow: cancel_reservation
+
+    - name: guests
+      path: /guests
+      title: Guest Management
+      components:
+        - type: data_table
+          data_source: guests
+          columns:
+            - field: name
+              label: Name
+              sortable: true
+            - field: email
+              label: Email
+              sortable: true
+            - field: phone
+              label: Phone
+            - field: reservations_count
+              label: Total Bookings
+              type: number
+              sortable: true
+          actions:
+            - label: View Profile
+              action: navigate
+              target: /guests/{id}
+            - label: Send Message
+              action: modal
+              component: send_message_form
+
+alerts:
+  rules:
+    - name: new_booking_alert
+      description: Alert when new booking is received
+      conditions:
+        - field: status
+          operator: equals
+          value: pending
+          data_source: reservations
+      actions:
+        - type: email
+          template: new_booking_notification
+          to: ["admin@lineproperties.com", "reservations@lineproperties.com"]
+        - type: slack
+          channel: "#bookings"
+          template: new_booking_slack
+      cooldown: 5m
+      priority: medium
+
+    - name: high_value_booking
+      description: Alert for bookings over $2000
+      conditions:
+        - field: totalPrice
+          operator: greater_than
+          value: 2000
+      actions:
+        - type: email
+          template: high_value_booking
+          to: ["manager@lineproperties.com"]
+        - type: workflow
+          workflow: vip_guest_setup
+      cooldown: 1h
+      priority: high
+
+    - name: property_sync_failure
+      description: Alert when property sync fails
+      conditions:
+        - field: sync_status
+          operator: equals
+          value: failed
+          data_source: integration_logs
+      actions:
+        - type: email
+          template: sync_failure_alert
+          to: ["tech@lineproperties.com"]
+        - type: slack
+          channel: "#alerts"
+      cooldown: 30m
+      priority: high
+
+    - name: checkout_reminder
+      description: Remind guests about checkout procedures
+      conditions:
+        - field: checkOut
+          operator: equals
+          value: "today + 1 day"
+      actions:
+        - type: email
+          template: checkout_reminder
+          to: guest.email
+      cooldown: 24h
+      priority: low
+
+deployment:
+  environment: production
+  resources:
+    api:
+      cpu: 1
+      memory: 2Gi
+      replicas: 2
+    ui:
+      cpu: 0.5
+      memory: 1Gi
+      replicas: 2
+    database:
+      instance_type: db.t3.small
+      storage: 50Gi
+    redis:
+      memory: 512Mi
+  
+  environment_variables:
+    - name: GUESTY_API_KEY
+      secret: true
+    - name: AIRBNB_CLIENT_ID
+      secret: true
+    - name: AIRBNB_CLIENT_SECRET
+      secret: true
+    - name: SMTP_HOST
+      value: smtp.resend.com
+    - name: STRIPE_SECRET_KEY
+      secret: true
+  
+  secrets:
+    - name: guesty_api_key
+      description: Guesty API Key for property sync
+      type: api_key
+    - name: airbnb_client_id
+      description: Airbnb OAuth Client ID
+      type: oauth
+    - name: airbnb_client_secret
+      description: Airbnb OAuth Client Secret
+      type: oauth
+
+features:
+  authentication: true
+  multiTenancy: true
+  workflows: true
+  integrations: true
+  alerts: true
+  dashboard: true
+  fileStorage: true

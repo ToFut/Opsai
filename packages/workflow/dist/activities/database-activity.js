@@ -132,6 +132,9 @@ class DatabaseActivity extends base_activity_1.BaseActivity {
                     const operation = operations[i];
                     context.heartbeat(`Executing operation ${i + 1} of ${operations.length}`);
                     // Execute each operation within the transaction
+                    if (!operation) {
+                        throw new errors_1.ActivityError(`Operation at index ${i} is undefined.`, { index: i, operations });
+                    }
                     const result = await this.executeOperationInTransaction(tx, operation);
                     operationResults.push(result);
                 }

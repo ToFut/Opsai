@@ -83,9 +83,23 @@ export declare class IntegrationService {
      */
     private processSyncJob;
     /**
-     * Perform actual sync operation
+     * Perform actual sync operation with Airbyte fallback
      */
     private performSync;
+    /**
+     * Perform direct API sync (original implementation)
+     */
+    private performDirectSync;
+    /**
+     * Perform Airbyte fallback sync
+     */
+    private performAirbyteFallback;
+    /**
+     * Map integration config to Airbyte source configuration
+     */
+    private mapConfigToAirbyteSource;
+    private mapAuthToAirbyte;
+    private mapDatabaseToAirbyte;
     /**
      * Dispose resources
      */

@@ -13,8 +13,10 @@ app:
 
 database:
   type: postgresql
-  models:
+  entities:
     - name: Property
+      displayName: Properties
+      description: Vacation rental properties
       fields:
         - name: id
           type: string
@@ -96,6 +98,8 @@ database:
           foreign_key: propertyId
 
     - name: Reservation
+      displayName: Reservations
+      description: Property reservations
       fields:
         - name: id
           type: string
@@ -155,6 +159,8 @@ database:
           foreign_key: guestId
 
     - name: Guest
+      displayName: Guests
+      description: Guest information
       fields:
         - name: id
           type: string

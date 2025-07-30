@@ -18,29 +18,88 @@ export class WorkflowGenerator {
     const workflowsDir = path.join(outputDir, 'src', 'workflows');
     fs.mkdirSync(workflowsDir, { recursive: true });
 
-    // Generate workflow engine
-    await this.generateWorkflowEngine(workflowsDir);
+    // Generate workflow service using @opsai/workflow
+    await this.generateWorkflowService(workflowsDir);
 
     // Generate workflow definitions
     for (const workflow of this.config.workflows) {
       await this.generateWorkflowDefinition(workflowsDir, workflow);
     }
 
-    // Generate workflow scheduler
-    await this.generateWorkflowScheduler(workflowsDir);
+    // Generate workflow activities
+    await this.generateWorkflowActivities(workflowsDir);
 
     // Generate workflow index
     await this.generateWorkflowIndex(workflowsDir);
 
-    console.log('✅ Workflow engines generated');
+    console.log('✅ Workflows generated using @opsai/workflow package');
   }
 
-  private async generateWorkflowEngine(workflowsDir: string): Promise<void> {
-    const engineContent = this.buildWorkflowEngine();
-    const enginePath = path.join(workflowsDir, 'engine.ts');
+  private async generateWorkflowService(workflowsDir: string): Promise<void> {
+    const serviceContent = this.buildWorkflowService();
+    const servicePath = path.join(workflowsDir, 'service.ts');
     
-    fs.writeFileSync(enginePath, engineContent);
-    console.log(`📄 Generated workflow engine: ${enginePath}`);
+    fs.writeFileSync(servicePath, serviceContent);
+    console.log(`📄 Generated workflow service: ${servicePath}`);
+  }
+
+  private buildWorkflowService(): string {
+    return `import { WorkflowService } from '@opsai/workflow';
+import { workflowDefinitions } from './definitions';
+import { customActivities } from './activities';
+
+class AppWorkflowService {
+  private workflowService: WorkflowService;
+
+  constructor() {
+    this.workflowService = new WorkflowService();
+  }
+
+  async initialize(): Promise<void> {
+    // Initialize the workflow service with BullMQ and Temporal
+    await this.workflowService.initialize();
+
+    // Register custom activities
+    for (const [name, activity] of Object.entries(customActivities)) {
+      await this.workflowService.registerActivity(name, activity);
+    }
+
+    // Register workflow definitions
+    for (const definition of workflowDefinitions) {
+      await this.workflowService.createWorkflow(definition, process.env.TENANT_ID || 'default');
+    }
+
+    console.log('Workflow service initialized with \${workflowDefinitions.length} workflows');
+  }
+
+  async executeWorkflow(workflowName: string, input: any, options: any = {}): Promise<string> {
+    return this.workflowService.executeWorkflow(workflowName, input, options);
+  }
+
+  async getWorkflowExecution(executionId: string): Promise<any> {
+    return this.workflowService.getExecution(executionId);
+  }
+
+  async pauseWorkflow(executionId: string): Promise<void> {
+    await this.workflowService.pauseExecution(executionId);
+  }
+
+  async resumeWorkflow(executionId: string): Promise<void> {
+    await this.workflowService.resumeExecution(executionId);
+  }
+
+  async cancelWorkflow(executionId: string): Promise<void> {
+    await this.workflowService.cancelExecution(executionId);
+  }
+
+  async getWorkflowHistory(workflowName?: string, limit: number = 100): Promise<any[]> {
+    return this.workflowService.getExecutionHistory(workflowName, limit);
+  }
+}
+
+export const appWorkflowService = new AppWorkflowService();
+export { AppWorkflowService };
+`;
   }
 
   private buildWorkflowEngine(): string {
@@ -461,6 +520,124 @@ workflowEngine.registerWorkflow(${this.toCamelCase(workflow.name)}Workflow);
 
 export default ${this.toCamelCase(workflow.name)}Workflow;
 `.trim();
+  }
+
+  private async generateWorkflowActivities(workflowsDir: string): Promise<void> {
+    const activitiesContent = this.buildWorkflowActivities();
+    const activitiesPath = path.join(workflowsDir, 'activities.ts');
+    
+    fs.writeFileSync(activitiesPath, activitiesContent);
+    console.log(`📄 Generated workflow activities: ${activitiesPath}`);
+  }
+
+  private buildWorkflowActivities(): string {
+    // Extract unique activities from workflow steps
+    const activities = new Set<string>();
+    this.config.workflows?.forEach(workflow => {
+      workflow.steps?.forEach((step: any) => {
+        if (step.activity) {
+          activities.add(step.activity);
+        }
+      });
+    });
+
+    return `import { 
+  BaseActivity, 
+  DatabaseActivity, 
+  HttpActivity, 
+  NotificationActivity 
+} from '@opsai/workflow';
+import { prisma } from '@opsai/database';
+import { integrations } from '../integrations';
+
+// Custom activities for this application
+export const customActivities = {
+  // Database operations
+  database_insert: new DatabaseActivity(prisma),
+  database_update: new DatabaseActivity(prisma),
+  database_delete: new DatabaseActivity(prisma),
+  database_query: new DatabaseActivity(prisma),
+
+  // HTTP requests
+  http_request: new HttpActivity(),
+  
+  // Notifications
+  send_email: new NotificationActivity(),
+  send_sms: new NotificationActivity(),
+  send_slack: new NotificationActivity(),
+
+  // Custom business logic activities
+  ${Array.from(activities).filter(activity => 
+    !['database_insert', 'database_update', 'database_delete', 'database_query', 
+      'http_request', 'send_email', 'send_sms', 'send_slack'].includes(activity)
+  ).map(activity => `
+  ${activity}: class extends BaseActivity {
+    async execute(input: any): Promise<any> {
+      // TODO: Implement ${activity} logic
+      console.log('Executing ${activity} with input:', input);
+      
+      switch ('${activity}') {
+        case 'validate_data':
+          return this.validateData(input);
+        case 'transform_data':
+          return this.transformData(input);
+        case 'send_notification':
+          return this.sendNotification(input);
+        case 'assign_task':
+          return this.assignTask(input);
+        case 'human_approval':
+          return this.requestHumanApproval(input);
+        case 'payment_processing':
+          return this.processPayment(input);
+        default:
+          throw new Error(\`Unknown activity: ${activity}\`);
+      }
+    }
+
+    private async validateData(input: any): Promise<any> {
+      // Implement data validation logic
+      return { valid: true, data: input };
+    }
+
+    private async transformData(input: any): Promise<any> {
+      // Implement data transformation logic
+      return input;
+    }
+
+    private async sendNotification(input: any): Promise<any> {
+      // Implement notification logic
+      return { sent: true, messageId: \`msg_\${Date.now()}\` };
+    }
+
+    private async assignTask(input: any): Promise<any> {
+      // Implement task assignment logic
+      return { taskId: \`task_\${Date.now()}\`, assignee: input.assignee };
+    }
+
+    private async requestHumanApproval(input: any): Promise<any> {
+      // Implement human approval workflow
+      return { approvalId: \`approval_\${Date.now()}\`, status: 'pending' };
+    }
+
+    private async processPayment(input: any): Promise<any> {
+      // Implement payment processing logic
+      return { transactionId: \`txn_\${Date.now()}\`, status: 'completed' };
+    }
+  }`).join(',\n  ')}
+};
+
+// Activity registry for easy lookup
+export const activityRegistry = new Map(Object.entries(customActivities));
+
+// Helper function to get activity by name
+export function getActivity(name: string): BaseActivity {
+  const activity = activityRegistry.get(name);
+  if (!activity) {
+    throw new Error(\`Activity '\${name}' not found\`);
+  }
+  return activity;
+}
+`;
   }
 
   private async generateWorkflowScheduler(workflowsDir: string): Promise<void> {

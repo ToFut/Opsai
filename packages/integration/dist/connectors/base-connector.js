@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseConnector = void 0;
 class BaseConnector {
+    dispose() {
+        throw new Error('Method not implemented.');
+    }
     constructor(config) {
         this.config = config;
     }

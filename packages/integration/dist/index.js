@@ -23,6 +23,7 @@ __exportStar(require("./connectors/base-connector"), exports);
 __exportStar(require("./connectors/rest-connector"), exports);
 __exportStar(require("./connectors/soap-connector"), exports);
 __exportStar(require("./connectors/webhook-connector"), exports);
+__exportStar(require("./connectors/airbyte-connector"), exports);
 // Processors
 __exportStar(require("./processors/data-processor"), exports);
 __exportStar(require("./processors/transformation-processor"), exports);

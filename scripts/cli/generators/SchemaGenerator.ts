@@ -49,12 +49,13 @@ datasource db {
 
     // Add Tenant model if multi-tenancy is enabled
     if (this.config.features?.multiTenancy) {
+      const settingsType = this.config.database.type === 'sqlite' ? 'String?' : 'Json?';
       models += `
 model Tenant {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
-  settings  Json?
+  settings  ${settingsType}
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -80,6 +81,12 @@ ${this.config.database.entities.map(entity =>
     const tableName = this.toSnakeCase(entity.name);
 
     let modelContent = `model ${modelName} {\n`;
+
+    // Always add id field first if not present
+    const hasIdField = Object.keys(entity.fields).some(key => key === 'id');
+    if (!hasIdField) {
+      modelContent += `  id String @id @default(cuid())\n`;
+    }
 
     // Add fields, handling relations properly
     Object.entries(entity.fields).forEach(([fieldName, field]) => {
@@ -409,21 +416,51 @@ main()
     return this.config.database.entities.map(entity => {
       const modelName = this.toCamelCase(entity.name);
       const displayName = entity.displayName;
+      const sampleData = this.buildMultipleSampleRecords(entity);
       
       return `
   // Seed ${displayName}
-  const sample${this.toPascalCase(entity.name)} = await prisma.${modelName}.upsert({
-    where: { id: 'sample-${entity.name}' },
+  ${sampleData.map((data, index) => `
+  const sample${this.toPascalCase(entity.name)}${index + 1} = await prisma.${modelName}.upsert({
+    where: { id: 'sample-${entity.name}-${index + 1}' },
     update: {},
     create: {
-      id: 'sample-${entity.name}',
-      ${this.buildSampleEntityData(entity)}
+      id: 'sample-${entity.name}-${index + 1}',
+      ${data}
       ${this.config.features?.multiTenancy ? 'tenantId: tenant.id,' : ''}
     }
-  });
+  });`).join('\n')}
 
-  console.log('✅ Created sample ${displayName}:', sample${this.toPascalCase(entity.name)}.id);`;
+  console.log('✅ Created ${sampleData.length} sample ${displayName} records');`;
     }).join('\n');
+  }
+
+  private buildMultipleSampleRecords(entity: Entity): string[] {
+    const entityName = entity.name.toLowerCase();
+    const records: string[] = [];
+    
+    // Generate 3-5 sample records per entity with domain-specific data
+    const recordCount = entityName === 'property' ? 5 : 3;
+    
+    for (let i = 0; i < recordCount; i++) {
+      const sampleData: string[] = [];
+      
+      Object.entries(entity.fields).forEach(([fieldName, field]) => {
+        if (fieldName === 'id') return; // Skip ID field
+        if (field.type === 'relation') return; // Skip relations for now
+
+        let sampleValue = this.generateDomainSpecificValue(fieldName, field, entityName, i);
+        if (typeof sampleValue === 'string') {
+          sampleData.push(`${fieldName}: '${sampleValue}',`);
+        } else {
+          sampleData.push(`${fieldName}: ${sampleValue},`);
+        }
+      });
+      
+      records.push(sampleData.join('\\n      '));
+    }
+    
+    return records;
   }
 
   private buildSampleEntityData(entity: Entity): string {
@@ -441,7 +478,122 @@ main()
       }
     });
 
-    return sampleData.join('\n      ');
+    return sampleData.join('\\n      ');
+  }
+
+  private generateDomainSpecificValue(fieldName: string, field: any, entityName: string, index: number): any {
+    const fname = fieldName.toLowerCase();
+    
+    // Domain-specific sample data for vacation rental platform
+    if (entityName === 'property') {
+      if (fname.includes('title') || fname.includes('name')) {
+        const titles = [
+          'Luxury Beachfront Villa',
+          'Mountain Cabin Retreat',  
+          'Downtown City Loft',
+          'Cozy Countryside Cottage',
+          'Modern Seaside Apartment'
+        ];
+        return titles[index] || `Property ${index + 1}`;
+      }
+      if (fname.includes('address')) {
+        const addresses = [
+          '123 Ocean Drive',
+          '456 Mountain View Lane', 
+          '789 Downtown Street',
+          '321 Country Road',
+          '654 Seaside Boulevard'
+        ];
+        return addresses[index] || `${100 + index} Sample Street`;
+      }
+      if (fname.includes('city')) {
+        const cities = ['Miami', 'Aspen', 'New York', 'Napa Valley', 'Malibu'];
+        return cities[index] || 'Sample City';
+      }
+      if (fname.includes('price')) {
+        const prices = [450, 350, 275, 200, 500];
+        return prices[index] || (200 + index * 50);
+      }
+      if (fname.includes('bedroom')) {
+        const bedrooms = [4, 3, 2, 2, 3];
+        return bedrooms[index] || (2 + (index % 3));
+      }
+      if (fname.includes('bathroom')) {
+        const bathrooms = [3.5, 2.5, 2, 1.5, 2.5];
+        return bathrooms[index] || (1.5 + (index % 2) * 0.5);
+      }
+      if (fname.includes('status')) {
+        const statuses = ['available', 'available', 'booked', 'available', 'maintenance'];
+        return statuses[index] || 'available';
+      }
+      if (fname.includes('description')) {
+        const descriptions = [
+          'Stunning beachfront property with panoramic ocean views',
+          'Peaceful mountain retreat perfect for outdoor enthusiasts',
+          'Modern loft in the heart of the city',
+          'Charming cottage surrounded by vineyards',
+          'Elegant seaside apartment with private balcony'
+        ];
+        return descriptions[index] || `Beautiful ${index + 1} bedroom property`;
+      }
+    }
+    
+    if (entityName === 'guest') {
+      if (fname.includes('name')) {
+        const names = ['John Smith', 'Sarah Johnson', 'Michael Davis'];
+        return names[index] || `Guest ${index + 1}`;
+      }
+      if (fname.includes('email')) {
+        const emails = ['john@example.com', 'sarah@example.com', 'michael@example.com'];
+        return emails[index] || `guest${index + 1}@example.com`;
+      }
+      if (fname.includes('phone')) {
+        const phones = ['+1-555-0101', '+1-555-0102', '+1-555-0103'];
+        return phones[index] || `+1-555-010${index + 1}`;
+      }
+    }
+    
+    if (entityName === 'reservation') {
+      if (fname.includes('checkin') || fname.includes('check_in')) {
+        const checkInDates = [
+          'new Date("2024-12-01")',
+          'new Date("2024-12-15")', 
+          'new Date("2024-12-20")'
+        ];
+        return checkInDates[index] || 'new Date()';
+      }
+      if (fname.includes('checkout') || fname.includes('check_out')) {
+        const checkOutDates = [
+          'new Date("2024-12-07")',
+          'new Date("2024-12-22")',
+          'new Date("2024-12-27")'
+        ];
+        return checkOutDates[index] || 'new Date()';
+      }
+      if (fname.includes('totalprice') || fname.includes('total_price')) {
+        const totalPrices = [2700, 2450, 1925];
+        return totalPrices[index] || (1500 + index * 500);
+      }
+      if (fname.includes('status')) {
+        const statuses = ['confirmed', 'pending', 'completed'];
+        return statuses[index] || 'confirmed';
+      }
+      if (fname.includes('guests')) {
+        const guestCounts = [4, 2, 3];
+        return guestCounts[index] || (2 + (index % 3));
+      }
+      if (fname.includes('specialrequests') || fname.includes('special_requests')) {
+        const requests = [
+          'Late checkout requested',
+          'Vegetarian breakfast preferences',
+          'Ground floor room preferred'
+        ];
+        return requests[index] || null;
+      }
+    }
+    
+    // Fallback to generic sample value
+    return this.generateSampleValue(field);
   }
 
   private generateSampleValue(field: any): any {

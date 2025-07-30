@@ -8,6 +8,7 @@ export * from './connectors/base-connector';
 export * from './connectors/rest-connector';
 export * from './connectors/soap-connector';
 export * from './connectors/webhook-connector';
+export * from './connectors/airbyte-connector';
 
 // Processors
 export * from './processors/data-processor';

@@ -1,0 +1,556 @@
+vertical:
+  name: line-properties
+  description: Line Properties Vacation Rental Platform
+  version: 1.0.0
+app:
+  name: line-properties
+  displayName: Line Properties
+  description: Vacation Rental Platform - Find your perfect getaway
+  version: 1.0.0
+  author: CORE Platform
+  license: MIT
+database:
+  type: postgresql
+  entities:
+    - name: Property
+      displayName: Properties
+      description: Vacation rental properties
+      fields:
+        id:
+          type: string
+          primary: true
+          unique: true
+        title:
+          type: string
+          required: true
+          ui:
+            label: Property Title
+            placeholder: Beautiful beachfront villa
+        address:
+          type: string
+          required: true
+          ui:
+            label: Address
+        city:
+          type: string
+          required: true
+          ui:
+            label: City
+        price:
+          type: decimal
+          required: true
+          ui:
+            label: Price per Night
+            type: currency
+        bedrooms:
+          type: integer
+          required: true
+          ui:
+            label: Bedrooms
+            min: 1
+            max: 10
+        bathrooms:
+          type: integer
+          required: true
+          ui:
+            label: Bathrooms
+            min: 1
+            max: 10
+        amenities:
+          type: json
+          required: false
+          ui:
+            label: Amenities
+            widget: multi_select
+            options:
+              - wifi
+              - pool
+              - parking
+              - kitchen
+              - ac
+              - beach_access
+              - mountain_view
+        images:
+          type: json
+          required: false
+          ui:
+            label: Property Images
+            widget: file_upload
+            multiple: true
+        status:
+          type: enum
+          values:
+            - available
+            - booked
+            - maintenance
+          default: available
+          ui:
+            label: Status
+            widget: select
+        createdAt:
+          type: datetime
+          default: now
+        updatedAt:
+          type: datetime
+          default: now
+      relationships:
+        - type: hasMany
+          model: Reservation
+          foreign_key: propertyId
+    - name: Reservation
+      displayName: Reservations
+      description: Property reservations
+      fields:
+        id:
+          type: string
+          primary: true
+          unique: true
+        propertyId:
+          type: string
+          required: true
+          ui:
+            label: Property
+            widget: relation_select
+            model: Property
+        guestId:
+          type: string
+          required: true
+          ui:
+            label: Guest
+            widget: relation_select
+            model: Guest
+        checkIn:
+          type: datetime
+          required: true
+          ui:
+            label: Check-in Date
+            widget: date
+        checkOut:
+          type: datetime
+          required: true
+          ui:
+            label: Check-out Date
+            widget: date
+        totalPrice:
+          type: decimal
+          required: true
+          ui:
+            label: Total Price
+            type: currency
+        status:
+          type: enum
+          values:
+            - pending
+            - confirmed
+            - cancelled
+          default: pending
+          ui:
+            label: Status
+            widget: select
+        createdAt:
+          type: datetime
+          default: now
+        updatedAt:
+          type: datetime
+          default: now
+      relationships:
+        - type: belongsTo
+          model: Property
+          foreign_key: propertyId
+        - type: belongsTo
+          model: Guest
+          foreign_key: guestId
+    - name: Guest
+      displayName: Guests
+      description: Guest information
+      fields:
+        id:
+          type: string
+          primary: true
+          unique: true
+        name:
+          type: string
+          required: true
+          ui:
+            label: Full Name
+        email:
+          type: string
+          required: true
+          unique: true
+          validation:
+            pattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+          ui:
+            label: Email
+            placeholder: guest@example.com
+        phone:
+          type: string
+          required: false
+          ui:
+            label: Phone Number
+            placeholder: +1 (555) 123-4567
+        createdAt:
+          type: datetime
+          default: now
+        updatedAt:
+          type: datetime
+          default: now
+workflows:
+  - name: create_reservation
+    description: Create a new property reservation with validation
+    trigger:
+      type: api_call
+      endpoint: /api/reservations
+      method: POST
+    steps:
+      - name: validate_availability
+        activity: database_query
+        config:
+          model: Reservation
+          where: >-
+            propertyId = {{propertyId}} AND status = 'confirmed' AND ((checkIn <= {{checkIn}} AND checkOut >
+            {{checkIn}}) OR (checkIn < {{checkOut}} AND checkOut >= {{checkOut}}))
+        timeout: 30s
+        retry_policy:
+          max_attempts: 3
+          backoff: exponential
+      - name: create_reservation
+        activity: database_insert
+        config:
+          model: Reservation
+          data:
+            propertyId: '{{propertyId}}'
+            guestId: '{{guestId}}'
+            checkIn: '{{checkIn}}'
+            checkOut: '{{checkOut}}'
+            totalPrice: '{{totalPrice}}'
+            status: pending
+      - name: send_confirmation_email
+        activity: http_request
+        config:
+          integration: email_service
+          endpoint: send_email
+          data:
+            to: '{{guest.email}}'
+            subject: Reservation Confirmation
+            template: reservation_created
+        timeout: 60s
+      - name: update_property_status
+        activity: database_update
+        config:
+          model: Property
+          where: id = {{propertyId}}
+          data:
+            status: booked
+  - name: refresh_guesty_token
+    description: Refresh Guesty API token automatically
+    trigger:
+      type: schedule
+      cron: 0 0 * * *
+    steps:
+      - name: fetch_new_token
+        activity: http_request
+        config:
+          integration: guesty_api
+          endpoint: refresh_token
+          data:
+            grant_type: client_credentials
+            scope: open-api
+        timeout: 30s
+        retry_policy:
+          max_attempts: 5
+          backoff: exponential
+      - name: update_environment
+        activity: system_update
+        config:
+          variable: GUESTY_ACCESS_TOKEN
+          value: '{{response.access_token}}'
+ui:
+  theme:
+    primary_color: '#2563eb'
+    secondary_color: '#64748b'
+    accent_color: '#f59e0b'
+    logo: /assets/line-properties-logo.png
+  pages:
+    - name: home
+      path: /
+      components:
+        - type: hero
+          title: Find Your Perfect Vacation Rental
+          subtitle: Discover amazing properties in the most beautiful destinations
+          background_image: /assets/hero-bg.jpg
+        - type: search_form
+          fields:
+            - name: location
+              type: text
+              placeholder: Where do you want to go?
+              icon: map-pin
+            - name: checkIn
+              type: date
+              placeholder: Check-in
+              icon: calendar
+            - name: checkOut
+              type: date
+              placeholder: Check-out
+              icon: calendar
+            - name: guests
+              type: number
+              placeholder: Guests
+              min: 1
+              max: 20
+              icon: users
+    - name: properties
+      path: /properties
+      components:
+        - type: filter_bar
+          fields:
+            - name: price_range
+              type: range
+              label: Price Range
+              min: 0
+              max: 1000
+            - name: bedrooms
+              type: select
+              label: Bedrooms
+              options:
+                - label: Any
+                  value: ''
+                - label: 1+
+                  value: '1'
+                - label: 2+
+                  value: '2'
+                - label: 3+
+                  value: '3'
+            - name: amenities
+              type: multi_select
+              label: Amenities
+              options:
+                - label: WiFi
+                  value: wifi
+                - label: Pool
+                  value: pool
+                - label: Parking
+                  value: parking
+                - label: Kitchen
+                  value: kitchen
+        - type: property_grid
+          data_source: properties
+          columns: 3
+          pagination: true
+          items_per_page: 12
+    - name: property_detail
+      path: /properties/:id
+      components:
+        - type: image_gallery
+          images: '{{property.images}}'
+          autoplay: true
+        - type: property_info
+          fields:
+            - title
+            - address
+            - city
+            - bedrooms
+            - bathrooms
+            - price
+            - amenities
+        - type: availability_calendar
+          property_id: '{{property.id}}'
+        - type: booking_form
+          fields:
+            - name: checkIn
+              type: date
+              required: true
+              min: today
+            - name: checkOut
+              type: date
+              required: true
+              min: '{{checkIn}}'
+            - name: guests
+              type: number
+              required: true
+              min: 1
+              max: 20
+          submit_action: create_reservation
+    - name: dashboard
+      path: /dashboard
+      auth_required: true
+      components:
+        - type: stats_cards
+          data_source: user_stats
+        - type: recent_reservations
+          data_source: user_reservations
+        - type: property_management
+          data_source: user_properties
+alerts:
+  rules:
+    - name: reservation_confirmed
+      description: Alert when reservation is confirmed
+      conditions:
+        - field: status
+          operator: equals
+          value: confirmed
+      actions:
+        - type: email
+          template: reservation_confirmed
+          to: '{{guest.email}}'
+        - type: notification
+          channel: in_app
+          user: '{{guestId}}'
+      cooldown: 1h
+      priority: medium
+    - name: property_availability_change
+      description: Alert when property becomes available
+      conditions:
+        - field: status
+          operator: equals
+          value: available
+      actions:
+        - type: email
+          template: property_available
+          to: '{{interested_users}}'
+      cooldown: 24h
+      priority: low
+    - name: api_token_expiring
+      description: Alert when Guesty API token expires soon
+      conditions:
+        - field: token_expires_at
+          operator: less_than
+          value: now() + 24 hours
+      actions:
+        - type: email
+          template: token_expiry_warning
+          to:
+            - admin@lineproperties.com
+        - type: workflow
+          workflow: refresh_guesty_token
+      cooldown: 12h
+      priority: high
+deployment:
+  platform: netlify
+  environment: production
+  build_command: pnpm run build
+  publish_directory: dist
+  functions_directory: netlify/functions
+  resources:
+    api:
+      cpu: 0.5
+      memory: 1Gi
+      replicas: 2
+    database:
+      instance_type: db.t3.micro
+      storage: 20Gi
+    redis:
+      memory: 256Mi
+  environment_variables:
+    - name: GUESTY_CLIENT_ID
+      value: 0oao2yl8voj7hKXzw5d7
+    - name: GUESTY_CLIENT_SECRET
+      value: uEyDMMHug2z_fVB2cmh3C-_64ZmEWXdZ-mVWSroYANxZ9ibnWSqxp4zRguGVPcyX
+    - name: NETLIFY_SITE_ID
+      value: 2210cbd3-e196-4b35-b48c-28534772f584
+    - name: NETLIFY_AUTH_TOKEN
+      value: nfp_SFYc4Wsqri8WyHk4wBcA3qoCqmVFsCzX7b22
+    - name: RESEND_API_KEY
+      secret: true
+    - name: DATABASE_URL
+      secret: true
+    - name: REDIS_URL
+      secret: true
+    - name: JWT_SECRET
+      secret: true
+  secrets:
+    - name: resend_api_key
+      description: Resend Email API Key
+      type: api_key
+    - name: database_url
+      description: PostgreSQL Database URL
+      type: connection_string
+    - name: redis_url
+      description: Redis Connection URL
+      type: connection_string
+    - name: jwt_secret
+      description: JWT Secret Key
+      type: secret
+features:
+  authentication: true
+  multiTenancy: true
+  fileUpload: true
+  notifications: true
+  analytics: true
+  workflows: true
+  alerts: true
+  integrations: true
+  search: true
+  booking: true
+  payments: true
+integrations:
+  - name: guesty_api
+    type: rest
+    base_url: https://open-api.guesty.com/v1/
+    authentication:
+      type: oauth2
+      client_credentials: true
+      client_id: 0oao2yl8voj7hKXzw5d7
+      client_secret: uEyDMMHug2z_fVB2cmh3C-_64ZmEWXdZ-mVWSroYANxZ9ibnWSqxp4zRguGVPcyX
+    endpoints:
+      - name: get_listings
+        path: /listings
+        method: GET
+        request_schema:
+          type: object
+          properties:
+            limit:
+              type: number
+            offset:
+              type: number
+        response_schema:
+          type: object
+          properties:
+            listings:
+              type: array
+      - name: create_reservation
+        path: /reservations
+        method: POST
+        request_schema:
+          type: object
+          properties:
+            propertyId:
+              type: string
+            checkIn:
+              type: string
+            checkOut:
+              type: string
+            guestInfo:
+              type: object
+      - name: refresh_token
+        path: /oauth2/token
+        method: POST
+        request_schema:
+          type: object
+          properties:
+            grant_type:
+              type: string
+            scope:
+              type: string
+    rate_limits:
+      requests_per_minute: 100
+      burst_limit: 20
+  - name: email_service
+    type: rest
+    base_url: https://api.resend.com
+    authentication:
+      type: api_key
+      header: Authorization
+      secret_name: resend_api_key
+    endpoints:
+      - name: send_email
+        path: /emails
+        method: POST
+        request_schema:
+          type: object
+          properties:
+            to:
+              type: string
+            subject:
+              type: string
+            html:
+              type: string

@@ -5,6 +5,7 @@ export * from './connectors/base-connector';
 export * from './connectors/rest-connector';
 export * from './connectors/soap-connector';
 export * from './connectors/webhook-connector';
+export * from './connectors/airbyte-connector';
 export * from './processors/data-processor';
 export * from './processors/transformation-processor';
 export * from './types';

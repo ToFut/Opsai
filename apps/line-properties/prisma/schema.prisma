@@ -1,0 +1,75 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  settings  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations to other models
+  Propertys Property[]
+  Reservations Reservation[]
+  Guests Guest[]
+
+  @@map("tenants")
+}
+model Property {
+  id String @id @default(cuid())
+  title String
+  address String
+  city String
+  price Decimal
+  bedrooms Int
+  bathrooms Int
+  amenities String?
+  images String?
+  status String? @default("available")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  tenantId  String
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("property")
+  @@index([tenantId])
+}
+
+model Reservation {
+  id String @id @default(cuid())
+  propertyId String @map("property_id")
+  guestId String @map("guest_id")
+  checkIn DateTime @map("check_in")
+  checkOut DateTime @map("check_out")
+  totalPrice Decimal @map("total_price")
+  status String? @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  tenantId  String
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("reservation")
+  @@index([tenantId])
+}
+
+model Guest {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  phone String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  tenantId  String
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("guest")
+  @@index([tenantId])
+}

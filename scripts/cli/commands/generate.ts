@@ -1,12 +1,19 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ConfigParser } from '../generators/ConfigParser';
+import { EnhancedConfigParser } from '../generators/EnhancedConfigParser';
 import { SchemaGenerator } from '../generators/SchemaGenerator';
+import { EnhancedSchemaGenerator } from '../generators/EnhancedSchemaGenerator';
 import { APIGenerator } from '../generators/APIGenerator';
 import { IntegrationGenerator } from '../generators/IntegrationGenerator';
 import { WorkflowGenerator } from '../generators/WorkflowGenerator';
 import { DeploymentGenerator } from '../generators/DeploymentGenerator';
+import { UIGenerator } from '../generators/UIGenerator';
+import { AlertGenerator } from '../generators/AlertGenerator';
+import { EnvironmentGenerator } from '../generators/EnvironmentGenerator';
+import { GeneratorCoordinator } from '../generators/GeneratorCoordinator';
 import { AppTemplateGenerator } from '../templates/AppTemplateGenerator';
+import { IntegrationTester } from '../../../packages/integration/src/testing/integration-tester';
 
 export class GenerateCommand {
   async execute(type: string, name: string, options: any): Promise<void> {
@@ -48,64 +55,25 @@ export class GenerateCommand {
         process.exit(1);
       }
 
-      // Parse configuration
+      // Parse configuration with enhanced parser
       console.log('📖 Parsing configuration...');
-      const configParser = new ConfigParser();
+      const configParser = new EnhancedConfigParser();
       const config = await configParser.parseConfig(options.config);
-      
-      // Validate configuration
-      const validation = configParser.validateConfig(config);
-      if (!validation.valid) {
-        console.error('❌ Configuration validation failed:');
-        validation.errors.forEach(error => console.error(`  - ${error}`));
-        process.exit(1);
-      }
 
       // Create output directory
       const outputDir = options.output || path.join(process.cwd(), 'apps', `${name}-saas`);
       console.log(`📁 Creating application at: ${outputDir}`);
       fs.mkdirSync(outputDir, { recursive: true });
       
-      // Generate database schema
-      console.log('🗄️  Generating database schema...');
-      const schemaGenerator = new SchemaGenerator(config);
-      await schemaGenerator.generateDatabaseSchema(outputDir);
-      
-      // Generate API endpoints
-      console.log('🌐 Generating API endpoints...');
-      const apiGenerator = new APIGenerator(config);
-      await apiGenerator.generateAPI(outputDir);
-      
-      // Generate integrations
-      console.log('🔌 Generating integrations...');
-      const integrationGenerator = new IntegrationGenerator(config);
-      await integrationGenerator.generateIntegrations(outputDir);
-      
-      // Generate workflows
-      console.log('⚡ Generating workflows...');
-      const workflowGenerator = new WorkflowGenerator(config);
-      await workflowGenerator.generateWorkflows(outputDir);
-      
-      // Generate deployment configuration
-      console.log('🚀 Generating deployment configuration...');
-      const deploymentGenerator = new DeploymentGenerator(config);
-      await deploymentGenerator.generateDeployment(outputDir);
-      
-      // Generate package.json and other config files
-      console.log('📦 Generating application configuration...');
-      await this.generateAppConfig(outputDir, config);
-      
-      // Generate Docker configuration
-      console.log('🐳 Generating Docker configuration...');
-      await this.generateDockerConfig(outputDir, config);
-      
-      // Generate environment files
-      console.log('⚙️  Generating environment configuration...');
-      await this.generateEnvironmentConfig(outputDir, config);
-      
-      // Generate README
-      console.log('📝 Generating documentation...');
-      await this.generateReadme(outputDir, config);
+      // Use coordinated generation for better reliability
+      const coordinator = new GeneratorCoordinator(config, outputDir);
+      await coordinator.generateApplication();
+
+      // Test integrations if they exist and --test-integrations flag is provided
+      if (options.testIntegrations && config.services.integrations?.length > 0) {
+        console.log('\n🧪 Testing integrations as part of generation...');
+        await this.testGeneratedIntegrations(config);
+      }
       
       console.log(`\n✅ Generated ${name} vertical successfully!`);
       console.log(`📁 Location: ${outputDir}`);
@@ -215,6 +183,221 @@ export class GenerateCommand {
   }
 
   private async generateAppConfig(outputDir: string, config: any): Promise<void> {
+    // Package.json generation is now handled by GeneratorCoordinator
+
+    // Generate TypeScript configuration
+    const tsConfig = {
+      compilerOptions: {
+        target: 'ES2022',
+        module: 'commonjs',
+        lib: ['ES2022'],
+        outDir: './dist',
+        rootDir: './src',
+        strict: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        forceConsistentCasingInFileNames: true,
+        declaration: true,
+        declarationMap: true,
+        sourceMap: true,
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+        resolveJsonModule: true,
+        allowSyntheticDefaultImports: true
+      },
+      include: ['src/**/*', 'prisma/**/*'],
+      exclude: ['node_modules', 'dist', '**/*.test.ts']
+    };
+
+    fs.writeFileSync(
+      path.join(outputDir, 'tsconfig.json'),
+      JSON.stringify(tsConfig, null, 2)
+    );
+
+    console.log('📦 Generated enhanced application configuration');
+  }
+
+  private buildPackageJson(config: any): any {
+    const features = config.features || {};
+    const services = config.services || {};
+    
+    // Core OPSAI packages - always included
+    const corePackages = {
+      '@opsai/shared': 'workspace:*'
+    };
+    
+    // Feature-based OPSAI packages
+    if (features.authentication) {
+      corePackages['@opsai/auth'] = 'workspace:*';
+    }
+    
+    if (features.workflows) {
+      corePackages['@opsai/workflow'] = 'workspace:*';
+    }
+    
+    if (features.integrations) {
+      corePackages['@opsai/integration'] = 'workspace:*';
+    }
+    
+    if (features.alerts) {
+      corePackages['@opsai/alerts'] = 'workspace:*';
+    }
+    
+    if (features.fileUpload) {
+      corePackages['@opsai/files'] = 'workspace:*';
+    }
+    
+    if (features.ui) {
+      corePackages['@opsai/ui'] = 'workspace:*';
+    }
+    
+    // Database package - included if using core-managed database
+    if (services.database?.provider === 'core-managed') {
+      corePackages['@opsai/database'] = 'workspace:*';
+    }
+    
+    // Runtime dependencies based on features and services
+    const runtimeDependencies = {
+      // API Framework
+      express: '^4.18.0',
+      cors: '^2.8.5',
+      helmet: '^7.1.0',
+      morgan: '^1.10.0',
+      
+      // Database
+      '@prisma/client': '^5.7.0',
+      
+      // Validation
+      zod: '^3.22.0',
+      
+      // HTTP client
+      axios: '^1.6.0',
+      
+      // Utilities
+      'date-fns': '^2.30.0'
+    };
+    
+    // Authentication dependencies
+    if (features.authentication) {
+      if (services.auth?.provider === 'core-supabase' || services.auth?.provider === 'user-supabase') {
+        runtimeDependencies['@supabase/supabase-js'] = '^2.38.0';
+      }
+      runtimeDependencies['jsonwebtoken'] = '^9.0.0';
+      runtimeDependencies['@types/jsonwebtoken'] = '^9.0.0';
+    }
+    
+    // Workflow dependencies
+    if (features.workflows) {
+      Object.assign(runtimeDependencies, {
+        'bullmq': '^5.0.0',
+        '@temporalio/client': '^1.8.0',
+        '@temporalio/worker': '^1.8.0',
+        '@temporalio/workflow': '^1.8.0',
+        '@temporalio/activity': '^1.12.1'
+      });
+    }
+    
+    // Queue processing dependencies
+    if (features.workflows || features.alerts) {
+      runtimeDependencies['redis'] = '^4.6.0';
+    }
+    
+    // Scheduling dependencies
+    if (features.workflows) {
+      runtimeDependencies['node-cron'] = '^3.0.3';
+    }
+    
+    // File upload dependencies
+    if (features.fileUpload) {
+      Object.assign(runtimeDependencies, {
+        'multer': '^1.4.5',
+        '@types/multer': '^1.4.7'
+      });
+    }
+    
+    // Integration-specific dependencies
+    const integrations = services.integrations || [];
+    integrations.forEach((integration: any) => {
+      // Add integration-specific packages if needed
+      if (integration.name === 'stripe') {
+        runtimeDependencies['stripe'] = '^14.0.0';
+      }
+      // Add more integration-specific dependencies as needed
+    });
+    
+    // Development dependencies
+    const devDependencies = {
+      '@types/node': '^20.0.0',
+      '@types/express': '^4.17.0',
+      '@types/cors': '^2.8.0',
+      '@types/morgan': '^1.9.0',
+      'typescript': '^5.3.0',
+      'tsx': '^4.6.0',
+      'prisma': '^5.7.0',
+      'jest': '^29.7.0',
+      '@types/jest': '^29.5.0',
+      'eslint': '^8.0.0',
+      '@typescript-eslint/eslint-plugin': '^6.0.0',
+      '@typescript-eslint/parser': '^6.0.0'
+    };
+    
+    // Add cron types if workflows are enabled
+    if (features.workflows) {
+      devDependencies['@types/node-cron'] = '^3.0.0';
+    }
+    
+    // Scripts based on features
+    const scripts = {
+      build: 'tsc',
+      dev: 'tsx watch src/api/server.ts',
+      start: 'node dist/api/server.js',
+      'db:generate': 'prisma generate',
+      'db:migrate': 'prisma migrate deploy',
+      'db:seed': 'tsx prisma/seed.ts',
+      'db:setup': 'npm run db:generate && npm run db:migrate && npm run db:seed',
+      'db:studio': 'prisma studio',
+      test: 'jest',
+      'test:watch': 'jest --watch',
+      lint: 'eslint src --ext .ts',
+      'lint:fix': 'eslint src --ext .ts --fix'
+    };
+    
+    // Add feature-specific scripts
+    if (features.workflows) {
+      scripts['workflow:start'] = 'tsx src/workflows/service.ts';
+    }
+    
+    if (features.alerts) {
+      scripts['alerts:start'] = 'tsx src/alerts/service.ts';
+    }
+    
+    return {
+      name: config.app.name,
+      version: config.app.version || '1.0.0',
+      description: config.app.description,
+      main: 'dist/api/server.js',
+      scripts,
+      dependencies: {
+        ...corePackages,
+        ...runtimeDependencies
+      },
+      devDependencies,
+      author: config.app.author || 'CORE Platform',
+      license: config.app.license || 'MIT',
+      engines: {
+        node: '>=18.0.0',
+        npm: '>=8.0.0'
+      },
+      keywords: [
+        'opsai',
+        'core-platform',
+        'vertical-saas',
+        config.app.name
+      ]
+    };
+  }
+
+  private async generateAppConfigOld(outputDir: string, config: any): Promise<void> {
     const packageJson = {
       name: config.app.name,
       version: config.app.version,
@@ -371,8 +554,8 @@ volumes:
 
   private async generateEnvironmentConfig(outputDir: string, config: any): Promise<void> {
     const envExample = `
-# Database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/${config.app.name}"
+# Database - SQLite for easy development (change to PostgreSQL for production)
+DATABASE_URL="file:./dev.db"
 
 # Server
 PORT=3000
@@ -544,5 +727,41 @@ ${config.app.license}
 `.trim();
 
     fs.writeFileSync(path.join(outputDir, 'README.md'), readme);
+  }
+
+  private async testGeneratedIntegrations(config: any): Promise<void> {
+    try {
+      const tester = new IntegrationTester(config.services);
+      
+      // Check required environment variables
+      const requiredVars = tester.getRequiredEnvironmentVariables(config.services.integrations);
+      const missingVars = requiredVars.filter(varName => !process.env[varName]);
+      
+      if (missingVars.length > 0) {
+        console.log('⚠️  Missing environment variables for integration testing:');
+        missingVars.forEach(varName => console.log(`   • ${varName}`));
+        console.log('💡 Set these variables to enable integration testing during generation');
+        return;
+      }
+
+      // Run integration tests
+      const report = await tester.testAllIntegrations(config.services.integrations);
+      
+      console.log(`📊 Integration Test Results: ${report.successfulIntegrations}/${report.totalIntegrations} working`);
+      
+      if (report.successfulIntegrations < report.totalIntegrations) {
+        console.log('⚠️  Some integrations failed testing:');
+        report.results
+          .filter(r => !r.success)
+          .forEach(result => {
+            console.log(`   ❌ ${result.integration}: ${result.error || 'Tests failed'}`);
+          });
+      } else {
+        console.log('✅ All integrations tested successfully!');
+      }
+      
+    } catch (error) {
+      console.log('⚠️  Integration testing failed:', error instanceof Error ? error.message : String(error));
+    }
   }
 } 

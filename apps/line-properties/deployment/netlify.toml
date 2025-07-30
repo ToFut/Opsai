@@ -1,0 +1,24 @@
+[build]
+  command = "pnpm run build"
+  publish = "dist"
+  [environment]
+    NODE_ENV = "production"
+    PORT = "3000"
+    DATABASE_URL = "${DATABASE_URL}"
+    JWT_SECRET = "${JWT_SECRET}"
+    GUESTY_CLIENT_ID = "${GUESTY_CLIENT_ID}"
+    GUESTY_CLIENT_SECRET = "${GUESTY_CLIENT_SECRET}"
+    NETLIFY_SITE_ID = "${NETLIFY_SITE_ID}"
+    NETLIFY_AUTH_TOKEN = "${NETLIFY_AUTH_TOKEN}"
+    RESEND_API_KEY = "${RESEND_API_KEY}"
+    REDIS_URL = "${REDIS_URL}"
+[functions]
+  directory = "netlify/functions"
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

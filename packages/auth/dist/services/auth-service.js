@@ -176,9 +176,7 @@ class AuthService {
             iat: Date.now(),
             exp: Date.now() + 15 * 60 * 1000 // 15 minutes
         };
-        return jsonwebtoken_1.default.sign(payload, this.config.jwtSecret, {
-            expiresIn: parseInt(this.config.jwtExpiresIn)
-        });
+        return jsonwebtoken_1.default.sign(payload, this.config.jwtSecret);
     }
     /**
      * Generate refresh token
@@ -193,9 +191,7 @@ class AuthService {
             iat: Date.now(),
             exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
         };
-        return jsonwebtoken_1.default.sign(payload, this.config.jwtSecret, {
-            expiresIn: parseInt(this.config.refreshTokenExpiresIn)
-        });
+        return jsonwebtoken_1.default.sign(payload, this.config.jwtSecret);
     }
 }
 exports.AuthService = AuthService;

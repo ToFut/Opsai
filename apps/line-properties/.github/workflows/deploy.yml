@@ -1,0 +1,88 @@
+{
+  "name": "CI/CD Pipeline",
+  "on": {
+    "push": {
+      "branches": [
+        "main",
+        "develop"
+      ]
+    },
+    "pull_request": {
+      "branches": [
+        "main"
+      ]
+    }
+  },
+  "jobs": {
+    "test": {
+      "runs-on": "ubuntu-latest",
+      "steps": [
+        {
+          "uses": "actions/checkout@v3"
+        },
+        {
+          "name": "Setup Node.js",
+          "uses": "actions/setup-node@v3",
+          "with": {
+            "node-version": "18",
+            "cache": "npm"
+          }
+        },
+        {
+          "name": "Install dependencies",
+          "run": "npm ci"
+        },
+        {
+          "name": "Run tests",
+          "run": "npm test"
+        },
+        {
+          "name": "Run linting",
+          "run": "npm run lint"
+        }
+      ]
+    },
+    "deploy": {
+      "runs-on": "ubuntu-latest",
+      "needs": "test",
+      "if": "github.ref == 'refs/heads/main'",
+      "steps": [
+        {
+          "uses": "actions/checkout@v3"
+        },
+        {
+          "name": "Setup Node.js",
+          "uses": "actions/setup-node@v3",
+          "with": {
+            "node-version": "18",
+            "cache": "npm"
+          }
+        },
+        {
+          "name": "Install dependencies",
+          "run": "npm ci"
+        },
+        {
+          "name": "Build application",
+          "run": "npm run build"
+        },
+        {
+          "name": "Deploy to production",
+          "run": "./deployment/scripts/deploy.sh",
+          "env": {
+            "NODE_ENV": "production",
+            "PORT": "3000",
+            "DATABASE_URL": "${DATABASE_URL}",
+            "JWT_SECRET": "${JWT_SECRET}",
+            "GUESTY_CLIENT_ID": "${GUESTY_CLIENT_ID}",
+            "GUESTY_CLIENT_SECRET": "${GUESTY_CLIENT_SECRET}",
+            "NETLIFY_SITE_ID": "${NETLIFY_SITE_ID}",
+            "NETLIFY_AUTH_TOKEN": "${NETLIFY_AUTH_TOKEN}",
+            "RESEND_API_KEY": "${RESEND_API_KEY}",
+            "REDIS_URL": "${REDIS_URL}"
+          }
+        }
+      ]
+    }
+  }
+}

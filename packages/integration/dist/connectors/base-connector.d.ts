@@ -1,5 +1,6 @@
 import { ConnectorConfig } from '../types';
 export declare abstract class BaseConnector {
+    dispose(): void;
     protected config: ConnectorConfig;
     constructor(config: ConnectorConfig);
     /**

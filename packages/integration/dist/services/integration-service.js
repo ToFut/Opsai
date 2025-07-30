@@ -7,6 +7,7 @@ const database_1 = require("@opsai/database");
 const rest_connector_1 = require("../connectors/rest-connector");
 const soap_connector_1 = require("../connectors/soap-connector");
 const webhook_connector_1 = require("../connectors/webhook-connector");
+const airbyte_connector_1 = require("../connectors/airbyte-connector");
 const errors_1 = require("../errors");
 const data_processor_1 = require("../processors/data-processor");
 class IntegrationService {
@@ -127,8 +128,7 @@ class IntegrationService {
             await database_1.prisma.integration.update({
                 where: { id: integrationId, tenantId },
                 data: {
-                    status: testResult ? 'active' : 'error',
-                    lastTestedAt: new Date()
+                    status: testResult ? 'active' : 'error'
                 }
             });
             return {
@@ -157,17 +157,13 @@ class IntegrationService {
             const result = await connector.executeRequest(endpoint, method, data);
             // Log the request for audit purposes
             if (tenantId) {
-                await database_1.prisma.integrationLog.create({
-                    data: {
-                        integrationId,
-                        tenantId,
-                        endpoint,
-                        method,
-                        requestData: data ? JSON.stringify(data) : null,
-                        responseData: JSON.stringify(result),
-                        status: result.success ? 'success' : 'error',
-                        duration: 0 // TODO: Track actual duration
-                    }
+                // TODO: Add integration log table to schema
+                console.log('Integration request logged:', {
+                    integrationId,
+                    tenantId,
+                    endpoint,
+                    method,
+                    status: result.success ? 'success' : 'error'
                 });
             }
             return result;
@@ -175,17 +171,12 @@ class IntegrationService {
         catch (error) {
             // Log the error
             if (tenantId) {
-                await database_1.prisma.integrationLog.create({
-                    data: {
-                        integrationId,
-                        tenantId,
-                        endpoint,
-                        method,
-                        requestData: data ? JSON.stringify(data) : null,
-                        status: 'error',
-                        error: error instanceof Error ? error.message : String(error),
-                        duration: 0
-                    }
+                console.error('Integration error logged:', {
+                    integrationId,
+                    tenantId,
+                    endpoint,
+                    method,
+                    error: error instanceof Error ? error.message : String(error)
                 });
             }
             throw error;
@@ -198,11 +189,9 @@ class IntegrationService {
         const job = await database_1.prisma.syncJob.create({
             data: {
                 integrationId,
-                tenantId,
                 status: 'pending',
                 recordsProcessed: 0,
                 recordsFailed: 0,
-                scheduledFor: options?.scheduledFor,
                 metadata: options?.metadata
             }
         });
@@ -234,7 +223,7 @@ class IntegrationService {
      */
     async getSyncJobHistory(integrationId, tenantId, limit = 10) {
         const jobs = await database_1.prisma.syncJob.findMany({
-            where: { integrationId, tenantId },
+            where: { integrationId },
             orderBy: { createdAt: 'desc' },
             take: limit
         });
@@ -244,7 +233,7 @@ class IntegrationService {
      * Get integration metrics
      */
     async getIntegrationMetrics(integrationId, tenantId, timeRange) {
-        const whereClause = { integrationId, tenantId };
+        const whereClause = { integrationId };
         if (timeRange) {
             whereClause.createdAt = {
                 gte: timeRange.from,
@@ -252,11 +241,11 @@ class IntegrationService {
             };
         }
         const [logs, syncJobs] = await Promise.all([
-            database_1.prisma.integrationLog.findMany({ where: whereClause }),
+            // TODO: Add integration log table to schema
+            Promise.resolve([]), // Placeholder for logs
             database_1.prisma.syncJob.findMany({
                 where: {
                     integrationId,
-                    tenantId,
                     ...(timeRange && {
                         createdAt: {
                             gte: timeRange.from,
@@ -267,7 +256,7 @@ class IntegrationService {
             })
         ]);
         const totalRequests = logs.length;
-        const successfulRequests = logs.filter(log => log.status === 'success').length;
+        const successfulRequests = logs.filter((log) => log.status === 'success').length;
         const failedRequests = totalRequests - successfulRequests;
         const averageResponseTime = logs.reduce((acc, log) => acc + (log.duration || 0), 0) / totalRequests || 0;
         return {
@@ -356,11 +345,9 @@ class IntegrationService {
         }
     }
     /**
-     * Perform actual sync operation
+     * Perform actual sync operation with Airbyte fallback
      */
     async performSync(integrationId, config, tenantId) {
-        // This is a simplified sync implementation
-        // In a real scenario, this would be more complex
         const connector = this.connectors.get(integrationId);
         if (!connector) {
             throw new errors_1.IntegrationError('Connector not initialized');
@@ -368,9 +355,63 @@ class IntegrationService {
         let recordsProcessed = 0;
         let recordsFailed = 0;
         const errors = [];
+        let usedFallback = false;
+        try {
+            // First attempt: Use direct API integration
+            const directResult = await this.performDirectSync(connector, config, tenantId);
+            if (directResult.success) {
+                return directResult;
+            }
+            // Direct sync failed - try Airbyte fallback if configured
+            console.warn(`Direct sync failed for integration ${integrationId}, attempting Airbyte fallback...`);
+            errors.push(...directResult.errors);
+            const airbyteResult = await this.performAirbyteFallback(config, tenantId);
+            if (airbyteResult.success) {
+                usedFallback = true;
+                return {
+                    ...airbyteResult,
+                    metadata: {
+                        ...airbyteResult.metadata,
+                        fallbackUsed: true,
+                        directSyncErrors: directResult.errors
+                    }
+                };
+            }
+            // Both direct and fallback failed
+            errors.push(...airbyteResult.errors);
+            return {
+                success: false,
+                recordsProcessed: directResult.recordsProcessed + airbyteResult.recordsProcessed,
+                recordsFailed: directResult.recordsFailed + airbyteResult.recordsFailed,
+                errors,
+                metadata: {
+                    syncedAt: new Date().toISOString(),
+                    tenantId,
+                    integrationId,
+                    fallbackAttempted: true,
+                    fallbackUsed: false
+                }
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                recordsProcessed,
+                recordsFailed: recordsFailed + 1,
+                errors: [...errors, error instanceof Error ? error.message : String(error)]
+            };
+        }
+    }
+    /**
+     * Perform direct API sync (original implementation)
+     */
+    async performDirectSync(connector, config, tenantId) {
+        let recordsProcessed = 0;
+        let recordsFailed = 0;
+        const errors = [];
         try {
             // Execute configured endpoints
-            for (const endpoint of config.endpoints) {
+            for (const endpoint of config.endpoints || []) {
                 try {
                     const result = await connector.executeRequest(endpoint.path, endpoint.method, endpoint.body);
                     if (result.success) {
@@ -398,7 +439,7 @@ class IntegrationService {
                 metadata: {
                     syncedAt: new Date().toISOString(),
                     tenantId,
-                    integrationId
+                    method: 'direct'
                 }
             };
         }
@@ -407,8 +448,211 @@ class IntegrationService {
                 success: false,
                 recordsProcessed,
                 recordsFailed: recordsFailed + 1,
-                errors: [...errors, error instanceof Error ? error.message : String(error)]
+                errors: [...errors, error instanceof Error ? error.message : String(error)],
+                metadata: {
+                    syncedAt: new Date().toISOString(),
+                    tenantId,
+                    method: 'direct'
+                }
             };
+        }
+    }
+    /**
+     * Perform Airbyte fallback sync
+     */
+    async performAirbyteFallback(config, tenantId) {
+        try {
+            // Check if Airbyte is configured
+            if (!process.env.AIRBYTE_API_KEY && !process.env.AIRBYTE_CLIENT_ID) {
+                return {
+                    success: false,
+                    recordsProcessed: 0,
+                    recordsFailed: 1,
+                    errors: ['Airbyte fallback not configured - missing credentials'],
+                    metadata: {
+                        syncedAt: new Date().toISOString(),
+                        tenantId,
+                        method: 'airbyte-fallback'
+                    }
+                };
+            }
+            // Create Airbyte connector
+            const airbyteConnector = (0, airbyte_connector_1.createAirbyteConnector)();
+            await airbyteConnector.connect();
+            // Map integration config to Airbyte source config
+            const sourceConfig = this.mapConfigToAirbyteSource(config);
+            // Execute Airbyte sync
+            const airbyteResult = await airbyteConnector.execute('sync', {
+                sourceConfig,
+                schedule: 'manual', // Manual trigger
+                streams: config.streams || undefined
+            });
+            await airbyteConnector.dispose();
+            return {
+                success: airbyteResult.success,
+                recordsProcessed: airbyteResult.recordCount || 0,
+                recordsFailed: airbyteResult.success ? 0 : 1,
+                errors: airbyteResult.success ? [] : [airbyteResult.error || 'Airbyte sync failed'],
+                metadata: {
+                    syncedAt: new Date().toISOString(),
+                    tenantId,
+                    method: 'airbyte-fallback',
+                    airbyteJobId: airbyteResult.metadata?.jobId,
+                    airbyteConnectionId: airbyteResult.metadata?.connectionId,
+                    duration: airbyteResult.duration,
+                    dataSize: airbyteResult.dataSize
+                }
+            };
+        }
+        catch (error) {
+            console.error('Airbyte fallback failed:', error);
+            return {
+                success: false,
+                recordsProcessed: 0,
+                recordsFailed: 1,
+                errors: [`Airbyte fallback error: ${error instanceof Error ? error.message : String(error)}`],
+                metadata: {
+                    syncedAt: new Date().toISOString(),
+                    tenantId,
+                    method: 'airbyte-fallback'
+                }
+            };
+        }
+    }
+    /**
+     * Map integration config to Airbyte source configuration
+     */
+    mapConfigToAirbyteSource(config) {
+        // This method converts the generic integration config to Airbyte-specific source config
+        const baseConfig = {
+            name: `opsai-${config.name}`,
+            workspaceId: process.env.AIRBYTE_WORKSPACE_ID
+        };
+        // Map based on integration type and provider
+        switch (config.type?.toLowerCase()) {
+            case 'rest':
+                return {
+                    ...baseConfig,
+                    sourceType: 'source-http-request',
+                    configuration: {
+                        base_url: config.baseUrl || config.host,
+                        path: config.endpoints?.[0]?.path || '/',
+                        http_method: config.endpoints?.[0]?.method?.toUpperCase() || 'GET',
+                        headers: config.headers || {},
+                        request_options: {
+                            timeout: config.timeout || 30
+                        },
+                        authentication: this.mapAuthToAirbyte(config.authentication)
+                    }
+                };
+            case 'database':
+                return this.mapDatabaseToAirbyte(config, baseConfig);
+            case 'file':
+                return {
+                    ...baseConfig,
+                    sourceType: 'source-file',
+                    configuration: {
+                        url: config.fileUrl || config.baseUrl,
+                        format: config.format || 'csv',
+                        provider: {
+                            storage: config.storage || 'HTTPS'
+                        }
+                    }
+                };
+            default:
+                // Generic HTTP source
+                return {
+                    ...baseConfig,
+                    sourceType: 'source-http-request',
+                    configuration: {
+                        base_url: config.baseUrl || config.host || 'https://api.example.com',
+                        path: '/',
+                        http_method: 'GET',
+                        authentication: this.mapAuthToAirbyte(config.authentication)
+                    }
+                };
+        }
+    }
+    mapAuthToAirbyte(auth) {
+        if (!auth)
+            return {};
+        switch (auth.type?.toLowerCase()) {
+            case 'api_key':
+                return {
+                    type: 'api_key',
+                    api_key: auth.apiKey || auth.key,
+                    header: auth.header || 'Authorization'
+                };
+            case 'bearer_token':
+            case 'bearer':
+                return {
+                    type: 'bearer_token',
+                    token: auth.token
+                };
+            case 'basic':
+                return {
+                    type: 'basic_auth',
+                    username: auth.username,
+                    password: auth.password
+                };
+            case 'oauth':
+            case 'oauth2':
+                return {
+                    type: 'oauth2',
+                    client_id: auth.clientId,
+                    client_secret: auth.clientSecret,
+                    token_url: auth.tokenUrl,
+                    scope: auth.scope
+                };
+            default:
+                return {};
+        }
+    }
+    mapDatabaseToAirbyte(config, baseConfig) {
+        const provider = config.provider?.toLowerCase();
+        switch (provider) {
+            case 'postgresql':
+            case 'postgres':
+                return {
+                    ...baseConfig,
+                    sourceType: 'source-postgres',
+                    configuration: {
+                        host: config.host,
+                        port: config.port || 5432,
+                        database: config.database,
+                        username: config.username,
+                        password: config.password,
+                        ssl: config.ssl || false,
+                        replication_method: 'Standard'
+                    }
+                };
+            case 'mysql':
+                return {
+                    ...baseConfig,
+                    sourceType: 'source-mysql',
+                    configuration: {
+                        host: config.host,
+                        port: config.port || 3306,
+                        database: config.database,
+                        username: config.username,
+                        password: config.password,
+                        ssl: config.ssl || false,
+                        replication_method: 'STANDARD'
+                    }
+                };
+            case 'mongodb':
+                return {
+                    ...baseConfig,
+                    sourceType: 'source-mongodb-v2',
+                    configuration: {
+                        connection_string: config.connectionString ||
+                            `mongodb://${config.username}:${config.password}@${config.host}:${config.port || 27017}/${config.database}`,
+                        database: config.database,
+                        auth_source: config.authSource || 'admin'
+                    }
+                };
+            default:
+                throw new errors_1.IntegrationError(`Unsupported database provider for Airbyte: ${provider}`);
         }
     }
     /**
