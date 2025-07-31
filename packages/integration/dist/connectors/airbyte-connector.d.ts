@@ -1,11 +1,18 @@
 import { BaseConnector } from './base-connector';
 import { ConnectorConfig } from '../types';
-export interface AirbyteConfig extends ConnectorConfig {
+export interface AirbyteConnectorConfig extends ConnectorConfig {
+    type: string;
     apiKey: string;
     clientId: string;
     clientSecret: string;
     baseUrl?: string;
     workspaceId?: string;
+    retryConfig?: {
+        maxRetries: number;
+        backoffStrategy: 'linear' | 'exponential';
+        initialDelay: number;
+        maxDelay: number;
+    };
 }
 export interface AirbyteSource {
     sourceId: string;
@@ -64,10 +71,13 @@ export interface AirbyteSyncJob {
 }
 export declare class AirbyteConnector extends BaseConnector {
     private client;
-    private config;
+    protected config: AirbyteConnectorConfig;
     private accessToken?;
     private tokenExpiresAt?;
-    constructor(config: AirbyteConfig);
+    isConnected: boolean;
+    constructor(config: AirbyteConnectorConfig);
+    initialize(): Promise<void>;
+    executeRequest(endpoint: string, method: string, data?: any): Promise<any>;
     connect(): Promise<void>;
     disconnect(): Promise<void>;
     private getAccessToken;
@@ -93,5 +103,5 @@ export declare class AirbyteConnector extends BaseConnector {
     private waitForJobCompletion;
     dispose(): Promise<void>;
 }
-export declare function createAirbyteConnector(config?: Partial<AirbyteConfig>): AirbyteConnector;
+export declare function createAirbyteConnector(config?: Partial<AirbyteConnectorConfig>): AirbyteConnector;
 //# sourceMappingURL=airbyte-connector.d.ts.map

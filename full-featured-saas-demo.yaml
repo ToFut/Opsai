@@ -1,0 +1,417 @@
+app:
+  name: "full-featured-saas-demo"
+  description: "Complete SaaS Platform Demo - E-commerce & Project Management"
+  version: "2.0.0"
+  port: 7300
+
+database:
+  type: "sqlite"
+  
+entities:
+  # Core User Management
+  User:
+    fields:
+      id: { type: "string", primary: true }
+      email: { type: "string", unique: true, required: true }
+      username: { type: "string", unique: true, required: true }
+      firstName: { type: "string", required: true }
+      lastName: { type: "string", required: true }
+      avatar: { type: "string" }
+      role: { type: "enum", values: ["admin", "manager", "user", "customer"], default: "user" }
+      status: { type: "enum", values: ["active", "inactive", "suspended"], default: "active" }
+      organizationId: { type: "string", required: true }
+      preferences: { type: "json" }
+      lastLogin: { type: "datetime" }
+      emailVerified: { type: "boolean", default: false }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Organization", field: "organizationId" }
+      - { type: "hasMany", target: "Order", as: "orders" }
+      - { type: "hasMany", target: "Project", as: "ownedProjects", foreignKey: "ownerId" }
+      - { type: "hasMany", target: "Task", as: "assignedTasks", foreignKey: "assignedTo" }
+      - { type: "hasMany", target: "Comment", as: "comments" }
+
+  # Multi-tenant Organizations  
+  Organization:
+    fields:
+      id: { type: "string", primary: true }
+      name: { type: "string", required: true }
+      slug: { type: "string", unique: true, required: true }
+      domain: { type: "string", unique: true }
+      logo: { type: "string" }
+      plan: { type: "enum", values: ["free", "starter", "professional", "enterprise"], default: "free" }
+      billingEmail: { type: "string", required: true }
+      settings: { type: "json" }
+      features: { type: "json" }
+      isActive: { type: "boolean", default: true }
+      trialEndsAt: { type: "datetime" }
+      subscriptionId: { type: "string" }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "hasMany", target: "User", as: "users" }
+      - { type: "hasMany", target: "Project", as: "projects" }
+      - { type: "hasMany", target: "Product", as: "products" }
+      - { type: "hasMany", target: "Order", as: "orders" }
+
+  # E-commerce Products
+  Product:
+    fields:
+      id: { type: "string", primary: true }
+      name: { type: "string", required: true }
+      description: { type: "text" }
+      slug: { type: "string", unique: true, required: true }
+      sku: { type: "string", unique: true, required: true }
+      price: { type: "decimal", required: true }
+      comparePrice: { type: "decimal" }
+      cost: { type: "decimal" }
+      inventory: { type: "integer", default: 0 }
+      weight: { type: "decimal" }
+      images: { type: "json" }
+      category: { type: "string", required: true }
+      tags: { type: "json" }
+      status: { type: "enum", values: ["draft", "active", "archived"], default: "draft" }
+      seoTitle: { type: "string" }
+      seoDescription: { type: "text" }
+      organizationId: { type: "string", required: true }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Organization", field: "organizationId" }
+      - { type: "hasMany", target: "OrderItem", as: "orderItems" }
+
+  # E-commerce Orders
+  Order:
+    fields:
+      id: { type: "string", primary: true }
+      orderNumber: { type: "string", unique: true, required: true }
+      customerId: { type: "string", required: true }
+      organizationId: { type: "string", required: true }
+      status: { type: "enum", values: ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"], default: "pending" }
+      subtotal: { type: "decimal", required: true }
+      tax: { type: "decimal", default: 0 }
+      shipping: { type: "decimal", default: 0 }
+      discount: { type: "decimal", default: 0 }
+      total: { type: "decimal", required: true }
+      currency: { type: "string", default: "USD" }
+      paymentStatus: { type: "enum", values: ["pending", "paid", "failed", "refunded"], default: "pending" }
+      paymentMethod: { type: "string" }
+      shippingAddress: { type: "json" }
+      billingAddress: { type: "json" }
+      notes: { type: "text" }
+      fulfillmentStatus: { type: "enum", values: ["unfulfilled", "partial", "fulfilled"], default: "unfulfilled" }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "User", field: "customerId" }
+      - { type: "belongsTo", target: "Organization", field: "organizationId" }
+      - { type: "hasMany", target: "OrderItem", as: "items" }
+
+  OrderItem:
+    fields:
+      id: { type: "string", primary: true }
+      orderId: { type: "string", required: true }
+      productId: { type: "string", required: true }
+      quantity: { type: "integer", required: true }
+      price: { type: "decimal", required: true }
+      total: { type: "decimal", required: true }
+      createdAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Order", field: "orderId" }
+      - { type: "belongsTo", target: "Product", field: "productId" }
+
+  # Project Management
+  Project:
+    fields:
+      id: { type: "string", primary: true }
+      name: { type: "string", required: true }
+      description: { type: "text" }
+      code: { type: "string", unique: true }
+      organizationId: { type: "string", required: true }
+      ownerId: { type: "string", required: true }
+      status: { type: "enum", values: ["planning", "active", "on_hold", "completed", "archived"], default: "planning" }
+      priority: { type: "enum", values: ["low", "medium", "high", "critical"], default: "medium" }
+      budget: { type: "decimal" }
+      spent: { type: "decimal", default: 0 }
+      progress: { type: "integer", default: 0 }
+      startDate: { type: "datetime" }
+      endDate: { type: "datetime" }
+      actualStartDate: { type: "datetime" }
+      actualEndDate: { type: "datetime" }
+      tags: { type: "json" }
+      settings: { type: "json" }
+      isPublic: { type: "boolean", default: false }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Organization", field: "organizationId" }
+      - { type: "belongsTo", target: "User", field: "ownerId" }
+      - { type: "hasMany", target: "Task", as: "tasks" }
+      - { type: "hasMany", target: "Comment", as: "comments" }
+
+  # Task Management
+  Task:
+    fields:
+      id: { type: "string", primary: true }
+      title: { type: "string", required: true }
+      description: { type: "text" }
+      projectId: { type: "string", required: true }
+      assignedTo: { type: "string" }
+      createdBy: { type: "string", required: true }
+      parentTaskId: { type: "string" }
+      status: { type: "enum", values: ["todo", "in_progress", "review", "testing", "done", "cancelled"], default: "todo" }
+      priority: { type: "enum", values: ["low", "medium", "high", "critical"], default: "medium" }
+      type: { type: "enum", values: ["task", "bug", "feature", "improvement"], default: "task" }
+      estimatedHours: { type: "integer" }
+      actualHours: { type: "integer", default: 0 }
+      progress: { type: "integer", default: 0 }
+      tags: { type: "json" }
+      dueDate: { type: "datetime" }
+      startedAt: { type: "datetime" }
+      completedAt: { type: "datetime" }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Project", field: "projectId" }
+      - { type: "belongsTo", target: "User", field: "assignedTo" }
+      - { type: "belongsTo", target: "User", field: "createdBy" }
+      - { type: "belongsTo", target: "Task", field: "parentTaskId" }
+      - { type: "hasMany", target: "Task", as: "subtasks", foreignKey: "parentTaskId" }
+      - { type: "hasMany", target: "Comment", as: "comments" }
+
+  # Comments System
+  Comment:
+    fields:
+      id: { type: "string", primary: true }
+      content: { type: "text", required: true }
+      authorId: { type: "string", required: true }
+      entityType: { type: "enum", values: ["project", "task", "order"], required: true }
+      entityId: { type: "string", required: true }
+      parentId: { type: "string" }
+      isInternal: { type: "boolean", default: false }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "User", field: "authorId" }
+      - { type: "belongsTo", target: "Comment", field: "parentId" }
+      - { type: "hasMany", target: "Comment", as: "replies", foreignKey: "parentId" }
+
+  # Analytics & Metrics
+  Metric:
+    fields:
+      id: { type: "string", primary: true }
+      name: { type: "string", required: true }
+      value: { type: "decimal", required: true }
+      unit: { type: "string" }
+      category: { type: "string", required: true }
+      organizationId: { type: "string", required: true }
+      entityType: { type: "string" }
+      entityId: { type: "string" }
+      metadata: { type: "json" }
+      recordedAt: { type: "datetime", default: "now" }
+      createdAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Organization", field: "organizationId" }
+
+features:
+  authentication:
+    enabled: true
+    provider: "supabase"
+    strategies: ["email", "oauth"]
+    mfa: true
+    
+  multiTenancy:
+    enabled: true
+    strategy: "shared_database"
+    isolation: "organization"
+    
+  fileUpload:
+    enabled: true
+    providers: ["local", "s3"]
+    maxSize: "50MB"
+    allowedTypes: ["image/*", "application/pdf", "text/*"]
+    
+  notifications:
+    enabled: true
+    channels: ["email", "push", "sms"]
+    templates: true
+    
+  analytics:
+    enabled: true
+    providers: ["built-in", "google-analytics"]
+    realtime: true
+    
+  workflows:
+    enabled: true
+    provider: "temporal"
+    
+  alerts:
+    enabled: true
+    rules: true
+    channels: ["email", "slack", "webhook"]
+    
+  integrations:
+    enabled: true
+    airbyte_fallback: true
+
+services:
+  database:
+    provider: "sqlite"
+  
+  cache:
+    provider: "redis"
+    url: "redis://localhost:6379"
+    
+  queue:
+    provider: "bullmq"
+    redis_url: "redis://localhost:6379"
+    
+  email:
+    provider: "sendgrid"
+    
+  storage:
+    provider: "local"
+    path: "./uploads"
+
+integrations:
+  - name: "stripe_payments"
+    type: "rest_api"
+    config:
+      base_url: "https://api.stripe.com/v1"
+      auth_type: "bearer"
+      rate_limit: 1000
+    endpoints:
+      - path: "/customers"
+        method: "GET"
+        description: "List customers"
+      - path: "/customers"
+        method: "POST"
+        description: "Create customer"
+      - path: "/payment_intents"
+        method: "POST"
+        description: "Create payment"
+
+  - name: "sendgrid_email"
+    type: "rest_api"
+    config:
+      base_url: "https://api.sendgrid.com/v3"
+      auth_type: "api_key"
+      rate_limit: 600
+    endpoints:
+      - path: "/mail/send"
+        method: "POST"
+        description: "Send email"
+
+  - name: "slack_notifications"
+    type: "webhook"
+    config:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+    events:
+      - "order.created"
+      - "project.completed"
+      - "task.overdue"
+
+workflows:
+  - name: "user_onboarding"
+    description: "Complete user onboarding process"
+    trigger: "user.created"
+    steps:
+      - name: "send_welcome_email"
+        type: "email"
+        template: "welcome"
+      - name: "create_sample_project"
+        type: "database"
+        action: "create"
+        entity: "Project"
+      - name: "notify_admin"
+        type: "notification"
+        channel: "slack"
+
+  - name: "order_fulfillment"
+    description: "Process and fulfill orders"
+    trigger: "order.created"
+    steps:
+      - name: "validate_inventory"
+        type: "validation"
+      - name: "process_payment"
+        type: "integration"
+        service: "stripe_payments"
+      - name: "update_inventory"
+        type: "database"
+        action: "update"
+      - name: "send_confirmation"
+        type: "email"
+        template: "order_confirmation"
+
+  - name: "project_completion"
+    description: "Handle project completion"
+    trigger: "project.status.completed"
+    steps:
+      - name: "generate_report"
+        type: "report"
+      - name: "notify_stakeholders"
+        type: "notification"
+      - name: "archive_tasks"
+        type: "database"
+        action: "update"
+
+alerts:
+  - name: "high_value_order"
+    description: "Alert for orders over $1000"
+    condition: "order.total > 1000"
+    channels: ["email", "slack"]
+    
+  - name: "project_overdue"
+    description: "Alert for overdue projects"
+    condition: "project.endDate < now() AND project.status != 'completed'"
+    channels: ["email"]
+    schedule: "daily"
+    
+  - name: "low_inventory"
+    description: "Alert for low stock products"
+    condition: "product.inventory < 10"
+    channels: ["email", "slack"]
+    
+  - name: "failed_payment"
+    description: "Alert for payment failures"
+    condition: "order.paymentStatus = 'failed'"
+    channels: ["email", "slack", "webhook"]
+
+ui:
+  framework: "nextjs"
+  styling: "tailwindcss"
+  components: "shadcn"
+  pages:
+    - path: "/"
+      name: "Dashboard"
+      layout: "dashboard"
+    - path: "/products"
+      name: "Products"
+      layout: "table"
+    - path: "/orders"
+      name: "Orders"
+      layout: "table"
+    - path: "/projects"
+      name: "Projects"
+      layout: "kanban"
+    - path: "/tasks"
+      name: "Tasks"
+      layout: "list"
+    - path: "/analytics"
+      name: "Analytics"
+      layout: "charts"
+
+deployment:
+  type: "docker"
+  environment: "production"
+  scaling:
+    min_instances: 2
+    max_instances: 10
+  monitoring:
+    enabled: true
+    provider: "datadog"
+  backup:
+    enabled: true
+    frequency: "daily"
+    retention: "30d"

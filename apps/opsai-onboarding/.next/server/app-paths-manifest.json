@@ -1,3 +1,5 @@
 {
+  "/api/generate/route": "app/api/generate/route.js",
+  "/api/ai-generate-yaml/route": "app/api/ai-generate-yaml/route.js",
   "/page": "app/page.js"
 }

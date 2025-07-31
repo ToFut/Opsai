@@ -1,0 +1,35 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "src/alert-manager.ts",
+    "src/auth-manager.ts",
+    "src/database-manager.ts",
+    "src/file-manager.ts",
+    "src/monitoring-manager.ts",
+    "src/workflow-engine.ts",
+    "src/workflow-orchestrator.ts",
+    "src/validators/**/*",
+    "src/engines/**/*",
+    "src/processors/**/*",
+    "src/generators/**/*",
+    "src/utils/**/*"
+  ],
+  "references": [
+    { "path": "../shared" }
+  ]
+}

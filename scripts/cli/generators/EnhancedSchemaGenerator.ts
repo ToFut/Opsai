@@ -48,16 +48,28 @@ export class EnhancedSchemaGenerator {
     const schemaDir = path.join(outputDir, 'prisma');
     fs.mkdirSync(schemaDir, { recursive: true });
 
-    // Generate Prisma schema
+    // Generate Prisma schema with analytics models
     await this.generatePrismaSchema(schemaDir);
     
-    // Generate database migrations
+    // Generate database migrations with audit trails
     await this.generateMigrations(schemaDir);
     
-    // Generate seed data
+    // Generate seed data with sample analytics
     await this.generateSeedData(schemaDir);
+    
+    // Generate analytics and BI schemas
+    await this.generateAnalyticsSchema(schemaDir);
+    
+    // Generate audit trail system
+    await this.generateAuditSystem(schemaDir);
+    
+    // Generate business intelligence views
+    await this.generateBIViews(schemaDir);
+    
+    // Generate data transformation utilities
+    await this.generateDataTransformUtils(outputDir);
 
-    console.log('✅ Enhanced database schema generated');
+    console.log('✅ Enhanced database schema with analytics generated');
   }
 
   private async generatePrismaSchema(schemaDir: string): Promise<void> {
@@ -89,12 +101,16 @@ datasource db {
       models += this.buildTenantModel(databaseType);
     }
 
-    // Add User model for authentication
-    if (this.config.features?.authentication) {
+    // Check if User model is defined in entities, if not add default User model for authentication
+    const hasUserEntity = this.config.database.entities.some(entity => 
+      entity.name.toLowerCase() === 'user'
+    );
+
+    if (this.config.features?.authentication && !hasUserEntity) {
       models += this.buildUserModel(databaseType);
     }
 
-    // Add entity models
+    // Add entity models (including User if defined in entities)
     models += this.config.database.entities.map(entity => 
       this.buildPrismaModel(entity, databaseType)
     ).join('\n\n');
@@ -103,17 +119,26 @@ datasource db {
   }
 
   private getDatabaseType(): string {
-    const provider = this.config.services.database.provider;
+    // Check both possible config locations for database type
+    const provider = this.config.services?.database?.provider || 
+                    this.config.database?.type || 
+                    this.config.database?.provider;
+    
+    console.log(`🔍 Database provider detected: ${provider}`);
+    
     switch (provider) {
       case 'core-managed':
       case 'user-postgresql':
+      case 'postgresql':
         return 'postgresql';
       case 'user-mysql':
+      case 'mysql':
         return 'mysql';
       case 'user-sqlite':
+      case 'sqlite':
         return 'sqlite';
       default:
-        return 'postgresql'; // Default fallback
+        return 'sqlite'; // Default to SQLite for easier development
     }
   }
 
@@ -227,16 +252,20 @@ ${this.config.features?.multiTenancy ? `
     let prismaType = this.mapToPrismaType(field.type, databaseType);
     let attributes: string[] = [];
 
-    // Handle required/optional fields
-    if (!field.required && !prismaType.includes('?') && !prismaType.includes('[]')) {
-      prismaType += '?';
-    }
-
-    // Handle primary key
+    // Handle primary key first
     if (field.primary || (fieldName === 'id' && field.unique)) {
       attributes.push('@id @default(cuid())');
-    } else if (field.unique) {
-      attributes.push('@unique');
+      // Primary keys are always required
+    } else {
+      // Handle required/optional fields for non-primary keys
+      if (!field.required && !prismaType.includes('?') && !prismaType.includes('[]')) {
+        prismaType += '?';
+      }
+      
+      // Handle unique fields
+      if (field.unique) {
+        attributes.push('@unique');
+      }
     }
 
     // Handle default values
@@ -252,12 +281,6 @@ ${this.config.features?.multiTenancy ? `
       }
     }
 
-    // Handle enum validation
-    if (field.validation?.enum) {
-      // For enums, we'll need to define them separately, but for now use string with validation
-      // This is a simplification - ideally we'd generate proper Prisma enums
-    }
-
     // Handle database field mapping if needed
     const dbFieldName = this.toSnakeCase(fieldName);
     if (dbFieldName !== fieldName) {
@@ -269,22 +292,47 @@ ${this.config.features?.multiTenancy ? `
   }
 
   private buildRelationshipField(relationship: any, entity: Entity): string {
-    const relatedModel = this.toPascalCase(relationship.model);
-    const fieldName = relationship.foreignKey || this.toCamelCase(relationship.model);
+    // Handle both 'target' (new format) and 'model' (legacy format)
+    const relatedModelName = relationship.target || relationship.model;
+    
+    if (!relatedModelName) {
+      console.warn(`⚠️  Relationship missing target/model for entity ${entity.name}:`, relationship);
+      return '';
+    }
+    
+    const relatedModel = this.toPascalCase(relatedModelName);
 
     switch (relationship.type) {
       case 'hasMany':
-        return `${this.toCamelCase(relationship.model)}s ${relatedModel}[]`;
+        const relationName = relationship.name || `${this.toCamelCase(relatedModelName)}s`;
+        return `${relationName} ${relatedModel}[]`;
       
       case 'belongsTo':
-        const foreignKeyField = relationship.foreignKey || `${this.toCamelCase(relationship.model)}Id`;
-        return `${foreignKeyField} String\n  ${this.toCamelCase(relationship.model)} ${relatedModel} @relation(fields: [${foreignKeyField}], references: [id])`;
+        const foreignKeyField = relationship.field || relationship.foreign_key || `${this.toCamelCase(relatedModelName)}Id`;
+        // Check if foreign key field already exists in entity fields to avoid duplicates
+        const hasExistingForeignKey = Object.keys(entity.fields).includes(foreignKeyField);
+        
+        let relationshipFields = '';
+        if (!hasExistingForeignKey) {
+          relationshipFields += `${foreignKeyField} String\n  `;
+        }
+        
+        // Create a unique relation field name that doesn't conflict with the foreign key
+        let relationFieldName = this.toCamelCase(foreignKeyField.replace('Id', ''));
+        
+        // If the relation field name is the same as an existing field, modify it
+        if (Object.keys(entity.fields).includes(relationFieldName)) {
+          relationFieldName = relationFieldName + 'Relation';
+        }
+        
+        relationshipFields += `${relationFieldName} ${relatedModel} @relation(fields: [${foreignKeyField}], references: [id])`;
+        return relationshipFields;
       
       case 'hasOne':
-        return `${this.toCamelCase(relationship.model)} ${relatedModel}?`;
+        return `${this.toCamelCase(relatedModelName)} ${relatedModel}?`;
       
       case 'manyToMany':
-        return `${this.toCamelCase(relationship.model)}s ${relatedModel}[]`;
+        return `${this.toCamelCase(relatedModelName)}s ${relatedModel}[]`;
       
       default:
         return '';
@@ -808,6 +856,569 @@ main()
     }
     
     return parseFloat(((index + 1) * 10.50).toFixed(2));
+  }
+
+  private async generateAnalyticsSchema(schemaDir: string): Promise<void> {
+    const analyticsModels = `
+// Analytics and Business Intelligence Models
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  eventType     String   // 'page_view', 'action', 'conversion', etc.
+  entityType    String?  // Related entity type
+  entityId      String?  // Related entity ID
+  userId        String?
+  sessionId     String?
+  properties    ${this.getDatabaseType() === 'sqlite' ? 'String?' : 'Json?'}
+  timestamp     DateTime @default(now())
+  ipAddress     String?
+  userAgent     String?
+  referrer      String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  ${this.config.features?.multiTenancy ? 'tenantId String' : ''}
+  
+  @@index([eventType, timestamp])
+  @@index([entityType, entityId])
+  @@index([userId])
+  ${this.config.features?.multiTenancy ? '@@index([tenantId])' : ''}
+  @@map("analytics_events")
+}
+
+model BusinessMetric {
+  id            String   @id @default(cuid())
+  metricName    String   // 'revenue', 'users', 'conversions', etc.
+  metricValue   Float
+  period        String   // 'daily', 'weekly', 'monthly'
+  periodStart   DateTime
+  periodEnd     DateTime
+  dimensions    ${this.getDatabaseType() === 'sqlite' ? 'String?' : 'Json?'} // Additional breakdown data
+  ${this.config.features?.multiTenancy ? 'tenantId String' : ''}
+  createdAt     DateTime @default(now())
+  
+  @@unique([metricName, period, periodStart, ${this.config.features?.multiTenancy ? 'tenantId' : 'id'}])
+  @@index([metricName, periodStart])
+  ${this.config.features?.multiTenancy ? '@@index([tenantId])' : ''}
+  @@map("business_metrics")
+}
+
+model DataQualityCheck {
+  id            String   @id @default(cuid())
+  tableName     String
+  checkType     String   // 'completeness', 'uniqueness', 'validity', 'consistency'
+  checkRule     String   // Description of the rule
+  passed        Boolean
+  score         Float?   // Quality score 0-100
+  details       ${this.getDatabaseType() === 'sqlite' ? 'String?' : 'Json?'}
+  checkedAt     DateTime @default(now())
+  ${this.config.features?.multiTenancy ? 'tenantId String' : ''}
+  
+  @@index([tableName, checkType])
+  @@index([checkedAt])
+  ${this.config.features?.multiTenancy ? '@@index([tenantId])' : ''}
+  @@map("data_quality_checks")
+}
+
+model UserSession {
+  id            String   @id @default(cuid())
+  userId        String?
+  sessionId     String   @unique
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+  duration      Int?     // Session duration in seconds
+  pageViews     Int      @default(0)
+  events        Int      @default(0)
+  ipAddress     String?
+  userAgent     String?
+  country       String?
+  city          String?
+  device        String?
+  browser       String?
+  ${this.config.features?.multiTenancy ? 'tenantId String' : ''}
+  
+  @@index([userId])
+  @@index([startTime])
+  ${this.config.features?.multiTenancy ? '@@index([tenantId])' : ''}
+  @@map("user_sessions")
+}
+`;
+
+    // Append analytics models to schema
+    const schemaPath = path.join(schemaDir, 'schema.prisma');
+    const existingSchema = fs.readFileSync(schemaPath, 'utf8');
+    fs.writeFileSync(schemaPath, existingSchema + analyticsModels);
+    
+    console.log('📊 Added analytics models to schema');
+  }
+
+  private async generateAuditSystem(schemaDir: string): Promise<void> {
+    const auditModels = `
+// Comprehensive Audit Trail System
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  tableName     String
+  recordId      String
+  action        String   // 'CREATE', 'UPDATE', 'DELETE', 'READ'
+  userId        String?
+  oldValues     ${this.getDatabaseType() === 'sqlite' ? 'String?' : 'Json?'}
+  newValues     ${this.getDatabaseType() === 'sqlite' ? 'String?' : 'Json?'}
+  changedFields String[] // Array of field names that changed
+  ipAddress     String?
+  userAgent     String?
+  timestamp     DateTime @default(now())
+  ${this.config.features?.multiTenancy ? 'tenantId String' : ''}
+  
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action])
+  ${this.config.features?.multiTenancy ? '@@index([tenantId])' : ''}
+  @@map("audit_logs")
+}
+
+model SystemLog {
+  id            String   @id @default(cuid())
+  level         String   // 'ERROR', 'WARN', 'INFO', 'DEBUG'
+  message       String
+  source        String   // Service/component that generated the log
+  context       ${this.getDatabaseType() === 'sqlite' ? 'String?' : 'Json?'}
+  userId        String?
+  requestId     String?
+  timestamp     DateTime @default(now())
+  ${this.config.features?.multiTenancy ? 'tenantId String?' : ''}
+  
+  @@index([level, timestamp])
+  @@index([source])
+  @@index([requestId])
+  ${this.config.features?.multiTenancy ? '@@index([tenantId])' : ''}
+  @@map("system_logs")
+}
+
+model SecurityEvent {
+  id            String   @id @default(cuid())
+  eventType     String   // 'login_attempt', 'permission_denied', 'suspicious_activity'
+  severity      String   // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+  userId        String?
+  ipAddress     String?
+  userAgent     String?
+  details       ${this.getDatabaseType() === 'sqlite' ? 'String?' : 'Json?'}
+  resolved      Boolean  @default(false)
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  timestamp     DateTime @default(now())
+  ${this.config.features?.multiTenancy ? 'tenantId String?' : ''}
+  
+  @@index([eventType, timestamp])
+  @@index([severity])
+  @@index([userId])
+  ${this.config.features?.multiTenancy ? '@@index([tenantId])' : ''}
+  @@map("security_events")
+}
+`;
+
+    // Append audit models to schema
+    const schemaPath = path.join(schemaDir, 'schema.prisma');
+    const existingSchema = fs.readFileSync(schemaPath, 'utf8');
+    fs.writeFileSync(schemaPath, existingSchema + auditModels);
+    
+    // Generate audit trigger functions
+    await this.generateAuditTriggers(schemaDir);
+    
+    console.log('🔍 Added comprehensive audit system');
+  }
+
+  private async generateAuditTriggers(schemaDir: string): Promise<void> {
+    const migrationsDir = path.join(schemaDir, 'migrations');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+    const migrationDir = path.join(migrationsDir, `${timestamp}_audit_triggers`);
+    fs.mkdirSync(migrationDir, { recursive: true });
+
+    const auditTriggerSQL = `
+-- Audit Trigger Functions (PostgreSQL)
+${this.getDatabaseType() === 'postgresql' ? `
+CREATE OR REPLACE FUNCTION audit_trigger_function()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    INSERT INTO audit_logs (id, table_name, record_id, action, old_values, user_id, timestamp)
+    VALUES (
+      gen_random_uuid()::text,
+      TG_TABLE_NAME,
+      OLD.id,
+      'DELETE',
+      to_jsonb(OLD),
+      current_setting('app.current_user_id', true),
+      NOW()
+    );
+    RETURN OLD;
+  ELSIF TG_OP = 'UPDATE' THEN
+    INSERT INTO audit_logs (id, table_name, record_id, action, old_values, new_values, user_id, timestamp)
+    VALUES (
+      gen_random_uuid()::text,
+      TG_TABLE_NAME,
+      NEW.id,
+      'UPDATE',
+      to_jsonb(OLD),
+      to_jsonb(NEW),
+      current_setting('app.current_user_id', true),
+      NOW()
+    );
+    RETURN NEW;
+  ELSIF TG_OP = 'INSERT' THEN
+    INSERT INTO audit_logs (id, table_name, record_id, action, new_values, user_id, timestamp)
+    VALUES (
+      gen_random_uuid()::text,
+      TG_TABLE_NAME,
+      NEW.id,
+      'INSERT',
+      to_jsonb(NEW),
+      current_setting('app.current_user_id', true),
+      NOW()
+    );
+    RETURN NEW;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create audit triggers for all entity tables
+${this.config.database.entities.map(entity => {
+  const tableName = this.toSnakeCase(entity.name);
+  return `
+CREATE TRIGGER ${tableName}_audit_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON "${tableName}"
+  FOR EACH ROW EXECUTE FUNCTION audit_trigger_function();`;
+}).join('')}
+` : '-- Audit triggers are only supported for PostgreSQL'}
+`;
+
+    fs.writeFileSync(
+      path.join(migrationDir, 'migration.sql'),
+      auditTriggerSQL
+    );
+  }
+
+  private async generateBIViews(schemaDir: string): Promise<void> {
+    const migrationsDir = path.join(schemaDir, 'migrations');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+    const migrationDir = path.join(migrationsDir, `${timestamp}_bi_views`);
+    fs.mkdirSync(migrationDir, { recursive: true });
+
+    const biViewsSQL = `
+-- Business Intelligence Views
+
+-- Daily Analytics Summary
+CREATE VIEW daily_analytics AS
+SELECT 
+  DATE(timestamp) as date,
+  event_type,
+  COUNT(*) as event_count,
+  COUNT(DISTINCT user_id) as unique_users,
+  COUNT(DISTINCT session_id) as unique_sessions
+FROM analytics_events
+WHERE timestamp >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY DATE(timestamp), event_type
+ORDER BY date DESC, event_count DESC;
+
+-- User Engagement Metrics
+CREATE VIEW user_engagement AS
+SELECT 
+  DATE(start_time) as date,
+  COUNT(*) as total_sessions,
+  AVG(duration) as avg_session_duration,
+  AVG(page_views) as avg_page_views,
+  SUM(CASE WHEN duration > 300 THEN 1 ELSE 0 END)::float / COUNT(*) as engagement_rate
+FROM user_sessions
+WHERE start_time >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY DATE(start_time)
+ORDER BY date DESC;
+
+-- Entity Growth Metrics
+${this.config.database.entities.map(entity => {
+  const tableName = this.toSnakeCase(entity.name);
+  return `
+CREATE VIEW ${tableName}_growth AS
+SELECT 
+  DATE(created_at) as date,
+  COUNT(*) as new_records,
+  SUM(COUNT(*)) OVER (ORDER BY DATE(created_at)) as cumulative_records
+FROM "${tableName}"
+WHERE created_at >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY DATE(created_at)
+ORDER BY date DESC;`;
+}).join('')}
+
+-- Data Quality Dashboard
+CREATE VIEW data_quality_summary AS
+SELECT 
+  table_name,
+  check_type,
+  AVG(score) as avg_quality_score,
+  COUNT(*) as total_checks,
+  SUM(CASE WHEN passed THEN 1 ELSE 0 END)::float / COUNT(*) as pass_rate,
+  MAX(checked_at) as last_check
+FROM data_quality_checks
+WHERE checked_at >= CURRENT_DATE - INTERVAL '7 days'
+GROUP BY table_name, check_type
+ORDER BY avg_quality_score ASC;
+
+-- Security Events Summary
+CREATE VIEW security_dashboard AS
+SELECT 
+  DATE(timestamp) as date,
+  event_type,
+  severity,
+  COUNT(*) as event_count,
+  COUNT(DISTINCT user_id) as affected_users,
+  SUM(CASE WHEN resolved THEN 0 ELSE 1 END) as unresolved_count
+FROM security_events
+WHERE timestamp >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY DATE(timestamp), event_type, severity
+ORDER BY date DESC, event_count DESC;
+`;
+
+    fs.writeFileSync(
+      path.join(migrationDir, 'migration.sql'),
+      biViewsSQL
+    );
+    
+    console.log('📈 Generated Business Intelligence views');
+  }
+
+  private async generateDataTransformUtils(outputDir: string): Promise<void> {
+    const utilsDir = path.join(outputDir, 'lib', 'analytics');
+    fs.mkdirSync(utilsDir, { recursive: true });
+
+    // Generate Analytics Service
+    const analyticsService = `
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+export class AnalyticsService {
+  static async trackEvent(data: {
+    eventType: string
+    entityType?: string
+    entityId?: string
+    userId?: string
+    sessionId?: string
+    properties?: any
+    ${this.config.features?.multiTenancy ? 'tenantId?: string' : ''}
+  }) {
+    try {
+      await prisma.analyticsEvent.create({
+        data: {
+          ...data,
+          properties: data.properties ? JSON.stringify(data.properties) : null,
+          timestamp: new Date()
+        }
+      })
+    } catch (error) {
+      console.error('Failed to track event:', error)
+    }
+  }
+
+  static async getDailyMetrics(days = 30) {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+    
+    return await prisma.$queryRaw\`
+      SELECT 
+        DATE(timestamp) as date,
+        event_type,
+        COUNT(*) as count
+      FROM analytics_events 
+      WHERE timestamp >= \${startDate}
+      GROUP BY DATE(timestamp), event_type
+      ORDER BY date DESC
+    \`
+  }
+
+  static async getUserEngagement(days = 30) {
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+    
+    return await prisma.$queryRaw\`
+      SELECT 
+        DATE(start_time) as date,
+        COUNT(*) as sessions,
+        AVG(duration) as avg_duration,
+        COUNT(DISTINCT user_id) as unique_users
+      FROM user_sessions 
+      WHERE start_time >= \${startDate}
+      GROUP BY DATE(start_time)
+      ORDER BY date DESC
+    \`
+  }
+
+  static async recordBusinessMetric(data: {
+    metricName: string
+    metricValue: number
+    period: 'daily' | 'weekly' | 'monthly'
+    periodStart: Date
+    periodEnd: Date
+    dimensions?: any
+    ${this.config.features?.multiTenancy ? 'tenantId?: string' : ''}
+  }) {
+    return await prisma.businessMetric.upsert({
+      where: {
+        metricName_period_periodStart${this.config.features?.multiTenancy ? '_tenantId' : ''}: {
+          metricName: data.metricName,
+          period: data.period,
+          periodStart: data.periodStart,
+          ${this.config.features?.multiTenancy ? 'tenantId: data.tenantId || "",' : ''}
+        }
+      },
+      update: {
+        metricValue: data.metricValue,
+        dimensions: data.dimensions ? JSON.stringify(data.dimensions) : null
+      },
+      create: {
+        ...data,
+        dimensions: data.dimensions ? JSON.stringify(data.dimensions) : null
+      }
+    })
+  }
+
+  static async runDataQualityCheck(tableName: string, checkType: string, rule: string) {
+    // This would contain actual data quality validation logic
+    // For now, we'll create a placeholder implementation
+    
+    let passed = true
+    let score = 100
+    let details = {}
+    
+    try {
+      // Example: Check for null values in required fields
+      if (checkType === 'completeness') {
+        // Implementation would go here
+      }
+      
+      await prisma.dataQualityCheck.create({
+        data: {
+          tableName,
+          checkType,
+          checkRule: rule,
+          passed,
+          score,
+          details: JSON.stringify(details),
+          ${this.config.features?.multiTenancy ? 'tenantId: "default",' : ''}
+        }
+      })
+    } catch (error) {
+      console.error('Data quality check failed:', error)
+    }
+  }
+
+  static async getDataQualitySummary() {
+    return await prisma.$queryRaw\`
+      SELECT 
+        table_name,
+        AVG(score) as avg_score,
+        COUNT(*) as total_checks,
+        SUM(CASE WHEN passed THEN 1 ELSE 0 END)::float / COUNT(*) as pass_rate
+      FROM data_quality_checks
+      WHERE checked_at >= NOW() - INTERVAL '7 days'
+      GROUP BY table_name
+      ORDER BY avg_score ASC
+    \`
+  }
+}
+`;
+
+    fs.writeFileSync(path.join(utilsDir, 'AnalyticsService.ts'), analyticsService);
+
+    // Generate Audit Service
+    const auditService = `
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+export class AuditService {
+  static async logSystemEvent(data: {
+    level: 'ERROR' | 'WARN' | 'INFO' | 'DEBUG'
+    message: string
+    source: string
+    context?: any
+    userId?: string
+    requestId?: string
+    ${this.config.features?.multiTenancy ? 'tenantId?: string' : ''}
+  }) {
+    try {
+      await prisma.systemLog.create({
+        data: {
+          ...data,
+          context: data.context ? JSON.stringify(data.context) : null
+        }
+      })
+    } catch (error) {
+      console.error('Failed to log system event:', error)
+    }
+  }
+
+  static async logSecurityEvent(data: {
+    eventType: string
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+    userId?: string
+    ipAddress?: string
+    userAgent?: string
+    details?: any
+    ${this.config.features?.multiTenancy ? 'tenantId?: string' : ''}
+  }) {
+    try {
+      await prisma.securityEvent.create({
+        data: {
+          ...data,
+          details: data.details ? JSON.stringify(data.details) : null
+        }
+      })
+    } catch (error) {
+      console.error('Failed to log security event:', error)
+    }
+  }
+
+  static async getAuditTrail(tableName: string, recordId: string) {
+    return await prisma.auditLog.findMany({
+      where: {
+        tableName,
+        recordId
+      },
+      orderBy: {
+        timestamp: 'desc'
+      }
+    })
+  }
+
+  static async getSecurityAlerts(severity?: string) {
+    return await prisma.securityEvent.findMany({
+      where: {
+        resolved: false,
+        ...(severity && { severity })
+      },
+      orderBy: {
+        timestamp: 'desc'
+      }
+    })
+  }
+
+  static async resolveSecurityEvent(id: string, resolvedBy: string) {
+    return await prisma.securityEvent.update({
+      where: { id },
+      data: {
+        resolved: true,
+        resolvedBy,
+        resolvedAt: new Date()
+      }
+    })
+  }
+}
+`;
+
+    fs.writeFileSync(path.join(utilsDir, 'AuditService.ts'), auditService);
+    
+    console.log('🛠️ Generated analytics and audit utilities');
   }
 
   // Utility methods

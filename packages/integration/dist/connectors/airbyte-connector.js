@@ -11,6 +11,7 @@ const errors_1 = require("../errors");
 class AirbyteConnector extends base_connector_1.BaseConnector {
     constructor(config) {
         super(config);
+        this.isConnected = false;
         this.config = config;
         this.client = axios_1.default.create({
             baseURL: config.baseUrl || 'https://api.airbyte.com/v1',
@@ -35,6 +36,17 @@ class AirbyteConnector extends base_connector_1.BaseConnector {
             }
             throw new errors_1.IntegrationError(`Airbyte API error: ${error.response?.data?.message || error.message}`, 'AIRBYTE_API_ERROR', error);
         });
+    }
+    async initialize() {
+        await this.connect();
+    }
+    async executeRequest(endpoint, method, data) {
+        const response = await this.client.request({
+            method,
+            url: endpoint,
+            data
+        });
+        return response.data;
     }
     async connect() {
         try {
@@ -189,6 +201,8 @@ class AirbyteConnector extends base_connector_1.BaseConnector {
             const completedJob = await this.waitForJobCompletion(job.jobId, 300000); // 5 minutes timeout
             return {
                 success: completedJob.status === 'succeeded',
+                recordsProcessed: completedJob.recordsSynced || 0,
+                recordsFailed: completedJob.status === 'failed' ? 1 : 0,
                 recordCount: completedJob.recordsSynced || 0,
                 dataSize: completedJob.dataEmitted || 0,
                 duration: completedJob.endedAt && completedJob.startedAt
@@ -200,7 +214,7 @@ class AirbyteConnector extends base_connector_1.BaseConnector {
                     sourceId: source.sourceId,
                     destinationId: destination.destinationId
                 },
-                error: completedJob.status === 'failed' ? completedJob.errorMessage : undefined
+                errors: completedJob.status === 'failed' ? [completedJob.errorMessage || 'Unknown error'] : []
             };
         }
         catch (error) {
@@ -326,6 +340,7 @@ exports.AirbyteConnector = AirbyteConnector;
 function createAirbyteConnector(config) {
     const airbyteConfig = {
         name: 'airbyte',
+        version: '1.0.0',
         type: 'airbyte',
         apiKey: config?.apiKey || process.env.AIRBYTE_API_KEY || '',
         clientId: config?.clientId || process.env.AIRBYTE_CLIENT_ID || '',
@@ -334,8 +349,9 @@ function createAirbyteConnector(config) {
         workspaceId: config?.workspaceId || process.env.AIRBYTE_WORKSPACE_ID,
         retryConfig: {
             maxRetries: 3,
-            backoffMs: 1000,
-            backoffMultiplier: 2
+            initialDelay: 1000,
+            backoffStrategy: 'exponential',
+            maxDelay: 10000
         },
         ...config
     };

@@ -1,0 +1,78 @@
+app:
+  name: "demo-saas-platform"
+  description: "Full SaaS Demo Platform"
+  version: "1.0.0"
+  port: 7300
+
+database:
+  type: "sqlite"
+  
+entities:
+  User:
+    fields:
+      id: { type: "string", primary: true }
+      email: { type: "string", unique: true, required: true }
+      name: { type: "string", required: true }
+      role: { type: "enum", values: ["admin", "user"], default: "user" }
+      organizationId: { type: "string", required: true }
+      createdAt: { type: "datetime", default: "now" }
+      updatedAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Organization", field: "organizationId" }
+      - { type: "hasMany", target: "Order", as: "orders" }
+
+  Organization:
+    fields:
+      id: { type: "string", primary: true }
+      name: { type: "string", required: true }
+      plan: { type: "enum", values: ["free", "pro"], default: "free" }
+      createdAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "hasMany", target: "User", as: "users" }
+      - { type: "hasMany", target: "Product", as: "products" }
+
+  Product:
+    fields:
+      id: { type: "string", primary: true }
+      name: { type: "string", required: true }
+      price: { type: "decimal", required: true }
+      organizationId: { type: "string", required: true }
+      createdAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "Organization", field: "organizationId" }
+
+  Order:
+    fields:
+      id: { type: "string", primary: true }
+      total: { type: "decimal", required: true }
+      status: { type: "enum", values: ["pending", "completed"], default: "pending" }
+      customerId: { type: "string", required: true }
+      createdAt: { type: "datetime", default: "now" }
+    relationships:
+      - { type: "belongsTo", target: "User", field: "customerId" }
+
+features:
+  authentication:
+    enabled: true
+    provider: "supabase"
+  multiTenancy:
+    enabled: true
+  analytics:
+    enabled: true
+
+integrations:
+  - name: "stripe_payments"
+    type: "rest_api"
+    config:
+      base_url: "https://api.stripe.com/v1"
+      auth_type: "bearer"
+
+workflows:
+  - name: "user_onboarding"
+    description: "User onboarding flow"
+    trigger: "user.created"
+
+alerts:
+  - name: "high_value_order"
+    description: "Alert for high value orders"
+    condition: "order.total > 1000"

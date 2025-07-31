@@ -1,7 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { CheckCircle, Clock, Loader2, ExternalLink, Download, Code, Database, Globe, Palette } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { 
+  CheckCircle, 
+  Clock, 
+  Loader2, 
+  ExternalLink, 
+  Download, 
+  Code, 
+  Database, 
+  Globe, 
+  Palette,
+  FolderOpen,
+  File,
+  Terminal,
+  Play,
+  Package,
+  Settings,
+  Layers,
+  FileText,
+  Folder,
+  ChevronRight,
+  ChevronDown
+} from 'lucide-react'
 
 interface AppGenerationProgressProps {
   yamlConfig: string
@@ -17,153 +38,243 @@ interface GenerationStep {
   icon: React.ComponentType<any>
   status: 'pending' | 'in_progress' | 'completed' | 'error'
   duration?: number
+  files?: string[]
+  commands?: string[]
+}
+
+interface FileNode {
+  name: string
+  type: 'file' | 'folder'
+  children?: FileNode[]
+  created?: boolean
+  path: string
+}
+
+interface TerminalEntry {
+  type: 'command' | 'output' | 'success' | 'error'
+  content: string
+  timestamp: number
 }
 
 export default function AppGenerationProgress({ yamlConfig, appName, onComplete, onBack }: AppGenerationProgressProps) {
   const [steps, setSteps] = useState<GenerationStep[]>([
     {
-      id: 'parse_config',
-      title: 'Parsing Configuration',
-      description: 'Reading YAML and validating structure',
-      icon: Code,
-      status: 'pending'
+      id: 'setup',
+      title: 'Initializing Project',
+      description: 'Creating project structure and configuration files',
+      icon: Settings,
+      status: 'pending',
+      files: ['package.json', 'tsconfig.json', 'next.config.js', 'tailwind.config.js'],
+      commands: ['mkdir -p my-app', 'cd my-app', 'npm init -y']
     },
     {
-      id: 'generate_database',
-      title: 'Creating Database Schema',
-      description: 'Generating tables, relationships, and migrations',
+      id: 'database',
+      title: 'Setting up Database',
+      description: 'Generating Prisma schema and database configuration',
       icon: Database,
-      status: 'pending'
+      status: 'pending',
+      files: ['prisma/schema.prisma', 'lib/prisma.ts'],
+      commands: ['prisma generate', 'prisma db push']
     },
     {
-      id: 'setup_apis',
-      title: 'Setting Up API Endpoints',
-      description: 'Creating REST API routes and authentication',
-      icon: Globe,
-      status: 'pending'
+      id: 'components',
+      title: 'Building React Components',
+      description: 'Creating UI components and dashboard pages',
+      icon: Layers,
+      status: 'pending',
+      files: ['components/Sidebar.tsx', 'components/StatsOverview.tsx', 'components/ChartWidget.tsx', 'app/layout.tsx', 'app/page.tsx'],
+      commands: ['Generating dashboard components...', 'Creating responsive layouts...']
     },
     {
-      id: 'generate_ui',
-      title: 'Building User Interface',
-      description: 'Generating React components and pages',
-      icon: Palette,
-      status: 'pending'
+      id: 'api',
+      title: 'Creating API Routes',
+      description: 'Building REST API endpoints and database operations',
+      icon: Code,
+      status: 'pending',
+      files: ['app/api/orders/route.ts', 'app/api/customers/route.ts', 'app/api/orders/[id]/route.ts'],
+      commands: ['Generating CRUD endpoints...', 'Setting up API middleware...']
     },
     {
-      id: 'deploy_app',
-      title: 'Deploying Application',
-      description: 'Building and deploying to production',
-      icon: ExternalLink,
-      status: 'pending'
+      id: 'pages',
+      title: 'Generating Pages',
+      description: 'Creating data management and form pages',
+      icon: FileText,
+      status: 'pending',
+      files: ['app/orders/page.tsx', 'app/customers/page.tsx', 'app/analytics/page.tsx'],
+      commands: ['Building data tables...', 'Creating form components...']
+    },
+    {
+      id: 'deploy',
+      title: 'Starting Application',
+      description: 'Installing dependencies and launching the app',
+      icon: Play,
+      status: 'pending',
+      files: ['README.md', 'deploy.sh'],
+      commands: ['npm install', 'npm run db:generate', 'npm run dev -- -p 7250']
     }
   ])
 
   const [currentStepIndex, setCurrentStepIndex] = useState(-1)
   const [generatedAppUrl, setGeneratedAppUrl] = useState<string | null>(null)
   const [generationLog, setGenerationLog] = useState<string[]>([])
+  
+  // New visual states
+  const [fileTree, setFileTree] = useState<FileNode[]>([])
+  const [terminalEntries, setTerminalEntries] = useState<TerminalEntry[]>([])
+  const [currentFiles, setCurrentFiles] = useState<Set<string>>(new Set())
+  const terminalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    console.log('🎨 Loading OPSAI Visual Generation Interface v2.0')
     startGeneration()
   }, [])
 
-  const startGeneration = async () => {
-    const stepDurations = [2000, 4000, 3000, 5000, 3000] // Simulated durations
-
-    for (let i = 0; i < steps.length; i++) {
-      // Mark current step as in progress
-      setCurrentStepIndex(i)
-      setSteps(prev => prev.map((step, index) => ({
-        ...step,
-        status: index === i ? 'in_progress' : index < i ? 'completed' : 'pending'
-      })))
-
-      // Add log entry
-      setGenerationLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] Starting: ${steps[i].title}`])
-
-      // Simulate generation with actual CLI integration
-      await simulateStepGeneration(steps[i], stepDurations[i])
-
-      // Mark step as completed
-      setSteps(prev => prev.map((step, index) => ({
-        ...step,
-        status: index <= i ? 'completed' : 'pending'
-      })))
-
-      setGenerationLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ✅ Completed: ${steps[i].title}`])
+  const addTerminalEntry = (type: TerminalEntry['type'], content: string) => {
+    const entry: TerminalEntry = {
+      type,
+      content,
+      timestamp: Date.now()
     }
-
-    // Generation complete
-    const appUrl = generateAppUrl(appName)
-    setGeneratedAppUrl(appUrl)
-    setGenerationLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] 🚀 App deployed successfully!`])
-    onComplete(appUrl)
-  }
-
-  const simulateStepGeneration = async (step: GenerationStep, duration: number) => {
-    // This would integrate with the actual OPSAI Core CLI
-    // For now, simulate the generation process
+    setTerminalEntries(prev => [...prev, entry])
     
-    switch (step.id) {
-      case 'parse_config':
-        // Parse YAML config
-        setGenerationLog(prev => [...prev, '  - Validating YAML syntax...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        setGenerationLog(prev => [...prev, '  - Extracting entities and relationships...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        setGenerationLog(prev => [...prev, '  - Configuration validated successfully'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        break
+    // Auto-scroll terminal
+    setTimeout(() => {
+      if (terminalRef.current) {
+        terminalRef.current.scrollTop = terminalRef.current.scrollHeight
+      }
+    }, 100)
+  }
 
-      case 'generate_database':
-        setGenerationLog(prev => [...prev, '  - Creating Prisma schema...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 4))
-        setGenerationLog(prev => [...prev, '  - Generating migration files...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 4))
-        setGenerationLog(prev => [...prev, '  - Setting up PostgreSQL database...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 4))
-        setGenerationLog(prev => [...prev, '  - Running database migrations...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 4))
-        break
+  const addFileToTree = async (filePath: string) => {
+    const newFile = new Set(currentFiles)
+    newFile.add(filePath)
+    setCurrentFiles(newFile)
+    
+    // Simulate file creation with delay
+    await new Promise(resolve => setTimeout(resolve, 200))
+  }
 
-      case 'setup_apis':
-        setGenerationLog(prev => [...prev, '  - Generating REST API routes...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        setGenerationLog(prev => [...prev, '  - Setting up authentication middleware...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        setGenerationLog(prev => [...prev, '  - Configuring API integrations...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        break
+  const startGeneration = async () => {
+    addTerminalEntry('output', '🚀 Starting application generation...')
+    addTerminalEntry('output', `📱 Project: ${appName}`)
+    addTerminalEntry('output', '─'.repeat(50))
+    
+    // Call the actual API to generate the app
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          yamlConfig,
+          appName
+        })
+      })
 
-      case 'generate_ui':
-        setGenerationLog(prev => [...prev, '  - Creating React components...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 5))
-        setGenerationLog(prev => [...prev, '  - Generating CRUD pages...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 5))
-        setGenerationLog(prev => [...prev, '  - Setting up routing and navigation...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 5))
-        setGenerationLog(prev => [...prev, '  - Applying theme and styling...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 5))
-        setGenerationLog(prev => [...prev, '  - Building production bundle...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 5))
-        break
+      const result = await response.json()
+      
+      for (let i = 0; i < steps.length; i++) {
+        setCurrentStepIndex(i)
+        setSteps(prev => prev.map((step, index) => ({
+          ...step,
+          status: index === i ? 'in_progress' : index < i ? 'completed' : 'pending'
+        })))
 
-      case 'deploy_app':
-        setGenerationLog(prev => [...prev, '  - Deploying to Vercel...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        setGenerationLog(prev => [...prev, '  - Setting up environment variables...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        setGenerationLog(prev => [...prev, '  - Configuring custom domain...'])
-        await new Promise(resolve => setTimeout(resolve, duration / 3))
-        break
+        await simulateVisualGeneration(steps[i])
 
-      default:
-        await new Promise(resolve => setTimeout(resolve, duration))
+        setSteps(prev => prev.map((step, index) => ({
+          ...step,
+          status: index <= i ? 'completed' : 'pending'
+        })))
+      }
+
+      if (result.success) {
+        setGeneratedAppUrl(result.appUrl)
+        addTerminalEntry('success', `✅ ${result.message}`)
+        addTerminalEntry('success', `🌐 App URL: ${result.appUrl}`)
+        onComplete(result.appUrl)
+      } else {
+        addTerminalEntry('error', `❌ Generation failed: ${result.error}`)
+      }
+    } catch (error) {
+      addTerminalEntry('error', `❌ Generation error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
-  const generateAppUrl = (name: string): string => {
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-    return `https://${slug}-${Math.random().toString(36).substr(2, 8)}.vercel.app`
+  const simulateVisualGeneration = async (step: GenerationStep) => {
+    addTerminalEntry('command', `▶ ${step.title}`)
+    addTerminalEntry('output', step.description)
+    
+    // Show commands being executed
+    if (step.commands) {
+      for (const command of step.commands) {
+        addTerminalEntry('command', `$ ${command}`)
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+    }
+    
+    // Show files being created
+    if (step.files) {
+      for (const file of step.files) {
+        addTerminalEntry('output', `  📄 Creating ${file}`)
+        await addFileToTree(file)
+      }
+    }
+    
+    // Simulate step completion time
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    addTerminalEntry('success', `✅ ${step.title} completed`)
+  }
+
+  // File tree rendering component
+  const renderFileTree = () => {
+    const allFiles = Array.from(currentFiles).map(path => {
+      const parts = path.split('/')
+      return {
+        name: parts[parts.length - 1],
+        path,
+        type: path.includes('.') ? 'file' as const : 'folder' as const,
+        created: true
+      }
+    })
+
+    const groupedFiles = allFiles.reduce((acc, file) => {
+      const folder = file.path.includes('/') ? file.path.split('/')[0] : 'root'
+      if (!acc[folder]) acc[folder] = []
+      acc[folder].push(file)
+      return acc
+    }, {} as Record<string, typeof allFiles>)
+
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center space-x-2 mb-3">
+          <FolderOpen className="w-4 h-4 text-blue-500" />
+          <span className="font-medium text-gray-900">{appName.toLowerCase().replace(/\s+/g, '-')}</span>
+        </div>
+        {Object.entries(groupedFiles).map(([folder, files]) => (
+          <div key={folder} className="ml-4">
+            {folder !== 'root' && (
+              <div className="flex items-center space-x-2 mb-1">
+                <ChevronDown className="w-3 h-3 text-gray-400" />
+                <Folder className="w-4 h-4 text-yellow-500" />
+                <span className="text-sm text-gray-700">{folder}</span>
+              </div>
+            )}
+            {files.map(file => (
+              <div 
+                key={file.path} 
+                className={`flex items-center space-x-2 py-1 px-2 rounded transition-all duration-300 ${
+                  file.created ? 'bg-green-50 animate-pulse' : ''
+                } ml-${folder === 'root' ? '0' : '6'}`}
+              >
+                <File className="w-3 h-3 text-gray-400" />
+                <span className="text-xs font-mono text-gray-600">{file.name}</span>
+                {file.created && <div className="w-2 h-2 bg-green-400 rounded-full animate-ping" />}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
   }
 
   const downloadSourceCode = () => {
@@ -205,32 +316,37 @@ ${yamlConfig}
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-4">
-        <div className="max-w-6xl mx-auto">
+      <div className="bg-slate-800/50 border-b border-slate-700 px-6 py-6">
+        <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Generating Your SaaS Application</h1>
-              <p className="text-gray-600">{appName}</p>
+            <div className="flex items-center space-x-4">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <div className="ml-4">
+                <h1 className="text-xl font-semibold text-white">🚀 OPSAI Code Generator v2.0</h1>
+                <p className="text-slate-400 text-sm">✨ Visual Generation • Building: {appName}</p>
+              </div>
             </div>
             {generatedAppUrl && (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={downloadSourceCode}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center text-sm transition-colors"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Download Source
+                  Download
                 </button>
                 <a
                   href={generatedAppUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+                  className="px-6 py-2 bg-green-600 hover:bg-green-500 rounded-lg flex items-center text-sm font-medium transition-colors"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  View Live App
+                  Open App
                 </a>
               </div>
             )}
@@ -238,114 +354,133 @@ ${yamlConfig}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Progress Steps */}
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Generation Progress</h2>
-            <div className="space-y-4">
-              {steps.map((step, index) => {
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
+          
+          {/* Progress Steps - Left Column */}
+          <div className="col-span-12 lg:col-span-3">
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 h-full">
+              <div className="flex items-center space-x-2 mb-6">
+                <Settings className="w-5 h-5 text-blue-400" />
+                <h2 className="text-lg font-semibold text-white">Build Steps</h2>
+              </div>
+              <div className="space-y-3">{steps.map((step, index) => {
                 const StepIcon = step.icon
                 return (
                   <div
                     key={step.id}
-                    className={`flex items-center space-x-4 p-4 rounded-lg transition-colors ${
-                      step.status === 'in_progress' ? 'bg-blue-50 border border-blue-200' :
-                      step.status === 'completed' ? 'bg-green-50 border border-green-200' :
-                      'bg-gray-50 border border-gray-200'
+                    className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-300 ${
+                      step.status === 'in_progress' ? 'bg-blue-600/20 border border-blue-500/30' :
+                      step.status === 'completed' ? 'bg-green-600/20 border border-green-500/30' :
+                      'bg-slate-700/30 border border-slate-600/30'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      step.status === 'in_progress' ? 'bg-blue-600 text-white' :
-                      step.status === 'completed' ? 'bg-green-600 text-white' :
-                      'bg-gray-300 text-gray-600'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      step.status === 'in_progress' ? 'bg-blue-500 animate-pulse' :
+                      step.status === 'completed' ? 'bg-green-500' :
+                      'bg-slate-600'
                     }`}>
                       {step.status === 'in_progress' ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <Loader2 className="w-4 h-4 text-white animate-spin" />
                       ) : step.status === 'completed' ? (
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4 text-white" />
                       ) : (
-                        <Clock className="w-5 h-5" />
+                        <StepIcon className="w-4 h-4 text-white" />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <h3 className={`font-medium ${
-                        step.status === 'completed' ? 'text-green-900' :
-                        step.status === 'in_progress' ? 'text-blue-900' :
-                        'text-gray-700'
-                      }`}>
-                        {step.title}
-                      </h3>
-                      <p className={`text-sm ${
-                        step.status === 'completed' ? 'text-green-600' :
-                        step.status === 'in_progress' ? 'text-blue-600' :
-                        'text-gray-500'
-                      }`}>
-                        {step.description}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{step.title}</p>
+                      <p className="text-xs text-slate-400 truncate">{step.description}</p>
                     </div>
-                    <StepIcon className={`w-5 h-5 ${
-                      step.status === 'completed' ? 'text-green-600' :
-                      step.status === 'in_progress' ? 'text-blue-600' :
-                      'text-gray-400'
-                    }`} />
                   </div>
                 )
-              })}
+              })}</div>
             </div>
+          </div>
 
-            {generatedAppUrl && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <h3 className="font-semibold text-green-900">Application Generated Successfully!</h3>
+          {/* File Tree - Middle Column */}
+          <div className="col-span-12 lg:col-span-4">
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 h-full">
+              <div className="flex items-center space-x-2 mb-6">
+                <FolderOpen className="w-5 h-5 text-yellow-400" />
+                <h2 className="text-lg font-semibold text-white">Project Files</h2>
+                <div className="flex-1" />
+                <div className="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">
+                  {currentFiles.size} files
                 </div>
-                <p className="text-green-700 text-sm mb-3">
-                  Your SaaS application is live and ready to use.
+              </div>
+              <div className="overflow-y-auto h-[calc(100%-80px)] text-sm">
+                {renderFileTree()}
+              </div>
+            </div>
+          </div>
+
+          {/* Terminal - Right Column */}
+          <div className="col-span-12 lg:col-span-5">
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700 h-full overflow-hidden">
+              <div className="flex items-center space-x-2 p-4 border-b border-slate-700">
+                <Terminal className="w-5 h-5 text-green-400" />
+                <h2 className="text-lg font-semibold text-white">Terminal</h2>
+                <div className="flex-1" />
+                <div className="flex space-x-1">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                </div>
+              </div>
+              <div 
+                ref={terminalRef}
+                className="p-4 h-[calc(100%-60px)] overflow-y-auto font-mono text-sm bg-slate-900/50"
+              >
+                {terminalEntries.map((entry, index) => (
+                  <div key={index} className={`mb-1 ${
+                    entry.type === 'command' ? 'text-cyan-400' :
+                    entry.type === 'success' ? 'text-green-400' :
+                    entry.type === 'error' ? 'text-red-400' :
+                    'text-slate-300'
+                  }`}>
+                    {entry.type === 'command' && <span className="text-green-400">❯ </span>}
+                    {entry.content}
+                  </div>
+                ))}
+                {currentStepIndex >= 0 && currentStepIndex < steps.length && (
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-slate-400 text-xs">Building...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Success Message */}
+        {generatedAppUrl && (
+          <div className="mt-8 bg-gradient-to-r from-green-600/20 to-blue-600/20 border border-green-500/30 rounded-xl p-6">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-8 h-8 text-green-400" />
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-1">🎉 Application Generated Successfully!</h3>
+                <p className="text-slate-300 mb-3">
+                  🚀 Your SaaS application is auto-started and running on port 7250!
                 </p>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <a
                     href={generatedAppUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-800 underline flex items-center"
+                    className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-medium transition-colors"
                   >
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    {generatedAppUrl}
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    Open Live App
                   </a>
+                  <span className="text-slate-400 font-mono text-sm">{generatedAppUrl}</span>
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Generation Log */}
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Generation Log</h2>
-            <div className="bg-gray-900 text-gray-100 p-4 rounded-lg h-96 overflow-y-auto font-mono text-sm">
-              {generationLog.map((log, index) => (
-                <div key={index} className="mb-1">
-                  {log}
-                </div>
-              ))}
-              {currentStepIndex >= 0 && currentStepIndex < steps.length && (
-                <div className="flex items-center space-x-2 text-blue-400">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>Processing...</span>
-                </div>
-              )}
             </div>
           </div>
-        </div>
-
-        {/* Back Button */}
-        <div className="mt-8">
-          <button
-            onClick={onBack}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
-          >
-            ← Back to Builder
-          </button>
-        </div>
+        )}
       </div>
     </div>
   )

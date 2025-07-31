@@ -122,6 +122,7 @@ export class WebhookConnector extends BaseConnector {
     const event: WebhookEvent = {
       id: crypto.randomUUID(),
       integrationId: this.config.name,
+      event: payload.type || 'unknown',
       eventType: payload.type || 'unknown',
       payload,
       receivedAt: new Date(),
@@ -173,6 +174,7 @@ export class WebhookConnector extends BaseConnector {
         const event: WebhookEvent = {
           id: crypto.randomUUID(),
           integrationId: this.config.name,
+          event: payload.type || 'websocket_message',
           eventType: payload.type || 'websocket_message',
           payload,
           receivedAt: new Date(),

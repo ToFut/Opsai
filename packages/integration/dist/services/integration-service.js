@@ -204,7 +204,10 @@ class IntegrationService {
             delay: options?.scheduledFor ?
                 Math.max(0, options.scheduledFor.getTime() - Date.now()) : 0
         });
-        return job;
+        return {
+            ...job,
+            errors: job.error ? [job.error] : []
+        };
     }
     /**
      * Update sync job status
@@ -227,7 +230,10 @@ class IntegrationService {
             orderBy: { createdAt: 'desc' },
             take: limit
         });
-        return jobs;
+        return jobs.map(job => ({
+            ...job,
+            errors: job.error ? [job.error] : []
+        }));
     }
     /**
      * Get integration metrics
@@ -332,7 +338,7 @@ class IntegrationService {
                 status: syncResult.success ? 'completed' : 'failed',
                 recordsProcessed: syncResult.recordsProcessed,
                 recordsFailed: syncResult.recordsFailed,
-                error: syncResult.success ? undefined : syncResult.errors.join(', '),
+                errors: syncResult.success ? [] : syncResult.errors,
                 metadata: syncResult.metadata
             });
         }
@@ -383,6 +389,7 @@ class IntegrationService {
                 success: false,
                 recordsProcessed: directResult.recordsProcessed + airbyteResult.recordsProcessed,
                 recordsFailed: directResult.recordsFailed + airbyteResult.recordsFailed,
+                recordCount: directResult.recordCount + airbyteResult.recordCount,
                 errors,
                 metadata: {
                     syncedAt: new Date().toISOString(),
@@ -398,6 +405,7 @@ class IntegrationService {
                 success: false,
                 recordsProcessed,
                 recordsFailed: recordsFailed + 1,
+                recordCount: recordsProcessed,
                 errors: [...errors, error instanceof Error ? error.message : String(error)]
             };
         }
@@ -435,6 +443,7 @@ class IntegrationService {
                 success: recordsFailed === 0,
                 recordsProcessed,
                 recordsFailed,
+                recordCount: recordsProcessed,
                 errors,
                 metadata: {
                     syncedAt: new Date().toISOString(),
@@ -448,6 +457,7 @@ class IntegrationService {
                 success: false,
                 recordsProcessed,
                 recordsFailed: recordsFailed + 1,
+                recordCount: recordsProcessed,
                 errors: [...errors, error instanceof Error ? error.message : String(error)],
                 metadata: {
                     syncedAt: new Date().toISOString(),
@@ -468,6 +478,7 @@ class IntegrationService {
                     success: false,
                     recordsProcessed: 0,
                     recordsFailed: 1,
+                    recordCount: 0,
                     errors: ['Airbyte fallback not configured - missing credentials'],
                     metadata: {
                         syncedAt: new Date().toISOString(),
@@ -492,6 +503,7 @@ class IntegrationService {
                 success: airbyteResult.success,
                 recordsProcessed: airbyteResult.recordCount || 0,
                 recordsFailed: airbyteResult.success ? 0 : 1,
+                recordCount: airbyteResult.recordCount || 0,
                 errors: airbyteResult.success ? [] : [airbyteResult.error || 'Airbyte sync failed'],
                 metadata: {
                     syncedAt: new Date().toISOString(),
@@ -510,6 +522,7 @@ class IntegrationService {
                 success: false,
                 recordsProcessed: 0,
                 recordsFailed: 1,
+                recordCount: 0,
                 errors: [`Airbyte fallback error: ${error instanceof Error ? error.message : String(error)}`],
                 metadata: {
                     syncedAt: new Date().toISOString(),

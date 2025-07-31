@@ -6,5 +6,4 @@ export * from './workflow';
 export * from './alerts';
 export * from './files';
 export * from './ui';
-export * from './vertical';
 //# sourceMappingURL=index.d.ts.map

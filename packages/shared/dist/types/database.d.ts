@@ -35,6 +35,15 @@ export interface Field {
     relationField?: string;
     relationModel?: string;
     relationType?: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany';
+    required?: boolean;
+    unique?: boolean;
+    description?: string;
+    validation?: {
+        min?: number;
+        max?: number;
+        pattern?: string;
+        enum?: string[];
+    };
 }
 export interface Relation {
     name: string;
@@ -73,6 +82,29 @@ export interface Migration {
     appliedAt: Date;
     checksum: string;
     sql: string;
+}
+export interface MigrationStep {
+    type: 'create_table' | 'drop_table' | 'create_index' | 'drop_index' | 'add_foreign_key' | 'drop_foreign_key';
+    table: string;
+    column?: string;
+    constraint?: string;
+    columns?: Array<{
+        name: string;
+        type: string;
+        nullable: boolean;
+        unique: boolean;
+        primary: boolean;
+        default?: any;
+    }>;
+    index?: {
+        name: string;
+        columns: string[];
+        unique: boolean;
+    };
+    references?: {
+        table: string;
+        column: string;
+    };
 }
 export interface SeedData {
     table: string;

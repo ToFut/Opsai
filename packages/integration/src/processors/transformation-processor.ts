@@ -17,7 +17,7 @@ export class TransformationProcessor {
     console.log('Creating transformation rule');
     return {
       ...rule,
-      enabled: true
+      enabled: true as boolean
     };
   }
 

@@ -23,5 +23,4 @@ __exportStar(require("./workflow"), exports);
 __exportStar(require("./alerts"), exports);
 __exportStar(require("./files"), exports);
 __exportStar(require("./ui"), exports);
-__exportStar(require("./vertical"), exports);
 //# sourceMappingURL=index.js.map

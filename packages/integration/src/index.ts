@@ -14,5 +14,9 @@ export * from './connectors/airbyte-connector';
 export * from './processors/data-processor';
 export * from './processors/transformation-processor';
 
+// Authentication
+export * from './auth/oauth-manager';
+export * from './credentials/credential-manager';
+
 // Types
 export * from './types'; 

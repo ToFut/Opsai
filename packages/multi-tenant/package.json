@@ -1,0 +1,26 @@
+{
+  "name": "@opsai/multi-tenant",
+  "version": "1.0.0",
+  "description": "Multi-tenant management services for OpsAI Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "type:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opsai/shared": "workspace:*",
+    "@opsai/database": "workspace:*",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0"
+  }
+}

@@ -150,15 +150,18 @@ export class EnvironmentGenerator {
   }
 
   private getDevelopmentDatabaseUrl(): string {
-    const dbProvider = this.config.services.database.provider;
+    const dbProvider = this.config.services?.database?.provider || this.config.database?.type;
     
     switch (dbProvider) {
       case 'core-managed':
+      case 'postgresql':
         return `postgresql://localhost:5432/dev_${this.config.app.name}`;
       case 'user-postgresql':
-        return this.config.services.database.url || 'postgresql://localhost:5432/dev_database';
+        return this.config.services?.database?.url || 'postgresql://localhost:5432/dev_database';
+      case 'mysql':
       case 'user-mysql':
-        return this.config.services.database.url || 'mysql://localhost:3306/dev_database';
+        return this.config.services?.database?.url || 'mysql://localhost:3306/dev_database';
+      case 'sqlite':
       case 'user-sqlite':
         return 'file:./dev.db';
       default:

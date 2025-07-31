@@ -27,6 +27,9 @@ __exportStar(require("./connectors/airbyte-connector"), exports);
 // Processors
 __exportStar(require("./processors/data-processor"), exports);
 __exportStar(require("./processors/transformation-processor"), exports);
+// Authentication
+__exportStar(require("./auth/oauth-manager"), exports);
+__exportStar(require("./credentials/credential-manager"), exports);
 // Types
 __exportStar(require("./types"), exports);
 //# sourceMappingURL=index.js.map

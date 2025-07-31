@@ -1,0 +1,599 @@
+
+> opsai-onboarding@1.0.0 dev /Users/segevbin/Desktop/Opsai/apps/opsai-onboarding
+> next dev -p 3010
+
+  ▲ Next.js 14.2.30
+  - Local:        http://localhost:3010
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 9s
+ ○ Compiling /api/discover ...
+ ✓ Compiled /api/discover in 1630ms (56 modules)
+🤖 Using AI-powered analysis
+ ○ Compiling /api/ai-analyze ...
+ ✓ Compiled /api/ai-analyze in 29s (196 modules)
+🤖 Starting AI analysis for: https://www.dominos.com
+🤖 Sending business analysis request to OpenAI...
+✅ AI Business Analysis completed
+ POST /api/ai-analyze 200 in 64230ms
+ POST /api/discover 200 in 67198ms
+ ○ Compiling / ...
+ ✓ Compiled / in 6.6s (751 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 7601ms
+ ✓ Compiled in 877ms (299 modules)
+ ○ Compiling /api/discover ...
+ ✓ Compiled /api/discover in 784ms (314 modules)
+🤖 Using AI-powered analysis
+ ✓ Compiled /api/ai-analyze in 205ms (454 modules)
+🤖 Starting AI analysis for: https://www.dominos.com
+🤖 Sending business analysis request to OpenAI...
+✅ AI Business Analysis completed
+ POST /api/ai-analyze 200 in 31859ms
+ POST /api/discover 200 in 33287ms
+ ○ Compiling /api/ai-generate-yaml ...
+ ✓ Compiled /api/ai-generate-yaml in 668ms (456 modules)
+🤖 Starting AI YAML generation for: Domino's Pizza
+🤖 Sending YAML generation request to OpenAI...
+OpenAI YAML Generation error: SyntaxError: Expected double-quoted property name in JSON at position 17989
+    at JSON.parse (<anonymous>)
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:263:33)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+AI YAML Generation error: Error: Failed to generate YAML with AI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:268:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+ POST /api/ai-generate-yaml 500 in 45923ms
+ ✓ Compiled in 338ms (583 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 149ms (299 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 134ms (299 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled /api/discover in 39ms (314 modules)
+🤖 Using AI-powered analysis
+ ✓ Compiled /api/ai-analyze in 92ms (454 modules)
+🤖 Starting AI analysis for: https://www.dominos.com
+🤖 Sending business analysis request to OpenAI...
+✅ AI Business Analysis completed
+ POST /api/ai-analyze 200 in 28852ms
+ POST /api/discover 200 in 29337ms
+ ✓ Compiled /api/ai-generate-yaml in 174ms (456 modules)
+🤖 Starting AI YAML generation for: Domino's Pizza
+🤖 Sending YAML generation request to OpenAI...
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+Failed to parse OpenAI response: SyntaxError: Unexpected token '`', "```json
+{
+"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:258:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+Response content length: 17214
+First 500 chars: ```json
+{
+  "yaml": "# Business Application Configuration\nvertical:\n  name: domino-s-pizza\n  description: Pizza restaurant chain offering delivery and carryout\n  version: \"1.0.0\"\n  industry: food-service\n  businessModel: B2C\n\nbusiness:\n  name: Domino's Pizza\n  type: Restaurant\n  website: https://www.dominos.com\n  contact:\n    email: support@dominos.com\n    phone: +1-800-366-4667\n  settings:\n    timezone: America/New_York\n    currency: USD\n    language: \"en\"\n\ndatabase:\n  
+OpenAI YAML Generation error: Error: Invalid JSON response from OpenAI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:269:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+AI YAML Generation error: Error: Failed to generate YAML with AI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:279:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+ POST /api/ai-generate-yaml 500 in 89701ms
+ ✓ Compiled in 315ms (583 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled /api/discover in 56ms (314 modules)
+🤖 Using AI-powered analysis
+ ✓ Compiled /api/ai-analyze in 54ms (454 modules)
+🤖 Starting AI analysis for: https://www.dominos.com
+🤖 Sending business analysis request to OpenAI...
+✅ AI Business Analysis completed
+ POST /api/ai-analyze 200 in 36518ms
+ POST /api/discover 200 in 37001ms
+ ✓ Compiled /api/ai-generate-yaml in 167ms (456 modules)
+🤖 Starting AI YAML generation for: Domino's Pizza
+🤖 Sending YAML generation request to OpenAI...
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ POST /api/ai-generate-yaml 200 in 83044ms
+Failed to parse OpenAI response: SyntaxError: Unexpected token '`', "```json
+{
+"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:259:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+Response content length: 17365
+First 500 chars: ```json
+{
+  "yaml": "# Business Application Configuration\nvertical:\n  name: domino-s-pizza\n  description: A leading pizza delivery and carryout chain\n  version: \"1.0.0\"\n  industry: food-service\n  businessModel: B2C\n\nbusiness:\n  name: Domino's Pizza\n  type: Restaurant\n  website: https://www.dominos.com\n  contact:\n    email: support@dominos.com\n    phone: +1-800-366-4667\n  settings:\n    timezone: America/New_York\n    currency: USD\n    language: \"en\"\n\ndatabase:\n  provider: 
+OpenAI YAML Generation error: Error: Invalid JSON response from OpenAI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:281:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+AI YAML Generation error: Error: Failed to generate YAML with AI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:292:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+ ✓ Compiled in 323ms (569 modules)
+ ✓ Compiled /api/discover in 61ms (314 modules)
+🤖 Using AI-powered analysis
+ ✓ Compiled /api/ai-analyze in 61ms (454 modules)
+🤖 Starting AI analysis for: https://www.dominos.com
+🤖 Sending business analysis request to OpenAI...
+✅ AI Business Analysis completed
+ POST /api/ai-analyze 200 in 36209ms
+ POST /api/discover 200 in 36540ms
+ ✓ Compiled /api/ai-generate-yaml in 65ms (456 modules)
+🤖 Starting AI YAML generation for: Domino's Pizza
+🤖 Sending YAML generation request to OpenAI...
+Failed to parse OpenAI response: SyntaxError: Unexpected token '`', "```json
+{
+"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:259:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+Response content length: 16632
+First 500 chars: ```json
+{
+  "yaml": "# Business Application Configuration\nvertical:\n  name: domino-pizza\n  description: \"Domino's Pizza business application\"\n  version: \"1.0.0\"\n  industry: \"food-service\"\n  businessModel: \"restaurant\"\n\nbusiness:\n  name: \"Domino's Pizza\"\n  type: \"Restaurant\"\n  website: \"https://www.dominos.com\"\n  contact:\n    email: \"support@dominos.com\"\n    phone: \"+1-800-366-4667\"\n  settings:\n    timezone: \"America/New_York\"\n    currency: \"USD\"\n    langua
+OpenAI YAML Generation error: Error: Invalid JSON response from OpenAI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:281:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+AI YAML Generation error: Error: Failed to generate YAML with AI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:292:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+ POST /api/ai-generate-yaml 500 in 49139ms
+ ○ Compiling /api/ai-generate-yaml-simple ...
+ ✓ Compiled /api/ai-generate-yaml-simple in 1344ms (455 modules)
+🤖 Generating YAML for: Domino's Pizza
+✅ YAML Generation completed
+ POST /api/ai-generate-yaml-simple 200 in 1392ms
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 228ms
+ ✓ Compiled /api/discover in 154ms (314 modules)
+🤖 Using AI-powered analysis
+ ✓ Compiled /api/ai-analyze in 68ms (454 modules)
+🤖 Starting AI analysis for: https://theoasiscafe.com
+🤖 Sending business analysis request to OpenAI...
+✅ AI Business Analysis completed
+ POST /api/ai-analyze 200 in 41612ms
+ POST /api/discover 200 in 42230ms
+ ✓ Compiled /api/ai-generate-yaml in 113ms (452 modules)
+🤖 Starting AI YAML generation for: Restaurant/Cafe
+🤖 Sending YAML generation request to OpenAI...
+Failed to parse OpenAI response: SyntaxError: Unexpected token '`', "```json
+{
+"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:259:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+Response content length: 17623
+First 500 chars: ```json
+{
+  "yaml": "# Business Application Configuration\nvertical:\n  name: restaurant-cafe\n  description: A comprehensive management system for restaurants and cafes.\n  version: \"1.0.0\"\n  industry: food-service\n  businessModel: B2C\n\nbusiness:\n  name: Restaurant/Cafe\n  type: Restaurant/Cafe\n  website: \"https://www.example-restaurant.com\"\n  contact:\n    email: \"contact@example-restaurant.com\"\n    phone: \"+1234567890\"\n  settings:\n    timezone: \"America/New_York\"\n    curr
+OpenAI YAML Generation error: Error: Invalid JSON response from OpenAI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:281:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+AI YAML Generation error: Error: Failed to generate YAML with AI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:292:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+ POST /api/ai-generate-yaml 500 in 51564ms
+ ✓ Compiled in 1943ms (583 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 3.5s (583 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ○ Compiling /api/ai-generate-yaml ...
+ ✓ Compiled /api/ai-generate-yaml in 3.9s (452 modules)
+🤖 Starting AI YAML generation for: Restaurant/Cafe
+🤖 Sending YAML generation request to OpenAI...
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 5.2s (299 modules)
+ ✓ Compiled in 409ms (299 modules)
+Failed to parse OpenAI response: SyntaxError: Unexpected token '`', "```json
+{
+"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:259:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+Response content length: 17262
+First 500 chars: ```json
+{
+  "yaml": "# Business Application Configuration\nvertical:\n  name: restaurant-cafe\n  description: A comprehensive management system for a restaurant or cafe\n  version: \"1.0.0\"\n  industry: food-service\n  businessModel: dine-in-and-takeaway\n\nbusiness:\n  name: Restaurant/Cafe\n  type: Restaurant/Cafe\n  website: https://www.example-restaurant.com\n  contact:\n    email: contact@example-restaurant.com\n    phone: \"+1234567890\"\n  settings:\n    timezone: \"America/New_York\"\n 
+OpenAI YAML Generation error: Error: Invalid JSON response from OpenAI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:291:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+AI YAML Generation error: Error: Failed to generate YAML with AI
+    at generateYAMLWithAI (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:302:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/ai-generate-yaml/route.ts:24:28)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57228
+    at async eT.execute (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46851)
+    at async eT.handle (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:58760)
+    at async doRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1588:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1496:28)
+    at async DevServer.renderPageComponent (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1924:24)
+    at async DevServer.renderToResponseImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/segevbin/Desktop/Opsai/node_modules/.pnpm/next@14.2.30_react-dom@18.3.1_react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+ POST /api/ai-generate-yaml 500 in 56604ms
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ○ Compiling /api/ai-generate-yaml-simple ...
+ ✓ Compiled /api/ai-generate-yaml-simple in 6.9s (614 modules)
+🤖 Generating YAML for: Restaurant/Cafe
+✅ YAML Generation completed
+ POST /api/ai-generate-yaml-simple 200 in 7869ms
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 13.2s (614 modules)
+ ✓ Compiled in 1189ms (614 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 3s (628 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ○ Compiling /_not-found ...
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 404 in 3498ms
+ ✓ Compiled /_not-found in 4.1s (586 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 1150ms
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/css/app/layout.css. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/chunks/main-app.js. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/chunks/app-pages-internals.js. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/chunks/app/page.js. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /_next/static/css/app/layout.css?v=1753897162847 404 in 69ms
+ GET /_next/static/chunks/main-app.js?v=1753897162847 404 in 92ms
+ GET /_next/static/chunks/app/page.js 404 in 89ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 93ms
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET / 200 in 124ms
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/css/app/layout.css. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/chunks/main-app.js. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/chunks/app-pages-internals.js. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_next/static/chunks/app/page.js. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /_next/static/css/app/layout.css?v=1753897165846 404 in 62ms
+ GET /_next/static/chunks/main-app.js?v=1753897165846 404 in 60ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 59ms
+ GET /_next/static/chunks/app/page.js 404 in 43ms
+[?25h

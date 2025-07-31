@@ -1,0 +1,372 @@
+vertical:
+  name: domino-s-pizza
+  description: Restaurant management system powered by AI
+  version: 1.0.0
+  industry: food-service
+  businessModel: franchise operation
+business:
+  name: Domino's Pizza
+  type: Restaurant
+  website: https://www.dominos.com
+  contact:
+    email: support@dominospizza.com
+    phone: +1-800-555-0100
+  settings:
+    timezone: America/New_York
+    currency: USD
+    language: en
+database:
+  provider: postgresql
+  models:
+    - name: Customer
+      displayName: Customer
+      description: Information about customers who place orders.
+      fields:
+        - name: customerId
+          type: string
+          required: true
+          unique: true
+          validation: UUID format
+          ui:
+            label: Customer Id
+            widget: text
+            placeholder: Enter customerId
+        - name: name
+          type: string
+          required: true
+          unique: false
+          validation: Non-empty string
+          ui:
+            label: Name
+            widget: text
+            placeholder: Enter name
+        - name: email
+          type: string
+          required: true
+          unique: true
+          validation: Valid email format
+          ui:
+            label: Email
+            widget: text
+            placeholder: Enter email
+        - name: phone
+          type: string
+          required: true
+          unique: false
+          validation: Valid phone number format
+          ui:
+            label: Phone
+            widget: text
+            placeholder: Enter phone
+        - name: address
+          type: json
+          required: true
+          unique: false
+          validation: Valid address format
+          ui:
+            label: Address
+            widget: json-editor
+            placeholder: Enter address
+      relationships:
+        - Order
+      indexes:
+        - customer_created_at
+      permissions:
+        read:
+          - admin
+          - staff
+          - customer
+        write:
+          - admin
+          - staff
+        delete:
+          - admin
+    - name: Order
+      displayName: Order
+      description: Details of customer orders.
+      fields:
+        - name: orderId
+          type: string
+          required: true
+          unique: true
+          validation: UUID format
+          ui:
+            label: Order Id
+            widget: text
+            placeholder: Enter orderId
+        - name: customerId
+          type: string
+          required: true
+          unique: false
+          validation: Must match existing customerId
+          ui:
+            label: Customer Id
+            widget: text
+            placeholder: Enter customerId
+        - name: orderDate
+          type: date
+          required: true
+          unique: false
+          validation: Valid date format
+          ui:
+            label: Order Date
+            widget: datepicker
+            placeholder: Enter orderDate
+        - name: status
+          type: enum
+          required: true
+          unique: false
+          validation: Must be one of ['pending', 'completed', 'cancelled']
+          ui:
+            label: Status
+            widget: select
+            placeholder: Enter status
+        - name: totalAmount
+          type: number
+          required: true
+          unique: false
+          validation: Positive number
+          ui:
+            label: Total Amount
+            widget: number
+            placeholder: Enter totalAmount
+      relationships:
+        - Customer
+        - Product
+      indexes:
+        - order_created_at
+      permissions:
+        read:
+          - admin
+          - staff
+          - customer
+        write:
+          - admin
+          - staff
+        delete:
+          - admin
+apis:
+  integrations:
+    - name: stripe
+      type: rest
+      provider: Stripe
+      baseUrl: https://api.stripe.com/v1
+      authentication:
+        type: api_key
+        envVars:
+          - STRIPE_API_KEY
+      endpoints:
+        - name: create_payment
+          method: POST
+          path: /payments
+        - name: get_payment
+          method: GET
+          path: /payments/{id}
+        - name: list_payments
+          method: GET
+          path: /payments
+      rateLimits:
+        requests: 1000
+        period: 1h
+    - name: twilio
+      type: rest
+      provider: Twilio
+      baseUrl: https://api.twilio.com/2010-04-01
+      authentication:
+        type: basic
+        envVars:
+          - TWILIO_API_KEY
+      endpoints:
+        - name: send_sms
+          method: POST
+          path: /messages
+        - name: send_email
+          method: POST
+          path: /emails
+      rateLimits:
+        requests: 1000
+        period: 1h
+    - name: google-analytics
+      type: rest
+      provider: Google Analytics
+      baseUrl: https://api.example.com
+      authentication:
+        type: api_key
+        envVars:
+          - GOOGLE_ANALYTICS_API_KEY
+      endpoints: []
+      rateLimits:
+        requests: 1000
+        period: 1h
+workflows:
+  - name: order-processing
+    description: Handles the complete lifecycle of an order from creation to delivery.
+    trigger:
+      type: api_call
+      endpoint: /api/workflows/order-processing
+      schedule: null
+    steps:
+      - id: step_1
+        name: Validate Order
+        type: validation
+        description: Ensure all order details are correct and complete.
+        config:
+          validateFields: true
+          stopOnError: true
+      - id: step_2
+        name: Process Payment
+        type: api_call
+        description: Charge the customer's payment method.
+        config:
+          retries: 3
+          timeout: 30000
+      - id: step_3
+        name: Notify Customer
+        type: notification
+        description: Send confirmation and updates via email/SMS.
+        config:
+          channels:
+            - email
+            - sms
+      - id: step_4
+        name: Dispatch Order
+        type: api_call
+        description: Send order details to the kitchen and delivery team.
+        config:
+          retries: 3
+          timeout: 30000
+authentication:
+  providers:
+    - email
+    - oauth
+  roles:
+    - name: customer
+      description: End users who place orders.
+      permissions:
+        - view_menu
+        - place_order
+        - track_order
+    - name: admin
+      description: System administrators managing the platform.
+      permissions:
+        - manage_users
+        - view_reports
+        - update_menu
+    - name: staff
+      description: Employees handling order fulfillment.
+      permissions:
+        - view_orders
+        - update_order_status
+  security:
+    passwordPolicy:
+      minLength: 8
+      requireUppercase: true
+      requireNumbers: true
+      requireSpecialChars: true
+    sessionManagement:
+      sessionTimeout: 24h
+      refreshToken: true
+    auditLogging: true
+ui:
+  theme:
+    primaryColor: '#1e40af'
+    secondaryColor: '#3b82f6'
+    layout: sidebar
+  pages:
+    - name: dashboard
+      path: /
+      layout: full-width
+      components:
+        - stats-overview
+        - charts
+        - recent-activity
+      permissions:
+        - admin
+        - staff
+    - name: customer
+      path: /customer
+      layout: sidebar
+      components:
+        - data-table
+        - filters
+        - actions
+      permissions:
+        - admin
+        - staff
+    - name: order
+      path: /order
+      layout: sidebar
+      components:
+        - data-table
+        - filters
+        - actions
+      permissions:
+        - admin
+        - staff
+    - name: intuitive-menu-navigation
+      path: /intuitive-menu-navigation
+      layout: sidebar
+      components:
+        - feature-specific
+      permissions:
+        - admin
+        - staff
+        - customer
+    - name: easy-order-customization
+      path: /easy-order-customization
+      layout: sidebar
+      components:
+        - feature-specific
+      permissions:
+        - admin
+        - staff
+        - customer
+    - name: real-time-order-tracking
+      path: /real-time-order-tracking
+      layout: sidebar
+      components:
+        - feature-specific
+      permissions:
+        - admin
+        - staff
+        - customer
+    - name: secure-checkout
+      path: /secure-checkout
+      layout: sidebar
+      components:
+        - feature-specific
+      permissions:
+        - admin
+        - staff
+        - customer
+  dashboards:
+    executive: true
+    operational: true
+    customer: false
+deployment:
+  platform: aws
+  environment: production
+  resources:
+    api:
+      memory: 512MB
+      cpu: '0.5'
+    database:
+      size: 10GB
+      connections: 20
+  domains:
+    - domino-s-pizza.opsai.app
+  ssl: true
+  monitoring:
+    enabled: true
+    services:
+      - logs
+      - metrics
+      - alerts
+features:
+  authentication: true
+  workflows: true
+  integrations: true
+  fileUpload: true
+  notifications: true
+  analytics: true
+  audit: true

@@ -10,7 +10,8 @@ export class WebhookService {
     return {
       id: `webhook-${Date.now()}`,
       integrationId,
-      eventType,
+      event: eventType || 'unknown',
+      eventType: eventType || 'unknown',
       payload,
       receivedAt: new Date(),
       status: 'pending'

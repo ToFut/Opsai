@@ -1,20 +1,14 @@
-import { SeedData } from '@opsai/shared';
+import { PrismaClient } from '@prisma/client';
+export interface SeedData {
+    table: string;
+    data: Record<string, any>[];
+}
 export declare class DatabaseSeeder {
-    /**
-     * Seed database with test data
-     */
-    seedDatabase(tenantId: string, data: SeedData[]): Promise<void>;
-    /**
-     * Seed a specific table
-     */
+    private prisma;
+    constructor(prisma: PrismaClient);
+    seedDatabase(seedData: SeedData[]): Promise<void>;
     private seedTable;
-    /**
-     * Seed with default test data
-     */
-    seedDefaultData(tenantId: string): Promise<void>;
-    /**
-     * Clear all data for a tenant
-     */
-    clearTenantData(tenantId: string): Promise<void>;
+    clearTable(tableName: string): Promise<void>;
+    clearAllTables(): Promise<void>;
 }
 //# sourceMappingURL=seed.d.ts.map

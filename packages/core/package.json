@@ -1,0 +1,52 @@
+{
+  "name": "@opsai/core",
+  "version": "1.0.0",
+  "description": "Core OpsAI platform services and utilities",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "type:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opsai/shared": "workspace:*",
+    "@opsai/performance": "workspace:*",
+    "@opsai/security": "workspace:*",
+    "@opsai/deployment": "workspace:*",
+    "@opsai/database": "workspace:*",
+    "@opsai/yaml-validator": "workspace:*",
+    "@opsai/multi-tenant": "workspace:*",
+    "@opsai/integration": "workspace:*",
+    "@temporalio/client": "^1.8.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.22.0",
+    "fs-extra": "^11.1.0",
+    "glob": "^10.3.0",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.0",
+    "@types/fs-extra": "^11.0.0",
+    "@types/glob": "^8.0.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./generators": {
+      "import": "./dist/generators/index.js",
+      "require": "./dist/generators/index.js"
+    },
+    "./processors": {
+      "import": "./dist/processors/index.js",
+      "require": "./dist/processors/index.js"
+    }
+  }
+} 

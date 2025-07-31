@@ -1,0 +1,413 @@
+
+  vertical: 
+    name: restaurant/cafe
+    description: Restaurant/Cafe management system
+    version: 1.0.0
+    industry: general
+  
+  business: 
+    name: Restaurant/Cafe
+    type: Restaurant/Cafe
+    contact: 
+    settings: 
+      timezone: America/New_York
+      currency: USD
+      language: en
+    
+  
+  database: 
+    provider: postgresql
+    models: - 
+      
+        name: square
+        fields: - 
+          
+            name: id
+            type: string
+            required: true
+            unique: true
+          
+          
+            name: createdAt
+            type: datetime
+            required: true
+          
+          
+            name: updatedAt
+            type: datetime
+            required: true
+          
+        
+      
+      
+        name: toast
+        fields: - 
+          
+            name: id
+            type: string
+            required: true
+            unique: true
+          
+          
+            name: createdAt
+            type: datetime
+            required: true
+          
+          
+            name: updatedAt
+            type: datetime
+            required: true
+          
+        
+      
+      
+        name: doordash
+        fields: - 
+          
+            name: id
+            type: string
+            required: true
+            unique: true
+          
+          
+            name: createdAt
+            type: datetime
+            required: true
+          
+          
+            name: updatedAt
+            type: datetime
+            required: true
+          
+        
+      
+    
+  
+  apis: 
+    integrations: - 
+      
+        name: square
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: toast
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: doordash
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: uber-eats
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: opentable
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: restaurant365
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: resy
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: quickbooks
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: google-workspace
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: salesforce
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: slack
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: zoom
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+      
+        name: notion
+        enabled: false
+        config: 
+          enabled: false
+          message: Not configured yet
+        
+      
+    
+  
+  workflows: - 
+    
+      name: Real-time data synchronization across all platforms
+      description: Automated Real-time data synchronization across all platforms
+      trigger: 
+        type: manual
+      
+      steps: - 
+        
+          name: process
+          type: custom
+        
+        
+          name: notify
+          type: notification
+        
+      
+    
+    
+      name: Automated customer communication workflows
+      description: Automated Automated customer communication workflows
+      trigger: 
+        type: manual
+      
+      steps: - 
+        
+          name: process
+          type: custom
+        
+        
+          name: notify
+          type: notification
+        
+      
+    
+    
+      name: Unified reporting dashboard with live metrics
+      description: Automated Unified reporting dashboard with live metrics
+      trigger: 
+        type: manual
+      
+      steps: - 
+        
+          name: process
+          type: custom
+        
+        
+          name: notify
+          type: notification
+        
+      
+    
+  
+  ui: 
+    theme: 
+      primary_color: #3B82F6
+      secondary_color: #10B981
+      font_family: Inter
+    
+    branding: 
+      logo_url: 
+      favicon_url: 
+    
+    pages: - 
+      
+        name: dashboard
+        path: /
+        components: - 
+          
+            type: stats_overview
+            dataSource: analytics
+          
+          
+            type: chart
+            dataSource: revenue_trends
+          
+          
+            type: recent_activity
+            dataSource: activity_log
+          
+        
+      
+      
+        name: square_list
+        path: /squares
+        components: - 
+          
+            type: data_table
+            dataSource: square
+            actions: - 
+              create
+              edit
+              delete
+            
+          
+        
+      
+      
+        name: square_form
+        path: /squares/:id
+        components: - 
+          
+            type: form
+            dataSource: square
+            mode: edit
+          
+        
+      
+      
+        name: toast_list
+        path: /toasts
+        components: - 
+          
+            type: data_table
+            dataSource: toast
+            actions: - 
+              create
+              edit
+              delete
+            
+          
+        
+      
+      
+        name: toast_form
+        path: /toasts/:id
+        components: - 
+          
+            type: form
+            dataSource: toast
+            mode: edit
+          
+        
+      
+      
+        name: doordash_list
+        path: /doordashs
+        components: - 
+          
+            type: data_table
+            dataSource: doordash
+            actions: - 
+              create
+              edit
+              delete
+            
+          
+        
+      
+      
+        name: doordash_form
+        path: /doordashs/:id
+        components: - 
+          
+            type: form
+            dataSource: doordash
+            mode: edit
+          
+        
+      
+    
+  
+  alerts: 
+    channels: - 
+      
+        type: email
+        config: 
+          from: noreply@restaurant/cafe.com
+          smtp: 
+            host: smtp.sendgrid.net
+            port: 587
+            secure: false
+          
+        
+      
+      
+        type: sms
+        enabled: false
+        config: 
+      
+    
+    rules: - 
+      
+        name: low_inventory
+        condition: inventory < reorder_point
+        severity: warning
+        channels: - 
+          email
+          dashboard
+        
+      
+      
+        name: high_value_order
+        condition: order.total > 1000
+        severity: info
+        channels: - 
+          email
+          sms
+        
+      
+    
+  
+  deployment: 
+    environment: production
+    platform: vercel
+    resources: 
+      api: 
+        instances: 2
+        memory: 1Gi
+        cpu: 0.5
+      
+      database: 
+        size: 10Gi
+        connections: 100
+      
+    
+    domains: - 
+      restaurant/cafe.opsai.app
+    
+  

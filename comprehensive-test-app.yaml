@@ -1,0 +1,448 @@
+vertical:
+  name: comprehensive-test-platform
+  description: Full-featured test platform with all OPSAI capabilities
+  version: 1.0.0
+  industry: technology
+  businessModel: b2b-saas
+
+business:
+  name: Comprehensive Test Corp
+  type: SaaS Platform
+  website: https://test.example.com
+  contact:
+    email: test@example.com
+    phone: +1-555-TEST-APP
+  settings:
+    timezone: America/New_York
+    currency: USD
+    language: en
+
+app:
+  name: comprehensive-test-app
+  displayName: Comprehensive Test Platform
+  description: Full-featured B2B SaaS platform testing all OPSAI generator capabilities
+  version: 1.0.0
+  author: OPSAI Test Team
+  license: MIT
+
+database:
+  type: sqlite
+  entities:
+    - name: User
+      displayName: Users
+      description: Application users with authentication
+      fields:
+        - name: id
+          type: string
+          primary: true
+          unique: true
+        - name: email
+          type: string
+          required: true
+          unique: true
+          validation:
+            pattern: ^[^\s@]+@[^\s@]+\.[^\s@]+$
+        - name: name
+          type: string
+          required: true
+        - name: role
+          type: string
+          default: user
+          validation:
+            enum: [admin, manager, user]
+        - name: organizationId
+          type: string
+          required: true
+        - name: isActive
+          type: boolean
+          default: true
+        - name: lastLogin
+          type: datetime
+        - name: preferences
+          type: string
+        - name: createdAt
+          type: datetime
+          default: now
+        - name: updatedAt
+          type: datetime
+          default: now
+      relationships:
+        - type: belongsTo
+          model: Organization
+          foreign_key: organizationId
+        - type: hasMany
+          model: Task
+          foreign_key: assignedTo
+      permissions:
+        create: [admin]
+        read: [admin, manager, user]
+        update: [admin, manager]
+        delete: [admin]
+
+    - name: Organization
+      displayName: Organizations
+      description: Customer organizations
+      fields:
+        - name: id
+          type: string
+          primary: true
+          unique: true
+        - name: name
+          type: string
+          required: true
+        - name: slug
+          type: string
+          unique: true
+        - name: domain
+          type: string
+          unique: true
+        - name: plan
+          type: string
+          default: starter
+          validation:
+            enum: [starter, professional, enterprise]
+        - name: billingEmail
+          type: string
+          required: true
+        - name: settings
+          type: string
+        - name: isActive
+          type: boolean
+          default: true
+        - name: createdAt
+          type: datetime
+          default: now
+        - name: updatedAt
+          type: datetime
+          default: now
+      relationships:
+        - type: hasMany
+          model: User
+          foreign_key: organizationId
+        - type: hasMany
+          model: Project
+          foreign_key: organizationId
+      permissions:
+        create: [admin]
+        read: [admin, manager, user]
+        update: [admin, manager]
+        delete: [admin]
+
+    - name: Project
+      displayName: Projects
+      description: Organization projects
+      fields:
+        - name: id
+          type: string
+          primary: true
+          unique: true
+        - name: name
+          type: string
+          required: true
+        - name: description
+          type: text
+        - name: organizationId
+          type: string
+          required: true
+        - name: ownerId
+          type: string
+          required: true
+        - name: status
+          type: string
+          default: planning
+          validation:
+            enum: [planning, active, completed, archived]
+        - name: priority
+          type: string
+          default: medium
+          validation:
+            enum: [low, medium, high, critical]
+        - name: budget
+          type: decimal
+        - name: startDate
+          type: date
+        - name: endDate
+          type: date
+        - name: tags
+          type: string
+        - name: createdAt
+          type: datetime
+          default: now
+        - name: updatedAt
+          type: datetime
+          default: now
+      relationships:
+        - type: belongsTo
+          model: Organization
+          foreign_key: organizationId
+        - type: belongsTo
+          model: User
+          foreign_key: ownerId
+        - type: hasMany
+          model: Task
+          foreign_key: projectId
+      permissions:
+        create: [admin, manager]
+        read: [admin, manager, user]
+        update: [admin, manager]
+        delete: [admin]
+
+    - name: Task
+      displayName: Tasks
+      description: Project tasks
+      fields:
+        - name: id
+          type: string
+          primary: true
+          unique: true
+        - name: title
+          type: string
+          required: true
+        - name: description
+          type: text
+        - name: projectId
+          type: string
+          required: true
+        - name: assignedTo
+          type: string
+        - name: createdBy
+          type: string
+          required: true
+        - name: status
+          type: string
+          default: todo
+          validation:
+            enum: [todo, in_progress, review, completed]
+        - name: priority
+          type: string
+          default: medium
+          validation:
+            enum: [low, medium, high, critical]
+        - name: estimatedHours
+          type: integer
+        - name: actualHours
+          type: integer
+        - name: dueDate
+          type: datetime
+        - name: completedAt
+          type: datetime
+        - name: createdAt
+          type: datetime
+          default: now
+        - name: updatedAt
+          type: datetime
+          default: now
+      relationships:
+        - type: belongsTo
+          model: Project
+          foreign_key: projectId
+        - type: belongsTo
+          model: User
+          foreign_key: assignedTo
+        - type: belongsTo
+          model: User
+          foreign_key: createdBy
+      permissions:
+        create: [admin, manager, user]
+        read: [admin, manager, user]
+        update: [admin, manager, user]
+        delete: [admin, manager]
+
+apis:
+  integrations:
+    - name: email_service
+      type: rest
+      provider: SendGrid
+      baseUrl: https://api.sendgrid.com/v3
+      authentication:
+        type: api_key
+        header: Authorization
+        envVars:
+          - SENDGRID_API_KEY
+      endpoints:
+        - name: send_email
+          method: POST
+          path: /mail/send
+          requestSchema:
+            type: object
+            properties:
+              personalizations: { type: array }
+              from: { type: object }
+              subject: { type: string }
+              content: { type: array }
+      rateLimits:
+        requestsPerMinute: 600
+
+    - name: slack_notifications
+      type: webhook
+      provider: Slack
+      webhookUrl: https://hooks.slack.com/services/TEST/WEBHOOK/URL
+      authentication:
+        type: signature
+        secret: SLACK_SIGNING_SECRET
+      events:
+        - user.created
+        - project.completed
+        - task.assigned
+
+workflows:
+  - name: user_onboarding
+    description: Welcome new users and set up their environment
+    trigger:
+      type: event
+      config:
+        event: user.created
+    steps:
+      - name: send_welcome_email
+        type: api_call
+        config:
+          integration: email_service
+          endpoint: send_email
+          data:
+            personalizations:
+              - to:
+                  - email: "{{user.email}}"
+                    name: "{{user.name}}"
+            from:
+              email: "noreply@test.com"
+              name: "Test Platform"
+            subject: "Welcome to Test Platform!"
+            content:
+              - type: "text/html"
+                value: "<p>Welcome {{user.name}}! Get started with our platform.</p>"
+
+      - name: notify_admin
+        type: webhook
+        config:
+          integration: slack_notifications
+          data:
+            text: "New user registered: {{user.name}} ({{user.email}})"
+            channel: "#new-users"
+
+      - name: create_welcome_project
+        type: database_insert
+        config:
+          model: Project
+          data:
+            name: "Welcome Project"
+            description: "Your first project to explore the platform"
+            organizationId: "{{user.organizationId}}"
+            ownerId: "{{user.id}}"
+            status: "active"
+
+  - name: project_completion
+    description: Handle project completion workflow
+    trigger:
+      type: api_call
+      endpoint: /api/projects/{id}/complete
+      method: POST
+    steps:
+      - name: update_project_status
+        type: database_update
+        config:
+          model: Project
+          where: "id = {{projectId}}"
+          data:
+            status: "completed"
+
+      - name: notify_team
+        type: api_call
+        config:
+          integration: email_service
+          endpoint: send_email
+          template: project_completion
+
+authentication:
+  providers:
+    - email
+    - oauth
+  oauth:
+    providers:
+      - google
+      - github
+  roles:
+    - name: admin
+      description: System administrator
+      permissions:
+        - "*"
+    - name: manager
+      description: Project manager
+      permissions:
+        - organizations.read
+        - organizations.update
+        - users.*
+        - projects.*
+        - tasks.*
+    - name: user
+      description: Standard user
+      permissions:
+        - profile.read
+        - profile.update
+        - projects.read
+        - tasks.*
+  security:
+    passwordPolicy:
+      minLength: 8
+      requireUppercase: true
+      requireNumbers: true
+    sessionManagement:
+      sessionTimeout: 24h
+      refreshToken: true
+    auditLogging: true
+
+alerts:
+  rules:
+    - name: overdue_tasks
+      description: Alert when tasks are overdue
+      conditions:
+        - field: task.dueDate
+          operator: less_than
+          value: "now()"
+        - field: task.status
+          operator: not_equals
+          value: "completed"
+      actions:
+        - type: email
+          to: ["{{task.assignedTo.email}}"]
+          template: task_overdue
+        - type: webhook
+          integration: slack_notifications
+          data:
+            text: "Overdue task: {{task.title}} assigned to {{task.assignedTo.name}}"
+
+    - name: project_budget_exceeded
+      description: Alert when project budget is exceeded
+      conditions:
+        - field: project.actualCost
+          operator: greater_than
+          value: "{{project.budget}}"
+      actions:
+        - type: email
+          to: ["{{project.owner.email}}"]
+          template: budget_exceeded
+
+deployment:
+  platform: aws
+  environment: production
+  resources:
+    api:
+      cpu: 1
+      memory: 2Gi
+      replicas: 2
+    database:
+      type: sqlite
+      storage: 10Gi
+  monitoring:
+    enabled: true
+
+features:
+  authentication: true
+  multiTenancy: false
+  workflows: true
+  integrations: true
+  fileUpload: true
+  notifications: true
+  analytics: true
+  audit: true
+  search: true
+  caching: true

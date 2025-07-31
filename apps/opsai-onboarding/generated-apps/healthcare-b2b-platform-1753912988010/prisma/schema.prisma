@@ -1,0 +1,42 @@
+// This is your Prisma schema file
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model MedicalDevice {
+  id String @unique @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deviceId String @unique
+  deviceName String
+  manufacturer String
+  complianceStatus String
+}
+
+model ComplianceRecord {
+  id String @unique @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  recordId String @unique
+  deviceId String
+  certificationDate DateTime
+  expiryDate DateTime
+}
+
+model TrainingSession {
+  id String @unique @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessionId String @unique
+  deviceId String
+  trainerName String
+  sessionDate DateTime
+}
+

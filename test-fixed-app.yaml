@@ -1,0 +1,83 @@
+vertical:
+  name: test-fixed-platform
+  description: Testing the fixed generator
+  version: 1.0.0
+
+app:
+  name: test-platform
+  displayName: Test Platform
+  description: Testing fixed schema generation
+  version: 1.0.0
+  author: OPSAI
+  license: MIT
+
+database:
+  type: sqlite
+  entities:
+    - name: User
+      displayName: Users
+      description: Application users
+      fields:
+        - name: id
+          type: string
+          primary: true
+          unique: true
+        - name: email
+          type: string
+          required: true
+          unique: true
+        - name: name
+          type: string
+          required: true
+        - name: role
+          type: string
+          default: user
+        - name: isActive
+          type: boolean
+          default: true
+        - name: createdAt
+          type: datetime
+          default: now
+        - name: updatedAt
+          type: datetime
+          default: now
+
+    - name: Project
+      displayName: Projects
+      description: User projects
+      fields:
+        - name: id
+          type: string
+          primary: true
+          unique: true
+        - name: name
+          type: string
+          required: true
+        - name: description
+          type: text
+        - name: userId
+          type: string
+          required: true
+        - name: status
+          type: string
+          default: active
+        - name: createdAt
+          type: datetime
+          default: now
+        - name: updatedAt
+          type: datetime
+          default: now
+      relationships:
+        - type: belongsTo
+          model: User
+          foreign_key: userId
+
+features:
+  authentication: true
+  multiTenancy: false
+  workflows: false
+  integrations: false
+  fileUpload: false
+  notifications: false
+  analytics: false
+  audit: false

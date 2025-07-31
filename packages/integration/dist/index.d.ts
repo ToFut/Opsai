@@ -8,5 +8,7 @@ export * from './connectors/webhook-connector';
 export * from './connectors/airbyte-connector';
 export * from './processors/data-processor';
 export * from './processors/transformation-processor';
+export * from './auth/oauth-manager';
+export * from './credentials/credential-manager';
 export * from './types';
 //# sourceMappingURL=index.d.ts.map

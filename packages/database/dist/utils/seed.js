@@ -1,80 +1,76 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseSeeder = void 0;
-const client_1 = require("../client");
 class DatabaseSeeder {
-    /**
-     * Seed database with test data
-     */
-    async seedDatabase(tenantId, data) {
-        for (const seedItem of data) {
-            await this.seedTable(tenantId, seedItem);
+    constructor(prisma) {
+        this.prisma = prisma;
+    }
+    async seedDatabase(seedData) {
+        try {
+            for (const tableData of seedData) {
+                await this.seedTable(tableData.table, tableData.data);
+            }
+        }
+        catch (error) {
+            throw new Error(`Seeding failed: ${error}`);
         }
     }
-    /**
-     * Seed a specific table
-     */
-    async seedTable(tenantId, seedData) {
-        const { table, data } = seedData;
-        // Add tenantId to all records
-        const recordsWithTenant = data.map(record => ({
-            ...record,
-            tenantId
-        }));
-        // Use Prisma's createMany for better performance
-        await client_1.prisma[table].createMany({
-            data: recordsWithTenant,
-            skipDuplicates: true
-        });
-    }
-    /**
-     * Seed with default test data
-     */
-    async seedDefaultData(tenantId) {
-        const defaultData = [
-            {
-                table: 'users',
-                data: [
-                    {
-                        email: 'admin@example.com',
-                        firstName: 'Admin',
-                        lastName: 'User',
-                        role: 'admin',
-                        isActive: true
-                    },
-                    {
-                        email: 'user@example.com',
-                        firstName: 'Regular',
-                        lastName: 'User',
-                        role: 'user',
-                        isActive: true
-                    }
-                ]
+    async seedTable(tableName, data) {
+        try {
+            // Use dynamic table access
+            const table = this.prisma[tableName];
+            if (!table) {
+                throw new Error(`Table ${tableName} not found in Prisma client`);
             }
-        ];
-        await this.seedDatabase(tenantId, defaultData);
+            for (const record of data) {
+                await table.create({
+                    data: record
+                });
+            }
+        }
+        catch (error) {
+            throw new Error(`Failed to seed table ${tableName}: ${error}`);
+        }
     }
-    /**
-     * Clear all data for a tenant
-     */
-    async clearTenantData(tenantId) {
-        const tables = [
-            'auditLogs',
-            'sessions',
-            'files',
-            'users',
-            'alertDeliveries',
-            'alerts',
-            'alertRules',
-            'workflowExecutions',
-            'workflows',
-            'syncJobs',
-            'integrations'
-        ];
-        for (const table of tables) {
-            await client_1.prisma[table].deleteMany({
-                where: { tenantId }
-            });
+    async clearTable(tableName) {
+        try {
+            const table = this.prisma[tableName];
+            if (!table) {
+                throw new Error(`Table ${tableName} not found in Prisma client`);
+            }
+            await table.deleteMany();
+        }
+        catch (error) {
+            throw new Error(`Failed to clear table ${tableName}: ${error}`);
+        }
+    }
+    async clearAllTables() {
+        try {
+            // Clear tables in reverse dependency order
+            const tables = [
+                'alertDelivery',
+                'alert',
+                'alertRule',
+                'workflowExecution',
+                'workflow',
+                'syncJob',
+                'integration',
+                'userRole',
+                'rolePermission',
+                'permission',
+                'role',
+                'auditLog',
+                'file',
+                'session',
+                'user',
+                'tenant'
+            ];
+            for (const tableName of tables) {
+                await this.clearTable(tableName);
+            }
+        }
+        catch (error) {
+            throw new Error(`Failed to clear all tables: ${error}`);
         }
     }
 }

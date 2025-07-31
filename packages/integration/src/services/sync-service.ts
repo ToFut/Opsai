@@ -12,7 +12,8 @@ export class SyncService {
       integrationId,
       status: 'running',
       recordsProcessed: 0,
-      recordsFailed: 0
+      recordsFailed: 0,
+      errors: []
     };
   }
 

@@ -8,7 +8,7 @@ class DataProcessor {
      */
     async processTransformations(data, transformations, tenantId) {
         let processedData = data;
-        for (const transformation of transformations.filter(t => t.enabled)) {
+        for (const transformation of transformations.filter(t => t.enabled !== false)) {
             try {
                 processedData = await this.applyTransformation(processedData, transformation);
             }
@@ -26,23 +26,23 @@ class DataProcessor {
         const result = {};
         for (const mapping of mappings) {
             try {
-                switch (mapping.type) {
+                switch (mapping.type || 'direct') {
                     case 'direct':
                         result[mapping.target] = this.getNestedValue(data, mapping.source);
                         break;
                     case 'default':
-                        result[mapping.target] = this.getNestedValue(data, mapping.source) || mapping.defaultValue;
+                        result[mapping.target] = this.getNestedValue(data, mapping.source) || mapping.defaultValue || null;
                         break;
                     case 'transform':
                         const sourceValue = this.getNestedValue(data, mapping.source);
-                        result[mapping.target] = this.applyTransformRule(sourceValue, mapping.transformRule);
+                        result[mapping.target] = this.applyTransformRule(sourceValue, mapping.transformRule || '');
                         break;
                 }
             }
             catch (error) {
                 console.error(`Mapping failed for ${mapping.source} -> ${mapping.target}:`, error);
                 if (mapping.type === 'default') {
-                    result[mapping.target] = mapping.defaultValue;
+                    result[mapping.target] = mapping.defaultValue || null;
                 }
             }
         }
@@ -143,7 +143,7 @@ class DataProcessor {
      */
     async applyTransformation(data, transformation) {
         // Validate input against input schema
-        const inputValidation = this.validateData(data, transformation.inputSchema);
+        const inputValidation = this.validateData(data, transformation.inputSchema || {});
         if (!inputValidation.valid) {
             throw new errors_1.IntegrationError(`Input validation failed: ${inputValidation.errors.join(', ')}`);
         }
@@ -152,14 +152,14 @@ class DataProcessor {
         try {
             // In a real implementation, this would be a secure sandbox
             // For now, we'll use a simple function evaluation
-            const transformFunction = new Function('data', transformation.transformFunction);
+            const transformFunction = new Function('data', transformation.transformFunction || 'return data;');
             result = transformFunction(data);
         }
         catch (error) {
             throw new errors_1.IntegrationError(`Transformation function execution failed: ${error}`, 'TRANSFORM_EXECUTION_FAILED', error);
         }
         // Validate output against output schema
-        const outputValidation = this.validateData(result, transformation.outputSchema);
+        const outputValidation = this.validateData(result, transformation.outputSchema || {});
         if (!outputValidation.valid) {
             throw new errors_1.IntegrationError(`Output validation failed: ${outputValidation.errors.join(', ')}`);
         }

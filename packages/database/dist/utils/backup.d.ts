@@ -1,26 +1,17 @@
-import { BackupResult } from '@opsai/shared';
+import { PrismaClient } from '@prisma/client';
+export interface BackupResult {
+    id: string;
+    filename: string;
+    size: number;
+    createdAt: Date;
+    status: 'completed' | 'failed' | 'in_progress';
+}
 export declare class DatabaseBackup {
-    private backupDir;
-    constructor(backupDir?: string);
-    /**
-     * Create backup directory if it doesn't exist
-     */
-    private ensureBackupDir;
-    /**
-     * Backup tenant data
-     */
-    backupTenant(tenantId: string): Promise<BackupResult>;
-    /**
-     * Restore tenant data
-     */
-    restoreTenant(_tenantId: string, backupPath: string): Promise<boolean>;
-    /**
-     * List available backups
-     */
-    listBackups(): string[];
-    /**
-     * Clean up old backups (keep last 10)
-     */
-    cleanupOldBackups(): void;
+    private prisma;
+    constructor(prisma: PrismaClient);
+    createBackup(): Promise<BackupResult>;
+    restoreBackup(backupId: string): Promise<void>;
+    listBackups(): Promise<BackupResult[]>;
+    deleteBackup(backupId: string): Promise<void>;
 }
 //# sourceMappingURL=backup.d.ts.map

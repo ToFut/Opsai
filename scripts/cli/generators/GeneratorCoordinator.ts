@@ -5,6 +5,9 @@ import { EnhancedSchemaGenerator } from './EnhancedSchemaGenerator';
 import { APIGenerator } from './APIGenerator';
 import { EnhancedIntegrationGenerator } from './EnhancedIntegrationGenerator';
 import { WorkflowGenerator } from './WorkflowGenerator';
+import { WorkflowOrchestrator } from './WorkflowOrchestrator';
+import { SupabaseGenerator } from './SupabaseGenerator';
+import { AirbyteGenerator } from './AirbyteGenerator';
 import { UIGenerator } from './UIGenerator';
 import { AlertGenerator } from './AlertGenerator';
 import { DeploymentGenerator } from './DeploymentGenerator';
@@ -34,15 +37,18 @@ export class GeneratorCoordinator {
     // Phase 1: Core Infrastructure
     await this.generatePhase('infrastructure', [
       () => this.generateDatabase(),
+      () => this.generateSupabaseSetup(),
       () => this.generateEnvironment(),
       () => this.generateProjectConfiguration()
     ]);
 
-    // Phase 2: Business Logic
+    // Phase 2: Business Logic & Data Integration
     await this.generatePhase('business-logic', [
       () => this.generateAPI(),
       () => this.generateIntegrations(),
-      () => this.generateWorkflows()
+      () => this.generateAirbyteSetup(),
+      () => this.generateWorkflows(),
+      () => this.generateWorkflowOrchestration()
     ]);
 
     // Phase 3: User Interface & Monitoring
@@ -82,14 +88,51 @@ export class GeneratorCoordinator {
   }
 
   private async generateDatabase(): Promise<void> {
-    console.log('🗄️  Generating database schema...');
+    console.log('🗄️  Generating enhanced database schema with analytics...');
     const generator = new EnhancedSchemaGenerator(this.config);
     await generator.generateDatabaseSchema(this.outputDir);
     
     this.recordGeneratedFiles('database', [
       'prisma/schema.prisma',
       'prisma/migrations/',
-      'prisma/seed.ts'
+      'prisma/seed.ts',
+      'lib/analytics/AnalyticsService.ts',
+      'lib/analytics/AuditService.ts'
+    ]);
+  }
+
+  private async generateSupabaseSetup(): Promise<void> {
+    console.log('🔧 Generating automated Supabase setup...');
+    const generator = new SupabaseGenerator(this.config, this.outputDir);
+    await generator.generateSupabaseSetup();
+    
+    this.recordGeneratedFiles('supabase', [
+      'supabase/config.toml',
+      'supabase/migrations/',
+      '.env.local',
+      'lib/supabase.ts',
+      'hooks/useAuth.ts',
+      'hooks/useRealtime.ts',
+      'lib/storage.ts'
+    ]);
+  }
+
+  private async generateAirbyteSetup(): Promise<void> {
+    if (!this.config.apis?.integrations?.length) {
+      console.log('⏭️  Skipping Airbyte setup (no integrations configured)');
+      return;
+    }
+
+    console.log('🔄 Generating Airbyte data integration setup...');
+    const generator = new AirbyteGenerator(this.config, this.outputDir);
+    await generator.generateAirbyteSetup();
+    
+    this.recordGeneratedFiles('airbyte', [
+      'airbyte/configs/',
+      'airbyte/transformations/',
+      'airbyte/monitoring/',
+      'airbyte/docker-compose.yml',
+      'lib/services/DataSyncService.ts'
     ]);
   }
 
@@ -174,6 +217,22 @@ export class GeneratorCoordinator {
     });
     
     this.recordGeneratedFiles('workflows', workflowFiles);
+  }
+
+  private async generateWorkflowOrchestration(): Promise<void> {
+    console.log('⚙️ Generating Temporal workflow orchestration...');
+    const orchestrator = new WorkflowOrchestrator(this.config, this.outputDir);
+    await orchestrator.generateWorkflowSystem();
+    
+    this.recordGeneratedFiles('workflow-orchestration', [
+      'workflows/',
+      'activities/workflow-activities.ts',
+      'activities/worker.ts',
+      'lib/workflow/WorkflowClient.ts',
+      'lib/workflow/WorkflowMonitoringService.ts',
+      'temporal/docker-compose.yml',
+      'app/api/workflows/route.ts'
+    ]);
   }
 
   private async generateUI(): Promise<void> {
@@ -382,9 +441,20 @@ export class GeneratorCoordinator {
         '@temporalio/client': '^1.8.0',
         '@temporalio/worker': '^1.8.0',
         '@temporalio/workflow': '^1.8.0',
-        '@temporalio/activity': '^1.12.1'
+        '@temporalio/activity': '^1.8.0'
       });
     }
+    
+    // Supabase dependencies (always included for modern apps)
+    Object.assign(runtimeDependencies, {
+      '@supabase/supabase-js': '^2.38.0'
+    });
+    
+    // Analytics and monitoring
+    Object.assign(runtimeDependencies, {
+      'uuid': '^9.0.0',
+      '@types/uuid': '^9.0.7'
+    });
     
     // Queue processing dependencies
     if (features.workflows || features.alerts) {
@@ -455,10 +525,34 @@ export class GeneratorCoordinator {
     // Add feature-specific scripts
     if (features.workflows) {
       scripts['workflow:start'] = 'tsx src/workflows/service.ts';
+      scripts['temporal:start'] = 'cd temporal && docker-compose up -d';
+      scripts['temporal:stop'] = 'cd temporal && docker-compose down';
+      scripts['temporal:worker'] = 'tsx activities/worker.ts';
+      scripts['temporal:ui'] = 'open http://localhost:8080';
     }
     
     if (features.alerts) {
       scripts['alerts:start'] = 'tsx src/alerts/service.ts';
+    }
+    
+    // Supabase scripts (always available)
+    Object.assign(scripts, {
+      'supabase:start': 'supabase start',
+      'supabase:stop': 'supabase stop',
+      'supabase:reset': 'supabase db reset',
+      'supabase:seed': 'supabase db seed',
+      'supabase:migrate': 'supabase db migrate up',
+      'supabase:types': 'supabase gen types typescript --local > types/supabase.ts'
+    });
+    
+    // Airbyte scripts (if integrations are enabled)
+    if (this.config.apis?.integrations?.length) {
+      Object.assign(scripts, {
+        'airbyte:start': 'cd airbyte && docker-compose up -d',
+        'airbyte:stop': 'cd airbyte && docker-compose down',
+        'airbyte:logs': 'cd airbyte && docker-compose logs -f',
+        'airbyte:reset': 'cd airbyte && docker-compose down -v && docker-compose up -d'
+      });
     }
     
     return {
@@ -471,8 +565,11 @@ export class GeneratorCoordinator {
         ...corePackages,
         ...runtimeDependencies
       },
-      devDependencies,
-      author: this.config.app.author || 'CORE Platform',
+      devDependencies: {
+        ...devDependencies,
+        'supabase': '^1.130.0' // Supabase CLI
+      },
+      author: this.config.app.author || 'OPSAI Platform',
       license: this.config.app.license || 'MIT',
       engines: {
         node: '>=18.0.0',
@@ -480,7 +577,13 @@ export class GeneratorCoordinator {
       },
       keywords: [
         'opsai',
-        'core-platform',
+        'supabase',
+        'temporal',
+        'airbyte',
+        'analytics',
+        'business-intelligence',
+        'workflow-orchestration',
+        'data-integration',
         'vertical-saas',
         this.config.app.name
       ]

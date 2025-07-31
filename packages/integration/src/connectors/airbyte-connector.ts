@@ -3,12 +3,19 @@ import { BaseConnector } from './base-connector';
 import { IntegrationConfig, SyncResult, ConnectorConfig } from '../types';
 import { IntegrationError } from '../errors';
 
-export interface AirbyteConfig extends ConnectorConfig {
+export interface AirbyteConnectorConfig extends ConnectorConfig {
+  type: string;
   apiKey: string;
   clientId: string;
   clientSecret: string;
   baseUrl?: string;
   workspaceId?: string;
+  retryConfig?: {
+    maxRetries: number;
+    backoffStrategy: 'linear' | 'exponential';
+    initialDelay: number;
+    maxDelay: number;
+  };
 }
 
 export interface AirbyteSource {
@@ -72,11 +79,12 @@ export interface AirbyteSyncJob {
 
 export class AirbyteConnector extends BaseConnector {
   private client: AxiosInstance;
-  private config: AirbyteConfig;
+  protected config: AirbyteConnectorConfig;
   private accessToken?: string;
   private tokenExpiresAt?: Date;
+  public isConnected: boolean = false;
 
-  constructor(config: AirbyteConfig) {
+  constructor(config: AirbyteConnectorConfig) {
     super(config);
     this.config = config;
     
@@ -112,6 +120,19 @@ export class AirbyteConnector extends BaseConnector {
         );
       }
     );
+  }
+
+  async initialize(): Promise<void> {
+    await this.connect();
+  }
+
+  async executeRequest(endpoint: string, method: string, data?: any): Promise<any> {
+    const response = await this.client.request({
+      method,
+      url: endpoint,
+      data
+    });
+    return response.data;
   }
 
   async connect(): Promise<void> {
@@ -326,6 +347,8 @@ export class AirbyteConnector extends BaseConnector {
 
       return {
         success: completedJob.status === 'succeeded',
+        recordsProcessed: completedJob.recordsSynced || 0,
+        recordsFailed: completedJob.status === 'failed' ? 1 : 0,
         recordCount: completedJob.recordsSynced || 0,
         dataSize: completedJob.dataEmitted || 0,
         duration: completedJob.endedAt && completedJob.startedAt 
@@ -337,7 +360,7 @@ export class AirbyteConnector extends BaseConnector {
           sourceId: source.sourceId,
           destinationId: destination.destinationId
         },
-        error: completedJob.status === 'failed' ? completedJob.errorMessage : undefined
+        errors: completedJob.status === 'failed' ? [completedJob.errorMessage || 'Unknown error'] : []
       };
 
     } catch (error) {
@@ -495,19 +518,21 @@ export class AirbyteConnector extends BaseConnector {
 }
 
 // Factory function for easy instantiation
-export function createAirbyteConnector(config?: Partial<AirbyteConfig>): AirbyteConnector {
-  const airbyteConfig: AirbyteConfig = {
-    name: 'airbyte',
-    type: 'airbyte',
-    apiKey: config?.apiKey || process.env.AIRBYTE_API_KEY || '',
-    clientId: config?.clientId || process.env.AIRBYTE_CLIENT_ID || '',
-    clientSecret: config?.clientSecret || process.env.AIRBYTE_CLIENT_SECRET || '',
-    baseUrl: config?.baseUrl || process.env.AIRBYTE_BASE_URL || 'https://api.airbyte.com/v1',
-    workspaceId: config?.workspaceId || process.env.AIRBYTE_WORKSPACE_ID,
+export function createAirbyteConnector(config?: Partial<AirbyteConnectorConfig>): AirbyteConnector {
+          const airbyteConfig: AirbyteConnectorConfig = {
+      name: 'airbyte',
+      version: '1.0.0',
+      type: 'airbyte',
+      apiKey: config?.apiKey || process.env.AIRBYTE_API_KEY || '',
+      clientId: config?.clientId || process.env.AIRBYTE_CLIENT_ID || '',
+      clientSecret: config?.clientSecret || process.env.AIRBYTE_CLIENT_SECRET || '',
+      baseUrl: config?.baseUrl || process.env.AIRBYTE_BASE_URL || 'https://api.airbyte.com/v1',
+      workspaceId: config?.workspaceId || process.env.AIRBYTE_WORKSPACE_ID,
     retryConfig: {
       maxRetries: 3,
-      backoffMs: 1000,
-      backoffMultiplier: 2
+      initialDelay: 1000,
+              backoffStrategy: 'exponential',
+        maxDelay: 10000
     },
     ...config
   };

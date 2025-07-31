@@ -1,0 +1,33 @@
+{
+  "name": "@opsai/analyzer",
+  "version": "1.0.0",
+  "description": "Website and data analysis engine for OpsAI Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "type:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opsai/shared": "workspace:*",
+    "@opsai/database": "workspace:*",
+    "playwright": "^1.40.0",
+    "cheerio": "^1.0.0-rc.12",
+    "wappalyzer": "^6.10.0",
+    "openai": "^4.0.0",
+    "zod": "^3.22.0",
+    "p-queue": "^7.4.0",
+    "lru-cache": "^10.0.0",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/cheerio": "^0.22.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0"
+  }
+}

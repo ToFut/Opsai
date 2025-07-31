@@ -1,86 +1,85 @@
-import { prisma } from '../client';
-import { SeedData } from '@opsai/shared';
+import { PrismaClient } from '@prisma/client'
+
+export interface SeedData {
+  table: string
+  data: Record<string, any>[]
+}
 
 export class DatabaseSeeder {
-  /**
-   * Seed database with test data
-   */
-  async seedDatabase(tenantId: string, data: SeedData[]): Promise<void> {
-    for (const seedItem of data) {
-      await this.seedTable(tenantId, seedItem);
+  private prisma: PrismaClient
+
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma
+  }
+
+  async seedDatabase(seedData: SeedData[]): Promise<void> {
+    try {
+      for (const tableData of seedData) {
+        await this.seedTable(tableData.table, tableData.data)
+      }
+    } catch (error) {
+      throw new Error(`Seeding failed: ${error}`)
     }
   }
 
-  /**
-   * Seed a specific table
-   */
-  private async seedTable(tenantId: string, seedData: SeedData): Promise<void> {
-    const { table, data } = seedData;
-
-    // Add tenantId to all records
-    const recordsWithTenant = data.map(record => ({
-      ...record,
-      tenantId
-    }));
-
-    // Use Prisma's createMany for better performance
-    await (prisma as any)[table].createMany({
-      data: recordsWithTenant,
-      skipDuplicates: true
-    });
-  }
-
-  /**
-   * Seed with default test data
-   */
-  async seedDefaultData(tenantId: string): Promise<void> {
-    const defaultData: SeedData[] = [
-      {
-        table: 'users',
-        data: [
-          {
-            email: 'admin@example.com',
-            firstName: 'Admin',
-            lastName: 'User',
-            role: 'admin',
-            isActive: true
-          },
-          {
-            email: 'user@example.com',
-            firstName: 'Regular',
-            lastName: 'User',
-            role: 'user',
-            isActive: true
-          }
-        ]
+  private async seedTable(tableName: string, data: Record<string, any>[]): Promise<void> {
+    try {
+      // Use dynamic table access
+      const table = (this.prisma as any)[tableName]
+      if (!table) {
+        throw new Error(`Table ${tableName} not found in Prisma client`)
       }
-    ];
 
-    await this.seedDatabase(tenantId, defaultData);
+      for (const record of data) {
+        await table.create({
+          data: record
+        })
+      }
+    } catch (error) {
+      throw new Error(`Failed to seed table ${tableName}: ${error}`)
+    }
   }
 
-  /**
-   * Clear all data for a tenant
-   */
-  async clearTenantData(tenantId: string): Promise<void> {
-    const tables = [
-      'auditLogs',
-      'sessions',
-      'files',
-      'users',
-      'alertDeliveries',
-      'alerts',
-      'alertRules',
-      'workflowExecutions',
-      'workflows',
-      'syncJobs',
-      'integrations'
-    ];
+  async clearTable(tableName: string): Promise<void> {
+    try {
+      const table = (this.prisma as any)[tableName]
+      if (!table) {
+        throw new Error(`Table ${tableName} not found in Prisma client`)
+      }
 
-    for (const table of tables) {
-      await (prisma as any)[table].deleteMany({
-        where: { tenantId }
-      });
+      await table.deleteMany()
+    } catch (error) {
+      throw new Error(`Failed to clear table ${tableName}: ${error}`)
+    }
+  }
+
+  async clearAllTables(): Promise<void> {
+    try {
+      // Clear tables in reverse dependency order
+      const tables = [
+        'alertDelivery',
+        'alert',
+        'alertRule',
+        'workflowExecution',
+        'workflow',
+        'syncJob',
+        'integration',
+        'userRole',
+        'rolePermission',
+        'permission',
+        'role',
+        'auditLog',
+        'file',
+        'session',
+        'user',
+        'tenant'
+      ]
+
+      for (const tableName of tables) {
+        await this.clearTable(tableName)
+      }
+    } catch (error) {
+      throw new Error(`Failed to clear all tables: ${error}`)
     }
   }
 } 

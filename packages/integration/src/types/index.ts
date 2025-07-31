@@ -14,6 +14,27 @@ export interface IntegrationConfig {
   schedule?: ScheduleConfig;
   dataMapping?: DataMapping[];
   transformations?: TransformationRule[];
+  
+  // REST/SOAP specific properties
+  host?: string;
+  port?: number;
+  timeout?: number;
+  headers?: Record<string, string>;
+  authentication?: RESTAuthentication;
+  streams?: any[];
+  
+  // Database specific properties
+  database?: string;
+  username?: string;
+  password?: string;
+  ssl?: boolean;
+  connectionString?: string;
+  authSource?: string;
+  
+  // File specific properties
+  fileUrl?: string;
+  format?: string;
+  storage?: any;
 }
 
 export interface EndpointConfig {
@@ -24,20 +45,21 @@ export interface EndpointConfig {
   params?: Record<string, any>;
   body?: any;
   responseSchema?: APISchema;
+  requestSchema?: APISchema;
   timeout?: number;
 }
 
 export interface RateLimitConfig {
   requestsPerMinute: number;
-  burstSize: number;
-  retryAfter?: number;
+  burstLimit?: number;
 }
 
 export interface RetryPolicy {
   maxRetries: number;
-  backoffMultiplier: number;
+  backoffStrategy: 'linear' | 'exponential';
   initialDelay: number;
   maxDelay: number;
+  retryableErrors?: string[];
 }
 
 export interface WebhookConfig {
@@ -45,40 +67,65 @@ export interface WebhookConfig {
   secret?: string;
   events: string[];
   headers?: Record<string, string>;
+  verifySignature?: boolean;
 }
 
 export interface ScheduleConfig {
-  cron: string;
+  type: 'cron' | 'interval';
+  expression: string;
   timezone?: string;
-  enabled: boolean;
 }
 
 export interface DataMapping {
   source: string;
   target: string;
-  type: 'direct' | 'transform' | 'default';
+  transform?: string;
+  type?: 'direct' | 'transform' | 'default';
   defaultValue?: any;
   transformRule?: string;
 }
 
 export interface TransformationRule {
   name: string;
-  description: string;
-  inputSchema: APISchema;
-  outputSchema: APISchema;
-  transformFunction: string;
-  enabled: boolean;
+  type: 'filter' | 'map' | 'aggregate' | 'sort';
+  expression: string;
+  options?: Record<string, any>;
+  enabled?: boolean;
+  inputSchema?: any;
+  outputSchema?: any;
+  transformFunction?: string;
+}
+
+export interface RESTAuthentication {
+  type: 'basic' | 'bearer' | 'oauth2' | 'api_key' | 'custom';
+  credentials: Record<string, string>;
+  header?: string;
+  value?: string;
+  secretName?: string;
+  token?: string;
+  username?: string;
+  password?: string;
+  usernameSecret?: string;
+  passwordSecret?: string;
+  headers?: Record<string, string>;
+  tokenUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  clientIdSecret?: string;
+  clientSecretSecret?: string;
+  scope?: string;
 }
 
 export interface SyncJob {
   id: string;
   integrationId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: 'pending' | 'running' | 'completed' | 'failed';
   startedAt?: Date;
   completedAt?: Date;
-  error?: string;
   recordsProcessed: number;
   recordsFailed: number;
+  errors: string[];
+  error?: string;
   metadata?: Record<string, any>;
 }
 
@@ -86,19 +133,23 @@ export interface SyncResult {
   success: boolean;
   recordsProcessed: number;
   recordsFailed: number;
+  recordCount: number;
   errors: string[];
   metadata?: Record<string, any>;
+  dataSize?: number;
+  duration?: number;
 }
 
 export interface WebhookEvent {
   id: string;
   integrationId: string;
-  eventType: string;
+  event: string;
   payload: any;
   receivedAt: Date;
   processedAt?: Date;
   status: 'pending' | 'processed' | 'failed';
   error?: string;
+  eventType?: string;
 }
 
 export interface ConnectorConfig {
@@ -120,31 +171,22 @@ export interface RESTEndpoint {
   path: string;
   method: string;
   headers?: Record<string, string>;
+  params?: Record<string, any>;
+  requestSchema?: APISchema;
+  responseSchema?: APISchema;
   timeout?: number;
-  requestSchema?: any;
-  responseSchema?: any;
 }
 
-export interface RESTAuthentication {
-  type: 'api_key' | 'bearer' | 'basic' | 'oauth2' | 'custom';
-  // API Key auth
-  header?: string;
-  value?: string;
-  secretName?: string;
-  // Bearer token auth
-  token?: string;
-  // Basic auth
-  username?: string;
-  password?: string;
-  usernameSecret?: string;
-  passwordSecret?: string;
-  // OAuth2 auth
-  clientId?: string;
-  clientSecret?: string;
-  clientIdSecret?: string;
-  clientSecretSecret?: string;
-  tokenUrl?: string;
-  scope?: string;
-  // Custom auth
-  headers?: Record<string, string>;
+export interface AirbyteConfig {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  apiVersion: string;
+  retryConfig?: {
+    maxRetries: number;
+    backoffStrategy: 'linear' | 'exponential';
+    initialDelay: number;
+    maxDelay: number;
+  };
 } 

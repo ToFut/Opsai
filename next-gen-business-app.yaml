@@ -1,0 +1,773 @@
+# Next-Generation Business Application Configuration
+# Generated for comprehensive testing of OPSAI platform capabilities
+
+vertical:
+  name: "next-gen-business-platform"
+  description: "Comprehensive business platform with analytics, workflows, and AI integration"
+  version: "2.0.0"
+  industry: "technology"
+  businessModel: "B2B SaaS"
+
+business:
+  name: "NextGen Business Solutions"
+  type: "technology"
+  website: "https://nextgen.business"
+  contact:
+    email: "admin@nextgen.business"
+    phone: "+1-555-0123"
+  settings:
+    timezone: "America/New_York"
+    currency: "USD"
+    language: "en"
+
+database:
+  provider: "postgresql"
+  models:
+    - name: "Customer"
+      displayName: "Customer"
+      description: "Business customers and prospects"
+      fields:
+        - name: "email"
+          type: "string"
+          required: true
+          unique: true
+          validation:
+            pattern: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"
+          ui:
+            label: "Email Address"
+            widget: "email"
+        - name: "company_name"
+          type: "string"
+          required: true
+          ui:
+            label: "Company Name"
+            widget: "text"
+        - name: "industry"
+          type: "string"
+          validation:
+            enum: ["technology", "healthcare", "finance", "retail", "manufacturing", "other"]
+          ui:
+            label: "Industry"
+            widget: "select"
+        - name: "revenue"
+          type: "decimal"
+          ui:
+            label: "Annual Revenue"
+            widget: "currency"
+        - name: "employee_count"
+          type: "integer"
+          ui:
+            label: "Number of Employees"
+            widget: "number"
+        - name: "status"
+          type: "string"
+          default: "prospect"
+          validation:
+            enum: ["prospect", "active", "churned", "paused"]
+          ui:
+            label: "Customer Status"
+            widget: "select"
+        - name: "subscription_tier"
+          type: "string"
+          validation:
+            enum: ["starter", "professional", "enterprise"]
+          ui:
+            label: "Subscription Tier"
+            widget: "select"
+        - name: "mrr"
+          type: "decimal"
+          ui:
+            label: "Monthly Recurring Revenue"
+            widget: "currency"
+        - name: "last_activity"
+          type: "datetime"
+          ui:
+            label: "Last Activity"
+            widget: "datetime"
+      relationships:
+        - type: "hasMany"
+          target: "Contract"
+          field: "customerId"
+        - type: "hasMany"
+          target: "SupportTicket"
+          field: "customerId"
+        - type: "hasMany"
+          target: "Invoice"
+          field: "customerId"
+      indexes:
+        - fields: ["email"]
+          unique: true
+        - fields: ["status", "subscription_tier"]
+        - fields: ["industry"]
+      permissions:
+        create: ["admin", "sales"]
+        read: ["admin", "sales", "support"]
+        update: ["admin", "sales"]
+        delete: ["admin"]
+
+    - name: "Contract"
+      displayName: "Contract"
+      description: "Customer contracts and agreements"
+      fields:
+        - name: "contract_number"
+          type: "string"
+          required: true
+          unique: true
+          ui:
+            label: "Contract Number"
+            widget: "text"
+        - name: "start_date"
+          type: "date"
+          required: true
+          ui:
+            label: "Start Date"
+            widget: "date"
+        - name: "end_date"
+          type: "date"
+          ui:
+            label: "End Date"
+            widget: "date"
+        - name: "value"
+          type: "decimal"
+          required: true
+          ui:
+            label: "Contract Value"
+            widget: "currency"
+        - name: "status"
+          type: "string"
+          default: "draft"
+          validation:
+            enum: ["draft", "active", "expired", "terminated"]
+          ui:
+            label: "Contract Status"
+            widget: "select"
+        - name: "terms"
+          type: "json"
+          ui:
+            label: "Contract Terms"
+            widget: "json"
+        - name: "auto_renew"
+          type: "boolean"
+          default: false
+          ui:
+            label: "Auto Renewal"
+            widget: "checkbox"
+      relationships:
+        - type: "belongsTo"
+          target: "Customer"
+          field: "customerId"
+      indexes:
+        - fields: ["contract_number"]
+          unique: true
+        - fields: ["status", "end_date"]
+
+    - name: "SupportTicket"
+      displayName: "Support Ticket"
+      description: "Customer support requests and issues"
+      fields:
+        - name: "ticket_number"
+          type: "string"
+          required: true
+          unique: true
+          ui:
+            label: "Ticket Number"
+            widget: "text"
+        - name: "subject"
+          type: "string"
+          required: true
+          ui:
+            label: "Subject"
+            widget: "text"
+        - name: "description"
+          type: "text"
+          required: true
+          ui:
+            label: "Description"
+            widget: "textarea"
+        - name: "priority"
+          type: "string"
+          default: "medium"
+          validation:
+            enum: ["low", "medium", "high", "critical"]
+          ui:
+            label: "Priority"
+            widget: "select"
+        - name: "status"
+          type: "string"
+          default: "open"
+          validation:
+            enum: ["open", "in_progress", "waiting", "resolved", "closed"]
+          ui:
+            label: "Status"
+            widget: "select"
+        - name: "category"
+          type: "string"
+          validation:
+            enum: ["technical", "billing", "feature_request", "bug_report", "general"]
+          ui:
+            label: "Category"
+            widget: "select"
+        - name: "resolution_time"
+          type: "integer"
+          ui:
+            label: "Resolution Time (hours)"
+            widget: "number"
+        - name: "satisfaction_score"
+          type: "integer"
+          validation:
+            min: 1
+            max: 5
+          ui:
+            label: "Satisfaction Score"
+            widget: "rating"
+      relationships:
+        - type: "belongsTo"
+          target: "Customer"
+          field: "customerId"
+      indexes:
+        - fields: ["status", "priority"]
+        - fields: ["category"]
+        - fields: ["ticket_number"]
+          unique: true
+
+    - name: "Invoice"
+      displayName: "Invoice"
+      description: "Customer invoices and billing"
+      fields:
+        - name: "invoice_number"
+          type: "string"
+          required: true
+          unique: true
+          ui:
+            label: "Invoice Number"
+            widget: "text"
+        - name: "amount"
+          type: "decimal"
+          required: true
+          ui:
+            label: "Amount"
+            widget: "currency"
+        - name: "tax_amount"
+          type: "decimal"
+          default: 0
+          ui:
+            label: "Tax Amount"
+            widget: "currency"
+        - name: "total_amount"
+          type: "decimal"
+          required: true
+          ui:
+            label: "Total Amount"
+            widget: "currency"
+        - name: "issue_date"
+          type: "date"
+          required: true
+          ui:
+            label: "Issue Date"
+            widget: "date"
+        - name: "due_date"
+          type: "date"
+          required: true
+          ui:
+            label: "Due Date"
+            widget: "date"
+        - name: "paid_date"
+          type: "date"
+          ui:
+            label: "Paid Date"
+            widget: "date"
+        - name: "status"
+          type: "string"
+          default: "pending"
+          validation:
+            enum: ["draft", "pending", "paid", "overdue", "cancelled"]
+          ui:
+            label: "Invoice Status"
+            widget: "select"
+        - name: "payment_method"
+          type: "string"
+          validation:
+            enum: ["credit_card", "bank_transfer", "check", "paypal", "stripe"]
+          ui:
+            label: "Payment Method"
+            widget: "select"
+        - name: "line_items"
+          type: "json"
+          ui:
+            label: "Line Items"
+            widget: "json"
+      relationships:
+        - type: "belongsTo"
+          target: "Customer"
+          field: "customerId"
+      indexes:
+        - fields: ["invoice_number"]
+          unique: true
+        - fields: ["status", "due_date"]
+        - fields: ["issue_date"]
+
+apis:
+  integrations:
+    - name: "stripe_payments"
+      type: "rest"
+      provider: "stripe"
+      baseUrl: "https://api.stripe.com/v1"
+      authentication:
+        type: "api_key"
+        header: "Authorization"
+        prefix: "Bearer"
+      endpoints:
+        - path: "/customers"
+          method: "GET"
+          description: "List customers"
+        - path: "/customers"
+          method: "POST"
+          description: "Create customer"
+        - path: "/subscriptions"
+          method: "GET"
+          description: "List subscriptions"
+        - path: "/invoices"
+          method: "GET"
+          description: "List invoices"
+      rateLimits:
+        requestsPerSecond: 25
+        burstLimit: 100
+      errorHandling:
+        retries: 3
+        backoffStrategy: "exponential"
+
+    - name: "salesforce_crm"
+      type: "rest"
+      provider: "salesforce"
+      baseUrl: "https://na1.salesforce.com/services/data/v58.0"
+      authentication:
+        type: "oauth2"
+        authUrl: "https://login.salesforce.com/services/oauth2/token"
+        scopes: ["api", "refresh_token"]
+      endpoints:
+        - path: "/sobjects/Account"
+          method: "GET"
+          description: "List accounts"
+        - path: "/sobjects/Contact"
+          method: "GET"
+          description: "List contacts"
+        - path: "/sobjects/Opportunity"
+          method: "GET"
+          description: "List opportunities"
+      rateLimits:
+        requestsPerSecond: 20
+        dailyLimit: 15000
+
+    - name: "hubspot_marketing"
+      type: "rest"
+      provider: "hubspot"
+      baseUrl: "https://api.hubapi.com"
+      authentication:
+        type: "api_key"
+        header: "Authorization"
+        prefix: "Bearer"
+      endpoints:
+        - path: "/crm/v3/objects/contacts"
+          method: "GET"
+          description: "List contacts"
+        - path: "/crm/v3/objects/companies"
+          method: "GET"
+          description: "List companies"
+        - path: "/crm/v3/objects/deals"
+          method: "GET"
+          description: "List deals"
+
+    - name: "quickbooks_accounting"
+      type: "rest"
+      provider: "quickbooks"
+      baseUrl: "https://sandbox-quickbooks.api.intuit.com/v3/company"
+      authentication:
+        type: "oauth2"
+        authUrl: "https://appcenter.intuit.com/connect/oauth2"
+        scopes: ["com.intuit.quickbooks.accounting"]
+      endpoints:
+        - path: "/customers"
+          method: "GET"
+          description: "List customers"
+        - path: "/invoices"
+          method: "GET"
+          description: "List invoices"
+        - path: "/payments"
+          method: "GET"
+          description: "List payments"
+
+workflows:
+  - name: "customer_onboarding"
+    description: "Automated customer onboarding workflow"
+    trigger:
+      type: "event"
+      config:
+        entityType: "Customer"
+        action: "created"
+    steps:
+      - name: "send_welcome_email"
+        type: "notification"
+        config:
+          channels: ["email"]
+          template: "welcome_customer"
+          recipients: ["${customer.email}"]
+      - name: "create_stripe_customer"
+        type: "api_call"
+        config:
+          service: "stripe_payments"
+          endpoint: "/customers"
+          method: "POST"
+          data:
+            email: "${customer.email}"
+            name: "${customer.company_name}"
+            metadata:
+              customer_id: "${customer.id}"
+      - name: "sync_to_salesforce"
+        type: "api_call"
+        config:
+          service: "salesforce_crm"
+          endpoint: "/sobjects/Account"
+          method: "POST"
+          data:
+            Name: "${customer.company_name}"
+            Industry: "${customer.industry}"
+            AnnualRevenue: "${customer.revenue}"
+      - name: "create_support_portal_access"
+        type: "database_operation"
+        config:
+          action: "insert"
+          table: "user_permissions"
+          data:
+            customer_id: "${customer.id}"
+            portal_access: true
+            role: "customer"
+    timeout: 300000
+    retryPolicy:
+      maximumAttempts: 3
+      backoffCoefficient: 2.0
+
+  - name: "invoice_processing"
+    description: "Automated invoice processing and payment tracking"
+    trigger:
+      type: "event"
+      config:
+        entityType: "Invoice"
+        action: "created"
+    steps:
+      - name: "validate_invoice_data"
+        type: "data_validation"
+        config:
+          rules:
+            amount: { required: true, min: 0.01 }
+            customer_id: { required: true }
+            due_date: { required: true }
+      - name: "create_stripe_invoice"
+        type: "api_call"
+        config:
+          service: "stripe_payments"
+          endpoint: "/invoices"
+          method: "POST"
+          data:
+            customer: "${stripe_customer_id}"
+            amount_due: "${invoice.total_amount}"
+            due_date: "${invoice.due_date}"
+      - name: "send_invoice_notification"
+        type: "notification"
+        config:
+          channels: ["email"]
+          template: "invoice_created"
+          recipients: ["${customer.email}"]
+      - name: "schedule_payment_reminder"
+        type: "wait"
+        config:
+          duration: 604800000  # 7 days
+      - name: "check_payment_status"
+        type: "conditional"
+        config:
+          condition: "invoice.status == 'pending'"
+          then:
+            type: "notification"
+            config:
+              channels: ["email"]
+              template: "payment_reminder"
+              recipients: ["${customer.email}"]
+
+  - name: "support_ticket_automation"
+    description: "Automated support ticket routing and escalation"
+    trigger:
+      type: "event"
+      config:
+        entityType: "SupportTicket"
+        action: "created"
+    steps:
+      - name: "classify_ticket"
+        type: "calculation"
+        config:
+          operation: "ai_classification"
+          fields: ["subject", "description", "category"]
+      - name: "assign_priority"
+        type: "conditional"
+        config:
+          condition: "customer.subscription_tier == 'enterprise'"
+          then:
+            type: "database_operation"
+            config:
+              action: "update"
+              table: "support_tickets"
+              data:
+                priority: "high"
+      - name: "auto_assign_agent"
+        type: "calculation"
+        config:
+          operation: "agent_assignment"
+          criteria: ["category", "priority", "workload"]
+      - name: "send_acknowledgment"
+        type: "notification"
+        config:
+          channels: ["email"]
+          template: "ticket_created"
+          recipients: ["${customer.email}"]
+      - name: "escalate_if_critical"
+        type: "conditional"
+        config:
+          condition: "ticket.priority == 'critical'"
+          then:
+            type: "notification"
+            config:
+              channels: ["slack", "email"]
+              template: "critical_ticket_alert"
+              recipients: ["support_manager", "technical_lead"]
+
+authentication:
+  providers: ["email", "google", "github"]
+  roles:
+    - name: "admin"
+      description: "Full system access"
+      permissions: ["*"]
+    - name: "sales"
+      description: "Sales team access"
+      permissions: ["customers:*", "contracts:*", "invoices:read"]
+    - name: "support"
+      description: "Customer support access"
+      permissions: ["customers:read", "support_tickets:*", "invoices:read"]
+    - name: "customer"
+      description: "Customer portal access"
+      permissions: ["support_tickets:own", "invoices:own", "contracts:own"]
+  security:
+    passwordPolicy:
+      minLength: 12
+      requireUppercase: true
+      requireLowercase: true
+      requireNumbers: true
+      requireSpecialChars: true
+    sessionManagement:
+      timeout: 3600000  # 1 hour
+      refreshTokens: true
+    auditLogging: true
+    mfa:
+      enabled: true
+      methods: ["totp", "sms"]
+
+ui:
+  theme:
+    primaryColor: "#3B82F6"
+    secondaryColor: "#10B981"
+    layout: "modern"
+  pages:
+    - name: "dashboard"
+      path: "/"
+      layout: "dashboard"
+      components:
+        - type: "analytics_overview"
+          config:
+            metrics: ["total_customers", "monthly_revenue", "active_tickets", "contract_renewals"]
+        - type: "recent_activity"
+          config:
+            entities: ["Customer", "SupportTicket", "Invoice"]
+        - type: "performance_charts"
+          config:
+            charts: ["revenue_trend", "customer_growth", "ticket_resolution"]
+      permissions: ["admin", "sales", "support"]
+
+    - name: "customers"
+      path: "/customers"
+      layout: "table"
+      components:
+        - type: "data_table"
+          config:
+            entity: "Customer"
+            columns: ["company_name", "industry", "status", "mrr", "last_activity"]
+            actions: ["view", "edit", "delete"]
+            filters: ["status", "industry", "subscription_tier"]
+            search: ["company_name", "email"]
+        - type: "customer_analytics"
+          config:
+            charts: ["customer_segmentation", "churn_analysis", "lifetime_value"]
+      permissions: ["admin", "sales", "support"]
+
+    - name: "support"
+      path: "/support"
+      layout: "kanban"
+      components:
+        - type: "ticket_board"
+          config:
+            entity: "SupportTicket"
+            columns: ["open", "in_progress", "waiting", "resolved"]
+            groupBy: "status"
+            sortBy: "priority"
+        - type: "support_metrics"
+          config:
+            metrics: ["avg_resolution_time", "satisfaction_score", "ticket_volume"]
+      permissions: ["admin", "support"]
+
+    - name: "billing"
+      path: "/billing"
+      layout: "dashboard"
+      components:
+        - type: "invoice_management"
+          config:
+            entity: "Invoice"
+            views: ["pending", "overdue", "paid"]
+        - type: "revenue_analytics"
+          config:
+            charts: ["monthly_revenue", "payment_methods", "collection_efficiency"]
+      permissions: ["admin", "sales"]
+
+alerts:
+  channels: ["email", "slack", "webhook"]
+  rules:
+    - name: "high_value_customer_churn_risk"
+      description: "Alert when high-value customer shows churn indicators"
+      conditions:
+        - "customer.mrr > 5000"
+        - "customer.last_activity > 30 days ago"
+        - "customer.support_tickets.priority == 'high'"
+      actions:
+        - type: "notification"
+          channels: ["email", "slack"]
+          recipients: ["sales_manager", "account_manager"]
+        - type: "database_operation"
+          action: "insert"
+          table: "customer_alerts"
+          data:
+            customer_id: "${customer.id}"
+            alert_type: "churn_risk"
+            severity: "high"
+      severity: "high"
+
+    - name: "payment_failures"
+      description: "Alert on payment processing failures"
+      conditions:
+        - "invoice.status == 'failed'"
+        - "payment_attempts > 2"
+      actions:
+        - type: "notification"
+          channels: ["email"]
+          recipients: ["billing_team"]
+        - type: "api_call"
+          service: "stripe_payments"
+          endpoint: "/payment_intents"
+          method: "POST"
+          data:
+            customer: "${customer.stripe_id}"
+            amount: "${invoice.total_amount}"
+            retry: true
+      severity: "medium"
+
+    - name: "critical_support_escalation"
+      description: "Escalate critical support tickets"
+      conditions:
+        - "support_ticket.priority == 'critical'"
+        - "support_ticket.created_at > 1 hour ago"
+        - "support_ticket.status == 'open'"
+      actions:
+        - type: "notification"
+          channels: ["slack", "email", "sms"]
+          recipients: ["support_director", "cto"]
+      severity: "critical"
+
+    - name: "revenue_anomaly"
+      description: "Detect unusual revenue patterns"
+      conditions:
+        - "daily_revenue < (avg_daily_revenue * 0.7)"
+        - "OR daily_revenue > (avg_daily_revenue * 1.5)"
+      actions:
+        - type: "notification"
+          channels: ["email", "slack"]
+          recipients: ["cfo", "revenue_operations"]
+        - type: "database_operation"
+          action: "insert"
+          table: "revenue_alerts"
+          data:
+            date: "${current_date}"
+            anomaly_type: "${anomaly_direction}"
+            severity: "medium"
+      severity: "medium"
+
+deployment:
+  platform: "vercel"
+  environment: "production"
+  resources:
+    api:
+      memory: "1024MB"
+      timeout: "10s"
+    database:
+      tier: "pro"
+      connections: 100
+    storage:
+      provider: "supabase"
+      bucket: "nextgen-files"
+  domains:
+    - "api.nextgen.business"
+    - "app.nextgen.business"
+  ssl: true
+  monitoring:
+    provider: "vercel"
+    alerts: true
+    uptime: true
+  backup:
+    frequency: "daily"
+    retention: "30 days"
+    encryption: true
+
+features:
+  authentication: true
+  workflows: true
+  integrations: true
+  fileUpload: true
+  notifications: true
+  analytics: true
+  multiTenancy: true
+  audit: true
+  realtime: true
+
+security:
+  encryption:
+    atRest: true
+    inTransit: true
+  compliance: ["SOC2", "GDPR", "CCPA"]
+  dataRetention:
+    analytics: "2 years"
+    audit_logs: "7 years"
+    customer_data: "indefinite"
+  accessLogging: true
+  rateLimit:
+    api: "1000/hour"
+    auth: "10/minute"
+
+performance:
+  caching:
+    strategy: "redis"
+    ttl: 3600
+  scaling:
+    type: "horizontal"
+    triggers:
+      cpu: "70%"
+      memory: "80%"
+      response_time: "500ms"
+  monitoring:
+    metrics: ["response_time", "error_rate", "throughput", "database_performance"]
+    alerting:
+      response_time: "> 1000ms"
+      error_rate: "> 1%"
+      database_connections: "> 80"

@@ -1,0 +1,26 @@
+{
+  "name": "@opsai/performance",
+  "version": "1.0.0",
+  "description": "Performance monitoring and caching services for OpsAI Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "type:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opsai/shared": "workspace:*",
+    "redis": "^4.6.0",
+    "node-cache": "^5.1.2",
+    "performance-now": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0"
+  }
+} 

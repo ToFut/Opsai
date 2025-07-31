@@ -95,7 +95,7 @@ export default function APIKeyCollection({ selectedIntegrations, onKeysCollected
 
   // Always include essential keys
   const essentialKeys = ['supabase', 'vercel', 'sendgrid']
-  const allRequiredKeys = [...new Set([...essentialKeys, ...selectedIntegrations])]
+  const allRequiredKeys = Array.from(new Set([...essentialKeys, ...selectedIntegrations]))
   const requiredConfigs = allRequiredKeys.map(id => API_KEY_CONFIGS[id]).filter(Boolean)
 
   const toggleKeyVisibility = (keyId: string) => {

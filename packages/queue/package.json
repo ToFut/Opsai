@@ -1,0 +1,31 @@
+{
+  "name": "@opsai/queue",
+  "version": "1.0.0",
+  "description": "Scalable queue and job processing system for OpsAI Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "type:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opsai/shared": "workspace:*",
+    "@opsai/monitoring": "workspace:*",
+    "bullmq": "^5.0.0",
+    "ioredis": "^5.3.0",
+    "p-queue": "^7.4.0",
+    "p-retry": "^5.1.0",
+    "bottleneck": "^2.19.5",
+    "eventemitter3": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0",
+    "redis-memory-server": "^0.6.0"
+  }
+}

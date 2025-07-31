@@ -29,7 +29,7 @@ export interface Model {
 
 export interface Field {
   name: string;
-  type: string;
+  type: string; // Supports both YAML types ('string', 'number', etc.) and Prisma types ('String', 'Int', etc.)
   isRequired: boolean;
   isUnique: boolean;
   isPrimary: boolean;
@@ -38,6 +38,16 @@ export interface Field {
   relationField?: string;
   relationModel?: string;
   relationType?: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany';
+  // Optional properties for better compatibility
+  required?: boolean; // Alias for isRequired
+  unique?: boolean;   // Alias for isUnique
+  description?: string;
+  validation?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+    enum?: string[];
+  };
 }
 
 export interface Relation {
@@ -83,6 +93,30 @@ export interface Migration {
   appliedAt: Date;
   checksum: string;
   sql: string;
+}
+
+export interface MigrationStep {
+  type: 'create_table' | 'drop_table' | 'create_index' | 'drop_index' | 'add_foreign_key' | 'drop_foreign_key';
+  table: string;
+  column?: string;
+  constraint?: string;
+  columns?: Array<{
+    name: string;
+    type: string;
+    nullable: boolean;
+    unique: boolean;
+    primary: boolean;
+    default?: any;
+  }>;
+  index?: {
+    name: string;
+    columns: string[];
+    unique: boolean;
+  };
+  references?: {
+    table: string;
+    column: string;
+  };
 }
 
 export interface SeedData {
