@@ -61,12 +61,16 @@ export type {
 // YAML configuration types - these are the primary types for config
 export * from './types/yaml'
 
+// Discovery types
+export * from './types/discovery'
+
 // Utilities
 export * from './utils/array'
 export * from './utils/crypto'
 export * from './utils/date'
 export * from './utils/string'
 export * from './utils/validation'
+export * from './utils/logger'
 
 // Configuration
 export * from './config/service-config' 

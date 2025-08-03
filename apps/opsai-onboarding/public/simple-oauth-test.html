@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple OAuth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; max-width: 800px; }
+        .test-section { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .button { background: #0066cc; color: white; padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0; }
+        .button:hover { background: #0052a3; }
+        .result { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple OAuth Test</h1>
+    <p>This is a minimal test to verify OAuth functionality step by step.</p>
+    
+    <div class="test-section">
+        <h3>Step 1: Test API Connection</h3>
+        <button class="button" onclick="testAPI()">Test API Connection</button>
+        <div id="api-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Step 2: Test OAuth URL Creation</h3>
+        <button class="button" onclick="testOAuthURL()">Create OAuth URL</button>
+        <div id="oauth-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Step 3: Test OAuth Redirect</h3>
+        <button class="button" onclick="testOAuthRedirect()">Test OAuth Redirect</button>
+        <div id="redirect-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Debug Information</h3>
+        <div id="debug-info" class="result">
+            <strong>Current URL:</strong> <span id="current-url"></span><br>
+            <strong>Timestamp:</strong> <span id="timestamp"></span><br>
+            <strong>Browser:</strong> <span id="browser"></span>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize debug info
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('timestamp').textContent = new Date().toISOString();
+        document.getElementById('browser').textContent = navigator.userAgent;
+        
+        // Log to console
+        console.log('🧪 Simple OAuth Test Page Loaded');
+        console.log('📍 Current URL:', window.location.href);
+        console.log('🕒 Loaded at:', new Date().toISOString());
+        
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Testing API connection...';
+            resultDiv.className = 'result';
+            
+            try {
+                console.log('🔗 Testing API connection...');
+                
+                const response = await fetch('/api/oauth/create-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: 'test',
+                        tenantId: 'test123',
+                        redirectUri: window.location.origin + '/oauth-success'
+                    })
+                });
+                
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response ok:', response.ok);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ API Response:', data);
+                    resultDiv.textContent = `✅ API Connected! Status: ${response.status}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    console.error('❌ API Error:', response.status, response.statusText);
+                    resultDiv.textContent = `❌ API Error: ${response.status} ${response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+                
+            } catch (error) {
+                console.error('❌ API Test failed:', error);
+                resultDiv.textContent = `❌ API Test failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function testOAuthURL() {
+            const resultDiv = document.getElementById('oauth-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Creating OAuth URL...';
+            resultDiv.className = 'result';
+            
+            try {
+                console.log('🔗 Creating OAuth URL for Shopify...');
+                
+                const response = await fetch('/api/oauth/create-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: 'shopify',
+                        tenantId: 'test_' + Date.now(),
+                        redirectUri: window.location.origin + '/oauth-success'
+                    })
+                });
+                
+                console.log('📡 OAuth Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ OAuth URL Response:', data);
+                    
+                    if (data.oauthUrl) {
+                        resultDiv.innerHTML = `✅ OAuth URL Created!<br><strong>URL:</strong> <a href="${data.oauthUrl}" target="_blank">${data.oauthUrl}</a><br><strong>Source:</strong> ${data.source}<br><strong>Demo Mode:</strong> ${data.demoMode}`;
+                        resultDiv.className = 'result success';
+                    } else {
+                        resultDiv.textContent = `⚠️ No OAuth URL returned`;
+                        resultDiv.className = 'result error';
+                    }
+                } else {
+                    console.error('❌ OAuth URL Error:', response.status);
+                    resultDiv.textContent = `❌ OAuth URL Error: ${response.status}`;
+                    resultDiv.className = 'result error';
+                }
+                
+            } catch (error) {
+                console.error('❌ OAuth URL Test failed:', error);
+                resultDiv.textContent = `❌ OAuth URL Test failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function testOAuthRedirect() {
+            const resultDiv = document.getElementById('redirect-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '⏳ Testing OAuth redirect...';
+            resultDiv.className = 'result';
+            
+            try {
+                console.log('🚀 Testing OAuth redirect...');
+                
+                const response = await fetch('/api/oauth/create-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: 'shopify',
+                        tenantId: 'redirect_test_' + Date.now(),
+                        redirectUri: window.location.origin + '/oauth-success'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Got OAuth URL for redirect:', data);
+                    
+                    if (data.oauthUrl) {
+                        resultDiv.innerHTML = `✅ OAuth URL ready! Click the link above to test redirect, or <button onclick="window.open('${data.oauthUrl}', '_blank')" style="background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Open OAuth URL</button>`;
+                        resultDiv.className = 'result success';
+                        
+                        // Ask user if they want to test redirect
+                        if (confirm('OAuth URL created! Do you want to test the redirect?\n\nThis will open: ' + data.oauthUrl)) {
+                            console.log('🚀 Redirecting to:', data.oauthUrl);
+                            window.open(data.oauthUrl, '_blank');
+                        }
+                    } else {
+                        resultDiv.textContent = `⚠️ No OAuth URL for redirect test`;
+                        resultDiv.className = 'result error';
+                    }
+                } else {
+                    resultDiv.textContent = `❌ Redirect test failed: ${response.status}`;
+                    resultDiv.className = 'result error';
+                }
+                
+            } catch (error) {
+                console.error('❌ Redirect Test failed:', error);
+                resultDiv.textContent = `❌ Redirect Test failed: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

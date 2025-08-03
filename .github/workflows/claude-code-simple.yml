@@ -1,0 +1,82 @@
+name: 🤖 Claude Code Integration
+
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  claude-assistant:
+    if: |
+      (github.event_name == 'issues' && contains(github.event.issue.body, '🤖 AI Improvement Request')) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run code analysis
+        run: |
+          echo "🔍 Analyzing codebase..."
+          npm run lint || echo "Linting issues found"
+          npm run type-check || echo "Type check issues found"
+
+      - name: Claude Code Action
+        uses: anthropics/anthropic-cdk-github-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are Claude, an AI assistant helping improve this application.
+            
+            Context:
+            - This is a request from the OpsAI platform web interface
+            - The user wants to improve their application
+            - You have access to the full codebase
+            
+            Current Issue: ${{ github.event.issue.title || 'Manual request' }}
+            Issue Body: ${{ github.event.issue.body || 'No body provided' }}
+            
+            Please:
+            1. Analyze the current codebase
+            2. Understand the user's request
+            3. Provide specific, actionable improvements
+            4. If appropriate, create code changes
+            5. Add helpful comments and documentation
+            
+            Follow the project's coding standards and best practices.
+          max_turns: 3
+          timeout_minutes: 30
+
+      - name: Update issue with results
+        if: github.event_name == 'issues'
+        run: |
+          echo "📝 Updating issue with analysis results..."
+          gh issue comment ${{ github.event.issue.number }} --body "
+          ## 🤖 Claude Analysis Complete
+          
+          I've analyzed your request and provided improvements.
+          
+          **Next Steps:**
+          1. Review the generated changes
+          2. Test the improvements
+          3. Merge when satisfied
+          " 

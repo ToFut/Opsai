@@ -5,31 +5,20 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!
 })
 
-interface BusinessAnalysisRequest {
-  websiteUrl: string
-  websiteContent: string
-  businessProfile: any
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const { websiteUrl, websiteContent, businessProfile }: BusinessAnalysisRequest = await request.json()
+    const { websiteUrl } = await request.json()
 
-    if (!websiteContent || !businessProfile) {
-      return NextResponse.json({ error: 'Website content and business profile are required' }, { status: 400 })
+    if (!websiteUrl) {
+      return NextResponse.json({ error: 'Website URL is required' }, { status: 400 })
     }
 
-    console.log(`🤖 Starting AI analysis for: ${websiteUrl}`)
+    console.log(`🤖 Starting direct OpenAI analysis for: ${websiteUrl}`)
 
-    // Stage 1: Deep Business Intelligence Analysis
-    const businessIntelligence = await analyzeBusinessWithAI(websiteContent, businessProfile, websiteUrl)
+    // Direct OpenAI analysis - let OpenAI do its own research
+    const analysis = await analyzeBusinessWithAI(websiteUrl)
 
-    return NextResponse.json({
-      success: true,
-      analysis: businessIntelligence,
-      stage: 'business_analysis',
-      nextStep: 'confirm_and_generate_yaml'
-    })
+    return NextResponse.json(analysis)
 
   } catch (error) {
     console.error('AI Analysis error:', error)
@@ -43,17 +32,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function analyzeBusinessWithAI(websiteContent: string, businessProfile: any, websiteUrl: string) {
+async function analyzeBusinessWithAI(websiteUrl: string) {
   const analysisPrompt = `
 You are an expert business analyst and software architect. Analyze this business website and provide comprehensive insights for building a custom business application.
 
 WEBSITE URL: ${websiteUrl}
-BUSINESS INFO: ${JSON.stringify(businessProfile, null, 2)}
 
-WEBSITE CONTENT:
-${websiteContent.substring(0, 8000)} // Limit content for token efficiency
-
-Please provide a detailed analysis in the following JSON structure:
+Please research this website and provide a detailed analysis in the following JSON structure:
 
 {
   "businessIntelligence": {
@@ -195,7 +180,7 @@ Provide comprehensive, accurate analysis that will guide the creation of a truly
       messages: [
         {
           role: "system",
-          content: "You are an expert business analyst and software architect with 15+ years of experience building custom business applications. You understand both technical implementation and business strategy."
+          content: "You are an expert business analyst and software architect with 15+ years of experience building custom business applications. You can research websites and provide comprehensive business analysis. Analyze the provided website URL thoroughly and provide actionable insights."
         },
         {
           role: "user", 
@@ -204,10 +189,14 @@ Provide comprehensive, accurate analysis that will guide the creation of a truly
       ],
       temperature: 0.3, // Lower temperature for more consistent, factual analysis
       max_tokens: 4000,
-      response_format: { type: "json_object" }
+
     })
 
-    const analysisResult = JSON.parse(response.choices[0].message.content || '{}')
+    const content = response.choices[0].message.content || '{}'
+    // Handle markdown-formatted JSON
+    const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/\{[\s\S]*\}/)
+    const jsonContent = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content
+    const analysisResult = JSON.parse(jsonContent)
     
     console.log('✅ AI Business Analysis completed')
     return analysisResult

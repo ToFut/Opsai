@@ -18,44 +18,39 @@ export async function POST(request: NextRequest) {
     let analysis
 
     if (useAI && process.env.OPENAI_API_KEY) {
-      console.log('🤖 Using AI-powered analysis')
-      // Use AI analysis for comprehensive insights
-      const basicAnalysis = performPatternAnalysis(websiteContent, websiteUrl)
+      console.log('🤖 Using direct OpenAI analysis')
       
-      // Trigger AI analysis
-      const aiAnalysisResponse = await fetch(`${request.nextUrl.origin}/api/ai-analyze`, {
+      // Send website URL directly to OpenAI for analysis
+      const openaiAnalysisResponse = await fetch(`${request.nextUrl.origin}/api/ai-analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          websiteUrl,
-          websiteContent,
-          businessProfile: {
-            businessName: extractBusinessName(websiteContent, websiteUrl),
-            businessType: basicAnalysis.businessType,
-            industry: basicAnalysis.industry,
-            website: websiteUrl
-          }
+          websiteUrl: websiteUrl
         })
       })
 
-      if (aiAnalysisResponse.ok) {
-        const aiResult = await aiAnalysisResponse.json()
+      if (openaiAnalysisResponse.ok) {
+        const aiResult = await openaiAnalysisResponse.json()
         analysis = {
-          ...basicAnalysis,
-          aiAnalysis: aiResult.analysis,
+          ...aiResult,
           analysisType: 'ai_powered',
           nextStep: 'review_insights'
         }
+        console.log('✅ OpenAI analysis successful, analysis type set to:', analysis.analysisType)
       } else {
-        console.warn('AI analysis failed, falling back to pattern matching')
-        analysis = performPatternAnalysis(websiteContent, websiteUrl)
-        analysis.analysisType = 'pattern_matching'
+        console.warn('OpenAI analysis failed, falling back to pattern matching')
+        analysis = {
+          ...performPatternAnalysis(websiteContent, websiteUrl),
+          analysisType: 'pattern_matching'
+        }
       }
     } else {
       console.log('📋 Using pattern matching analysis')
       // Fallback to pattern matching
-      analysis = performPatternAnalysis(websiteContent, websiteUrl)
-      analysis.analysisType = 'pattern_matching'
+      analysis = {
+        ...performPatternAnalysis(websiteContent, websiteUrl),
+        analysisType: 'pattern_matching'
+      }
     }
 
     return NextResponse.json(analysis)

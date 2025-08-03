@@ -1,0 +1,321 @@
+name: 🚀 Integrated Deployment Pipeline
+
+on:
+  push:
+    branches: [main, develop, staging]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'App to deploy (leave empty for all)'
+        required: false
+        type: string
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+        - preview
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 🔍 Security & Quality Gates
+  security-scan:
+    name: 🔒 Security & Quality Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        run: pnpm audit --audit-level=high
+
+      - name: Run SAST scan with CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # 🧪 Comprehensive Testing
+  test-suite:
+    name: 🧪 Test Suite
+    runs-on: ubuntu-latest
+    needs: security-scan
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run type checking
+        run: pnpm typecheck
+
+      - name: Run unit tests
+        run: pnpm test:unit
+        env:
+          CI: true
+
+      - name: Run integration tests
+        run: pnpm test:integration
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          BASE_URL: ${{ secrets.TEST_BASE_URL }}
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+  # 🏗️ Build All Packages & Apps
+  build:
+    name: 🏗️ Build Monorepo
+    runs-on: ubuntu-latest
+    needs: [security-scan, test-suite]
+    outputs:
+      build-id: ${{ steps.build.outputs.build-id }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages and apps
+        id: build
+        run: |
+          pnpm build
+          echo "build-id=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: |
+            apps/*/dist/
+            apps/*/.next/
+            packages/*/dist/
+            apps/*/package.json
+            packages/*/package.json
+
+  # 🚀 Deploy Generated Apps
+  deploy-generated-apps:
+    name: 🚀 Deploy Generated Apps
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        app: ${{ fromJson(steps.get-apps.outputs.apps) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get generated apps
+        id: get-apps
+        run: |
+          APPS=$(find apps/opsai-onboarding/generated-apps -maxdepth 1 -type d -name "*" | jq -R -s -c 'split("\n")[:-1]')
+          echo "apps=$APPS" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Deploy app ${{ matrix.app }}
+        run: |
+          cd ${{ matrix.app }}
+          
+          # Install dependencies
+          npm ci
+          
+          # Build application
+          npm run build
+          
+          # Deploy based on environment
+          if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+            npm run deploy:production
+          else
+            npm run deploy:staging
+          fi
+
+  # 🚀 Deploy Main Platform
+  deploy-main-platform:
+    name: 🚀 Deploy Main Platform
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./apps/opsai-onboarding
+
+      - name: Deploy to Railway
+        uses: bervProject/railway-deploy@v1.0.0
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: opsai-onboarding
+
+  # 🔄 Database Migration
+  database-migration:
+    name: 🔄 Database Migration
+    runs-on: ubuntu-latest
+    needs: [deploy-generated-apps, deploy-main-platform]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run database migrations
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # 📊 Monitoring & Observability
+  monitoring-setup:
+    name: 📊 Setup Monitoring
+    runs-on: ubuntu-latest
+    needs: [deploy-generated-apps, deploy-main-platform]
+    if: always()
+    steps:
+      - name: Setup Sentry monitoring
+        run: |
+          curl -X POST ${{ secrets.SENTRY_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{"event": "deployment", "environment": "${{ github.ref_name }}"}'
+
+      - name: Setup DataDog monitoring
+        run: |
+          curl -X POST ${{ secrets.DATADOG_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{"title": "Deployment Complete", "text": "Deployment to ${{ github.ref_name }} completed"}'
+
+  # 🔔 Notifications
+  notifications:
+    name: 🔔 Send Notifications
+    runs-on: ubuntu-latest
+    needs: [deploy-generated-apps, deploy-main-platform, monitoring-setup]
+    if: always()
+    steps:
+      - name: Send Slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          text: |
+            🚀 Deployment Status: ${{ job.status }}
+            Environment: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+
+      - name: Send Discord notification
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: ${{ job.status }}
+          title: "Deployment ${{ job.status }}"
+          description: "Deployment to ${{ github.ref_name }} environment" 

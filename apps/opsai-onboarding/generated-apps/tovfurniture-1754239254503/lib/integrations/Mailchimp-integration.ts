@@ -1,0 +1,1 @@
+// Mailchimp integration placeholder

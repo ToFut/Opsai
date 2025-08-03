@@ -6,10 +6,12 @@ export type { UIComponent as SystemUIComponent, Theme } from './types/ui';
 export type { Workflow as SystemWorkflow, WorkflowStep, WorkflowTrigger } from './types/workflow';
 export type { Alert, AlertRule } from './types/alerts';
 export * from './types/yaml';
+export * from './types/discovery';
 export * from './utils/array';
 export * from './utils/crypto';
 export * from './utils/date';
 export * from './utils/string';
 export * from './utils/validation';
+export * from './utils/logger';
 export * from './config/service-config';
 //# sourceMappingURL=index.d.ts.map

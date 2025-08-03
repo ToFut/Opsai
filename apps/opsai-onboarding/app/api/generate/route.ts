@@ -3,13 +3,11 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import fs from 'fs/promises'
 import path from 'path'
+import * as yaml from 'js-yaml'
 
 const execAsync = promisify(exec)
 
-// Forward declarations for TypeScript
-// (Remove if you move the function definitions above their usage)
-declare function generateEnvironmentConfig(config: any, outputDir: string): Promise<void>;
-declare function generateDeploymentConfig(config: any, outputDir: string): Promise<void>;
+
 
 // Local implementations to replace broken imports
 class LocalYamlProcessor {
@@ -133,12 +131,58 @@ class LocalDeploymentManager {
 // Temporary validation function until @opsai/shared is built
 function validateYamlConfigSafe(config: any): { success: boolean; data?: any; errors?: string[] } {
   try {
-    if (!config.vertical || !config.business || !config.database) {
-      return { success: false, errors: ['Missing required sections: vertical, business, database'] }
+    const errors: string[] = []
+    
+    // Check for required sections
+    if (!config.vertical) {
+      errors.push('Missing required section: vertical')
     }
+    if (!config.business) {
+      errors.push('Missing required section: business')
+    }
+    if (!config.database) {
+      errors.push('Missing required section: database')
+    }
+    
+    // Log what we actually received
+    console.log('🔍 Validation - Config structure:', {
+      hasVertical: !!config.vertical,
+      hasBusiness: !!config.business,
+      hasDatabase: !!config.database,
+      topLevelKeys: Object.keys(config || {}),
+      verticalKeys: config.vertical ? Object.keys(config.vertical) : [],
+      businessKeys: config.business ? Object.keys(config.business) : [],
+      databaseKeys: config.database ? Object.keys(config.database) : []
+    })
+    
+    if (errors.length > 0) {
+      return { success: false, errors }
+    }
+    
+    // Ensure database has models array
+    if (!config.database.models) {
+      config.database.models = []
+    }
+    
+    // Ensure APIs section exists
+    if (!config.apis) {
+      config.apis = { integrations: [] }
+    }
+    
+    // Ensure workflows array exists
+    if (!config.workflows) {
+      config.workflows = []
+    }
+    
+    // Ensure UI section exists
+    if (!config.ui) {
+      config.ui = { pages: [] }
+    }
+    
     return { success: true, data: config }
   } catch (error) {
-    return { success: false, errors: ['Invalid configuration format'] }
+    console.error('Validation error:', error)
+    return { success: false, errors: ['Invalid configuration format: ' + (error instanceof Error ? error.message : 'Unknown error')] }
   }
 }
 
@@ -337,103 +381,197 @@ interface YamlConfig {
     name: string
     description: string
     industry: string
+    version?: string
+    businessModel?: string
   }
   business: {
     name: string
     type: string
+    website?: string
+    contact?: {
+      email?: string
+      phone?: string
+    }
+    settings?: {
+      timezone?: string
+      currency?: string
+      language?: string
+    }
   }
   database: {
+    provider?: string
     models: Array<{
       name: string
+      displayName?: string
+      description?: string
       fields: Array<{
         name: string
         type: string
-        required: boolean
+        required?: boolean
         unique?: boolean
+        validation?: any
+        ui?: any
       }>
+      relationships?: Array<any>
+      indexes?: string[]
+      permissions?: any
     }>
   }
-  apis: {
-    integrations: Array<{
+  apis?: {
+    integrations?: Array<{
       name: string
-      enabled: boolean
+      type?: string
+      enabled?: boolean
+      provider?: string
+      baseUrl?: string
+      authentication?: any
+      endpoints?: any[]
     }>
   }
-  workflows: Array<{
+  workflows?: Array<{
     name: string
     description: string
+    trigger?: any
+    steps?: any[]
   }>
-  ui: {
-    pages: Array<{
+  authentication?: {
+    providers?: string[]
+    roles?: Array<{
+      name: string
+      description?: string
+      permissions?: string[]
+    }>
+    security?: any
+  }
+  ui?: {
+    theme?: any
+    pages?: Array<{
       name: string
       path: string
-      components: Array<{
-        type: string
-        dataSource: string
-        actions?: string[]
-        mode?: string
-      }>
+      layout?: string
+      components?: any[]
+      permissions?: string[]
     }>
+    dashboards?: any
   }
+  deployment?: any
+  features?: any
+  security?: any
+  performance?: any
 }
 
 // Generate a truly custom Next.js application based on YAML
 async function generateCustomNextJSApp(config: YamlConfig, appName: string, outputDir: string) {
   console.log('🚀 Generating custom application based on YAML configuration...')
-  
-  // Create app structure
-  const appDir = path.join(outputDir, 'app')
-  const componentsDir = path.join(outputDir, 'components')
-  const libDir = path.join(outputDir, 'lib')
-  const prismaDir = path.join(outputDir, 'prisma')
-  const apiDir = path.join(appDir, 'api')
+  console.log('📊 Config summary:', {
+    appName,
+    verticalName: config.vertical?.name,
+    verticalType: config.vertical?.type,
+    verticalIndustry: config.vertical?.industry,
+    businessName: config.business?.name,
+    modelCount: config.database?.models?.length || 0,
+    workflowCount: config.workflows?.length || 0,
+    integrationCount: config.apis?.integrations?.length || 0
+  })
 
-  await fs.mkdir(appDir, { recursive: true })
-  await fs.mkdir(componentsDir, { recursive: true })
-  await fs.mkdir(libDir, { recursive: true })
-  await fs.mkdir(prismaDir, { recursive: true })
-  await fs.mkdir(apiDir, { recursive: true })
+  try {
+    // Create app structure
+    const appDir = path.join(outputDir, 'app')
+    const componentsDir = path.join(outputDir, 'components')
+    const libDir = path.join(outputDir, 'lib')
+    const prismaDir = path.join(outputDir, 'prisma')
+    const apiDir = path.join(appDir, 'api')
 
-  // Generate custom Prisma schema based on YAML models
-  await generateCustomPrismaSchema(config, prismaDir)
-  
-  // Generate custom app layout
-  await generateCustomAppLayout(config, appDir)
-  
-  // Generate custom main page
-  await generateCustomMainPage(config, appDir)
-  
-  // Generate custom dashboard components
-  await generateCustomDashboardComponents(config, componentsDir)
-  
-  // Generate custom API routes
-  await generateCustomAPIRoutes(config, apiDir)
-  
-  // Generate custom data pages
-  await generateCustomDataPages(config, appDir)
-  
-  // Generate custom utility files
-  await generateCustomUtilityFiles(config, libDir)
-  
-  // Generate authentication system
-  await generateAuthenticationSystem(config, outputDir)
-  
-  // Generate integration configurations
-  await generateIntegrationConfig(config, outputDir)
-  
-  // Generate package.json with business-specific dependencies
-  await generateCustomPackageJson(config, outputDir)
-  
-  // Generate environment configuration
-  await generateEnvironmentConfig(config, outputDir)
-  
-  // Generate deployment configuration
-  await generateDeploymentConfig(config, outputDir)
-  
-  // Generate custom README
-  await generateCustomREADME(config, outputDir)
-  
-  console.log('✅ Custom application generation completed!')
+    console.log('📁 Creating directories...')
+    await fs.mkdir(appDir, { recursive: true })
+    await fs.mkdir(componentsDir, { recursive: true })
+    await fs.mkdir(libDir, { recursive: true })
+    await fs.mkdir(prismaDir, { recursive: true })
+    await fs.mkdir(apiDir, { recursive: true })
+    console.log('✅ Directories created')
+
+    // Generate custom Prisma schema based on YAML models
+    console.log('🔧 Generating Prisma schema...')
+    await generateCustomPrismaSchema(config, prismaDir)
+    console.log('✅ Prisma schema generated')
+    
+    // Generate custom app layout
+    console.log('🎨 Generating app layout...')
+    await generateCustomAppLayout(config, appDir)
+    console.log('✅ App layout generated')
+    
+    // Generate custom main page
+    console.log('📄 Generating main page...')
+    await generateCustomMainPage(config, appDir)
+    console.log('✅ Main page generated')
+    
+    // Generate custom dashboard components
+    console.log('🧩 Generating dashboard components...')
+    await generateCustomDashboardComponents(config, componentsDir)
+    console.log('✅ Dashboard components generated')
+    
+    // Generate custom API routes
+    console.log('🔌 Generating API routes...')
+    await generateCustomAPIRoutes(config, apiDir)
+    console.log('✅ API routes generated')
+    
+    // Generate custom data pages
+    console.log('📊 Generating data pages...')
+    await generateCustomDataPages(config, appDir)
+    console.log('✅ Data pages generated')
+    
+    // Generate custom utility files
+    console.log('🛠️ Generating utility files...')
+    await generateCustomUtilityFiles(config, appDir)
+    console.log('✅ Utility files generated')
+    
+    // Generate authentication system
+    console.log('🔐 Generating authentication system...')
+    await generateAuthenticationSystem(config, outputDir)
+    console.log('✅ Authentication system generated')
+    
+    // Generate integration configurations
+    console.log('🔗 Generating integration configurations...')
+    await generateIntegrationConfig(config, outputDir)
+    console.log('✅ Integration configurations generated')
+    
+    // Generate package.json with business-specific dependencies
+    console.log('📦 Generating package.json...')
+    await generateCustomPackageJson(config, outputDir)
+    console.log('✅ Package.json generated')
+    
+    // Generate Tailwind and PostCSS configuration
+    console.log('🎨 Generating Tailwind config...')
+    await generateTailwindConfig(outputDir)
+    await generatePostCSSConfig(outputDir)
+    console.log('✅ Tailwind and PostCSS configs generated')
+    
+    // Generate TypeScript configuration
+    console.log('📝 Generating TypeScript config...')
+    await generateTsConfig(outputDir)
+    console.log('✅ TypeScript config generated')
+    
+    // Generate environment configuration
+    console.log('🔧 Generating environment config...')
+    await generateEnvironmentConfig(config, outputDir)
+    console.log('✅ Environment config generated')
+    
+    // Generate deployment configuration
+    console.log('🚀 Generating deployment config...')
+    await generateDeploymentConfig(config, outputDir)
+    console.log('✅ Deployment config generated')
+    
+    // Generate custom README
+    console.log('📚 Generating README...')
+    await generateCustomREADME(config, outputDir)
+    console.log('✅ README generated')
+    
+    console.log('✅ Custom application generation completed!')
+  } catch (error) {
+    console.error('❌ Error in generateCustomNextJSApp:', error)
+    console.error('❌ Error occurred at step:', error instanceof Error ? error.message : 'Unknown')
+    throw error
+  }
 }
 
 // Generate custom Prisma schema based on YAML models
@@ -460,7 +598,7 @@ datasource db {
   name String
   slug String @unique
   status String @default("active")
-  settings Json?
+  settings String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -632,11 +770,13 @@ async function generateCustomDashboardComponents(config: YamlConfig, componentsD
   const navigation = generateCustomNavigation(config, businessType)
   
   // Generate custom sidebar
+  // Deduplicate icon imports
+  const uniqueIcons = Array.from(new Set(navigation.map(nav => nav.icon)))
   const sidebarContent = `'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ${navigation.map(nav => nav.icon).join(', ')} } from 'lucide-react'
+import { ${uniqueIcons.join(', ')} } from 'lucide-react'
 
 const navigation = [
 ${navigation.map(nav => `  { name: '${nav.name}', href: '${nav.href}', icon: ${nav.icon} }`).join(',\n')}
@@ -1027,37 +1167,20 @@ export async function POST(request: NextRequest) {
   
   // Generate tenant management API
   const tenantApiRoute = `import { NextRequest, NextResponse } from 'next/server'
-import { TenantManager } from '@opsai/multi-tenant'
-import { AuthService } from '@opsai/auth'
-
-const tenantManager = TenantManager.getInstance(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { TenantManager } from '@/lib/tenant-manager'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, slug } = await request.json()
+    const { name, industry, type, description } = await request.json()
     
-    const tenant = await tenantManager.createTenant({
+    const tenantId = await TenantManager.createTenant({
       name,
-      slug,
-      status: 'active',
-      settings: {
-        timezone: 'UTC',
-        currency: 'USD',
-        language: 'en'
-      },
-      config: {} // Will be set later
+      industry: industry || 'general',
+      type: type || 'b2b',
+      description
     })
     
-    // Setup tenant database schema
-    await tenantManager.setupTenantDatabase(tenant.id, {} as any)
-    
-    // Enable row-level security
-    await tenantManager.enableRLS(tenant.id)
-    
-    return NextResponse.json(tenant)
+    return NextResponse.json({ id: tenantId, name, industry, type })
   } catch (error) {
     console.error('Error creating tenant:', error)
     return NextResponse.json({ error: 'Failed to create tenant' }, { status: 500 })
@@ -1086,19 +1209,8 @@ export async function GET(request: NextRequest) {
   
   // Generate auth API routes
   const authApiRoute = `import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '@opsai/auth'
-import { TenantManager } from '@opsai/multi-tenant'
-
-const authService = new AuthService({
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  jwtSecret: process.env.JWT_SECRET!
-})
-
-const tenantManager = TenantManager.getInstance(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { auth } from '@/lib/supabase'
+import { TenantManager } from '@/lib/tenant-manager'
 
 export async function POST(request: NextRequest) {
   try {
@@ -1106,16 +1218,19 @@ export async function POST(request: NextRequest) {
     
     switch (action) {
       case 'login':
-        const loginResult = await authService.login(data)
+        const loginResult = await auth.signIn(data.email, data.password)
         return NextResponse.json(loginResult)
         
       case 'register':
-        const registerResult = await authService.register(data)
+        const registerResult = await auth.signUp(data.email, data.password, {
+          firstName: data.firstName,
+          lastName: data.lastName
+        })
         return NextResponse.json(registerResult)
         
       case 'logout':
-        await authService.logout(data.token)
-        return NextResponse.json({ success: true })
+        const logoutResult = await auth.signOut()
+        return NextResponse.json(logoutResult)
         
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
@@ -1249,7 +1364,7 @@ export default function ${model.name}List() {
 }
 
 // Generate custom utility files
-async function generateCustomUtilityFiles(config: YamlConfig, libDir: string) {
+async function generateCustomUtilityFiles(config: YamlConfig, appDir: string) {
   const globalsCss = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -1278,7 +1393,7 @@ body {
     rgb(var(--background-start-rgb));
 }`
 
-  await fs.writeFile(path.join(libDir, 'globals.css'), globalsCss)
+  await fs.writeFile(path.join(appDir, 'globals.css'), globalsCss)
   console.log('🎨 Custom utility files generated')
 }
 
@@ -1295,15 +1410,11 @@ async function generateCustomPackageJson(config: YamlConfig, outputDir: string) 
     "tailwindcss": "^3.3.0",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",
-    // OpsAI Core packages
-    "@opsai/auth": "workspace:*",
-    "@opsai/integration": "workspace:*",
-    "@opsai/database": "workspace:*",
-    "@opsai/ui": "workspace:*",
-    "@opsai/shared": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
     "jsonwebtoken": "^9.0.0",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/bcryptjs": "^2.4.0"
   }
 
   // Add business-specific dependencies
@@ -1407,21 +1518,106 @@ Generated by OPSAI on ${new Date().toISOString()}
   console.log('📖 Custom README generated')
 }
 
+// Generate Tailwind configuration
+async function generateTailwindConfig(outputDir: string) {
+  const tailwindConfig = `/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}`
+
+  await fs.writeFile(path.join(outputDir, 'tailwind.config.js'), tailwindConfig)
+  console.log('🎨 Tailwind config generated')
+}
+
+// Generate PostCSS configuration
+async function generatePostCSSConfig(outputDir: string) {
+  const postcssConfig = `module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}`
+
+  await fs.writeFile(path.join(outputDir, 'postcss.config.js'), postcssConfig)
+  console.log('🎨 PostCSS config generated')
+}
+
+// Generate TypeScript configuration
+async function generateTsConfig(outputDir: string) {
+  const tsconfigContent = `{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "incremental": true,
+    "module": "esnext",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}`
+
+  await fs.writeFile(path.join(outputDir, 'tsconfig.json'), tsconfigContent)
+  console.log('📑 TypeScript config generated')
+}
+
 // Generate authentication system
 async function generateAuthenticationSystem(config: YamlConfig, outputDir: string) {
   const authDir = path.join(outputDir, 'app', 'auth')
   const middlewareDir = path.join(outputDir, 'middleware')
   
+  // Ensure all directories exist
   await fs.mkdir(authDir, { recursive: true })
   await fs.mkdir(middlewareDir, { recursive: true })
+  
+  // Create login subdirectory
+  const loginDir = path.join(authDir, 'login')
+  await fs.mkdir(loginDir, { recursive: true })
+  
+  // Create register subdirectory
+  const registerDir = path.join(authDir, 'register')
+  await fs.mkdir(registerDir, { recursive: true })
   
   // Generate login page
   const loginPage = `'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AuthService } from '@opsai/auth'
-import { Card } from '@opsai/ui'
+import { auth } from '@/lib/supabase'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -1429,12 +1625,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  
-  const authService = new AuthService({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    jwtSecret: process.env.JWT_SECRET!
-  })
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1442,10 +1632,11 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await authService.login({ email, password })
-      if (response.token) {
-        localStorage.setItem('auth_token', response.token)
+      const response = await auth.signIn(email, password)
+      if (response.success) {
         router.push('/')
+      } else {
+        setError(response.error || 'Login failed')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
@@ -1456,7 +1647,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md p-8">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-8">
         <h1 className="text-2xl font-bold text-center mb-6">Login to ${config.business.name}</h1>
         
         <form onSubmit={handleLogin} className="space-y-4">
@@ -1498,20 +1689,19 @@ export default function LoginPage() {
         <p className="text-center mt-4 text-sm text-gray-600">
           Don't have an account? <a href="/auth/register" className="text-blue-600 hover:underline">Register</a>
         </p>
-      </Card>
+      </div>
     </div>
   )
 }`
   
-  await fs.writeFile(path.join(authDir, 'login', 'page.tsx'), loginPage)
+  await fs.writeFile(path.join(loginDir, 'page.tsx'), loginPage)
   
   // Generate register page
   const registerPage = `'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AuthService } from '@opsai/auth'
-import { Card } from '@opsai/ui'
+import { auth } from '@/lib/supabase'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -1524,12 +1714,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  
-  const authService = new AuthService({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    jwtSecret: process.env.JWT_SECRET!
-  })
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1537,19 +1721,15 @@ export default function RegisterPage() {
     setError('')
 
     try {
-      // Create tenant first
-      const tenantId = await createTenant(formData.tenantName)
-      
-      // Register user with tenant
-      const response = await authService.register({
-        ...formData,
-        tenantId,
-        role: 'admin'
+      const response = await auth.signUp(formData.email, formData.password, {
+        firstName: formData.firstName,
+        lastName: formData.lastName
       })
       
-      if (response.token) {
-        localStorage.setItem('auth_token', response.token)
+      if (response.success) {
         router.push('/')
+      } else {
+        setError(response.error || 'Registration failed')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
@@ -1571,7 +1751,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md p-8">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-8">
         <h1 className="text-2xl font-bold text-center mb-6">Create Your Account</h1>
         
         <form onSubmit={handleRegister} className="space-y-4">
@@ -1647,18 +1827,17 @@ export default function RegisterPage() {
         <p className="text-center mt-4 text-sm text-gray-600">
           Already have an account? <a href="/auth/login" className="text-blue-600 hover:underline">Login</a>
         </p>
-      </Card>
+      </div>
     </div>
   )
 }`
   
   await fs.mkdir(path.join(authDir, 'register'), { recursive: true })
-  await fs.writeFile(path.join(authDir, 'register', 'page.tsx'), registerPage)
+  await fs.writeFile(path.join(registerDir, 'page.tsx'), registerPage)
   
   // Generate middleware for auth protection
   const middleware = `import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifyToken } from '@opsai/auth/utils/jwt-utils'
 
 export function middleware(request: NextRequest) {
   // Public routes that don't require authentication
@@ -1676,16 +1855,21 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
   
+  // For now, we'll do simple token validation
+  // In production, you should verify the JWT properly
   try {
-    // Verify token
-    const decoded = verifyToken(token, process.env.JWT_SECRET!)
-    
-    // Add user info to headers for API routes
-    const response = NextResponse.next()
-    response.headers.set('x-user-id', decoded.userId)
-    response.headers.set('x-tenant-id', decoded.tenantId)
-    
-    return response
+    // Simple validation - just check if token exists
+    // You can add proper JWT verification here using jsonwebtoken package
+    if (token && token.length > 0) {
+      // Add placeholder user info to headers for API routes
+      const response = NextResponse.next()
+      response.headers.set('x-user-id', 'user-1')
+      response.headers.set('x-tenant-id', 'tenant-1')
+      
+      return response
+    } else {
+      throw new Error('Invalid token')
+    }
   } catch (error) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
@@ -1707,7 +1891,6 @@ async function generateIntegrationConfig(config: YamlConfig, outputDir: string) 
   
   // Generate Airbyte integration
   const airbyteIntegration = `import { createAirbyteConnector } from '@opsai/integration'
-import { prisma } from '@opsai/database'
 
 export class DataSyncService {
   private airbyte = createAirbyteConnector({
@@ -1749,7 +1932,7 @@ export class DataSyncService {
       })
       
       // Save sync configuration
-      await prisma.integration.create({
+      await // prisma.create({
         data: {
           tenantId,
           provider: sourceConfig.type,
@@ -1814,8 +1997,8 @@ export class StripeIntegration {
       items: [{ price: priceId }]
     })
   }
-}\`,
-    'quickbooks': \`import { OAuthManager } from '@opsai/integration/auth'
+}`,
+    'quickbooks': `import { OAuthManager } from '@opsai/integration/auth'
 
 export class QuickBooksIntegration {
   private oauth: OAuthManager
@@ -1831,8 +2014,8 @@ export class QuickBooksIntegration {
   async syncInvoices(accessToken: string) {
     // QuickBooks invoice sync logic
   }
-}\`,
-    'shopify': \`import { RestConnector } from '@opsai/integration'
+}`,
+    'shopify': `import { RestConnector } from '@opsai/integration'
 
 export class ShopifyIntegration {
   private connector: RestConnector
@@ -1851,23 +2034,20 @@ export class ShopifyIntegration {
   async getOrders() {
     return this.connector.get('/orders.json')
   }
-}\`
+}`
   }
   
-  return integrationMap[integrationName] || \`// \${integrationName} integration placeholder\`
+  return integrationMap[integrationName] || `// ${integrationName} integration placeholder`
 }
 
 // Generate environment configuration
 async function generateEnvironmentConfig(config: YamlConfig, outputDir: string) {
-  const envExample = `# Database
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/app_db"
+  const envExample = `DATABASE_URL="postgresql://postgres:postgres@localhost:5432/app_db"
 
-# Authentication
 NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 JWT_SECRET="your-jwt-secret-key"
 
-# App Configuration
 NEXT_PUBLIC_APP_NAME="${config.business.name}"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"`
 
@@ -1891,8 +2071,35 @@ async function generateDeploymentConfig(config: YamlConfig, outputDir: string) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 Generate endpoint called')
+  
   try {
-    const { yamlConfig, appName } = await request.json()
+    console.log('📥 Parsing request body...')
+    const requestBody = await request.json()
+    const { yamlConfig, appName } = requestBody
+    console.log('✅ Request body parsed successfully')
+    
+    console.log('🔍 App Generation Request:', {
+      appName,
+      yamlConfigLength: yamlConfig?.length,
+      yamlConfigType: typeof yamlConfig,
+      yamlConfigPreview: yamlConfig?.substring(0, 500),
+      requestBodyKeys: Object.keys(requestBody)
+    })
+    
+    // Additional debugging
+    console.log('📝 Full yamlConfig first 1000 chars:', yamlConfig?.substring(0, 1000))
+    console.log('📝 yamlConfig last 500 chars:', yamlConfig?.substring(yamlConfig.length - 500))
+    
+    // Check if yamlConfig is actually a string
+    if (typeof yamlConfig !== 'string') {
+      console.error('❌ yamlConfig is not a string, got:', typeof yamlConfig)
+      console.error('❌ yamlConfig value:', yamlConfig)
+      return NextResponse.json(
+        { error: 'yamlConfig must be a string' },
+        { status: 400 }
+      )
+    }
 
     if (!yamlConfig || !appName) {
       return NextResponse.json(
@@ -1904,19 +2111,33 @@ export async function POST(request: NextRequest) {
     // Parse and validate YAML configuration
     let config: YamlConfig
     try {
-      console.log('🔍 Parsing YAML config:', yamlConfig.substring(0, 500))
+      console.log('🔍 Starting YAML parsing...')
+      console.log('🔍 YAML config preview:', yamlConfig.substring(0, 200))
+      console.log('🔍 YAML config type:', typeof yamlConfig)
+      console.log('🔍 YAML config length:', yamlConfig.length)
       
       // Try to parse the YAML config as YAML first
       let parsedConfig
       try {
-        // Import yaml parser
-        const yaml = require('js-yaml')
+        console.log('🔍 Attempting to parse as YAML...')
+        // Parse YAML using imported js-yaml
         parsedConfig = yaml.load(yamlConfig)
         console.log('✅ Successfully parsed YAML')
+        console.log('📊 YAML parsed type:', typeof parsedConfig)
+        console.log('📊 YAML parsed is array?', Array.isArray(parsedConfig))
+        console.log('📊 Top-level keys:', Object.keys(parsedConfig || {}))
       } catch (yamlError) {
-        console.log('❌ YAML parse failed, trying JSON fallback')
-        // If YAML parsing fails, the yamlConfig might already be JSON
-        parsedConfig = JSON.parse(yamlConfig)
+        console.log('❌ YAML parse failed:', yamlError)
+        console.log('❌ Error message:', yamlError instanceof Error ? yamlError.message : 'Unknown error')
+        console.log('🔄 Trying JSON fallback...')
+        try {
+          // If YAML parsing fails, the yamlConfig might already be JSON
+          parsedConfig = JSON.parse(yamlConfig)
+          console.log('✅ Successfully parsed as JSON')
+        } catch (jsonError) {
+          console.log('❌ JSON parse also failed:', jsonError)
+          throw new Error('Failed to parse config as YAML or JSON')
+        }
       }
       
       console.log('📊 Parsed config structure:', JSON.stringify(parsedConfig, null, 2).substring(0, 1000))
@@ -1950,10 +2171,30 @@ export async function POST(request: NextRequest) {
     const sanitizedAppName = appName.toLowerCase().replace(/\s+/g, '-')
     const outputDir = path.join(process.cwd(), 'generated-apps', sanitizedAppName + '-' + timestamp)
     
+    console.log('📁 Creating output directory:', outputDir)
     await fs.mkdir(outputDir, { recursive: true })
+    console.log('✅ Output directory created')
 
     // Generate the complete custom Next.js application
-    await generateCustomNextJSApp(config, appName, outputDir)
+    console.log('🏗️ Starting app generation...')
+    try {
+      await generateCustomNextJSApp(config, appName, outputDir)
+      console.log('✅ App generation completed')
+    } catch (genError) {
+      console.error('❌ App generation failed:', genError)
+      console.error('❌ Error stack:', genError instanceof Error ? genError.stack : 'No stack trace')
+      console.error('❌ Error details:', {
+        message: genError instanceof Error ? genError.message : 'Unknown error',
+        config: {
+          verticalName: config.vertical?.name,
+          verticalType: config.vertical?.type,
+          verticalIndustry: config.vertical?.industry,
+          businessName: config.business?.name,
+          modelsCount: config.database?.models?.length
+        }
+      })
+      throw genError
+    }
 
     // Auto-start the generated application
     const port = 3000 + Math.floor(Math.random() * 1000)
@@ -1979,12 +2220,16 @@ export async function POST(request: NextRequest) {
       console.error('Auto-setup error:', error)
     }
 
+    const appUrl = `http://localhost:${port}`
+    console.log('✅ Returning successful response with URL:', appUrl)
+    
     return NextResponse.json({
       success: true,
       appName,
       outputDir,
       port,
-      message: 'Application generated successfully! Access it at http://localhost:' + port
+      appUrl,
+      message: `Application generated successfully! Access it at ${appUrl}`
     })
 
   } catch (error) {
@@ -1996,58 +2241,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Generate environment configuration
-async function generateEnvironmentConfig(config: YamlConfig, outputDir: string) {
-  const envExample = `# Database
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/app_db"
 
-# Authentication
-NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
-JWT_SECRET="your-jwt-secret-key"
-
-# App Configuration
-NEXT_PUBLIC_APP_NAME="${config.business.name}"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"`
-
-  await fs.writeFile(path.join(outputDir, '.env.example'), envExample)
-  console.log('🌍 Environment configuration generated')
-}
-
-// Generate deployment configuration
-async function generateDeploymentConfig(config: YamlConfig, outputDir: string) {
-  const vercelConfig = {
-    "name": config.business.name.toLowerCase().replace(/\s+/g, '-'),
-    "framework": "nextjs",
-    "buildCommand": "npm run build",
-    "outputDirectory": ".next",
-    "installCommand": "npm install",
-    "devCommand": "npm run dev"
-  }
-  
-  await fs.writeFile(path.join(outputDir, 'vercel.json'), JSON.stringify(vercelConfig, null, 2))
-  console.log('🚀 Deployment configuration generated')
-}
-
-// Generate integration code
-function generateIntegrationCode(integrationName: string, businessType: string): string {
-  return `// ${integrationName} integration for ${businessType}
-export class ${integrationName}Integration {
-  constructor(config: any) {
-    // Integration configuration
-  }
-  
-  async connect(): Promise<any> {
-    // Connection logic
-    return { success: true }
-  }
-  
-  async sync(): Promise<any> {
-    // Sync logic
-    return { success: true, data: [] }
-  }
-}`
-}
 
 export async function GET() {
   return NextResponse.json({

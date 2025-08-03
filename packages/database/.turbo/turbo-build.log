@@ -2,3 +2,49 @@
 > @opsai/database@1.0.0 build /Users/segevbin/Desktop/Opsai/packages/database
 > tsc
 
+src/analyzers/schema-analyzer.ts(2,89): error TS2307: Cannot find module '@opsai/integration' or its corresponding type declarations.
+src/analyzers/schema-analyzer.ts(5,34): error TS2307: Cannot find module '@opsai/core' or its corresponding type declarations.
+src/validators/migration-validator.ts(220,50): error TS2339: Property 'estimatedRows' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/migration-validator.ts(226,76): error TS2339: Property 'estimatedRows' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/migration-validator.ts(255,13): error TS2367: This comparison appears to be unintentional because the types '"CASCADE" | "SET_NULL" | "RESTRICT"' and '"Cascade"' have no overlap.
+src/validators/migration-validator.ts(473,36): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/migration-validator.ts(474,34): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/migration-validator.ts(480,16): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/migration-validator.ts(484,20): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/migration-validator.ts(556,34): error TS2339: Property 'estimatedRows' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/migration-validator.ts(564,34): error TS2339: Property 'estimatedRows' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/migration-validator.ts(572,34): error TS2339: Property 'estimatedRows' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/migration-validator.ts(580,34): error TS2339: Property 'estimatedRows' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/schema-validator.ts(211,19): error TS2339: Property 'isList' does not exist on type 'PrismaField'.
+src/validators/schema-validator.ts(211,36): error TS2339: Property 'relation' does not exist on type 'PrismaField'.
+src/validators/schema-validator.ts(245,46): error TS2339: Property 'requiresTenantIsolation' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/schema-validator.ts(279,52): error TS2339: Property 'model' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(287,49): error TS2339: Property 'model' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(295,13): error TS2339: Property 'model' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(295,57): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(298,33): error TS2367: This comparison appears to be unintentional because the types '"one-to-one" | "one-to-many" | "many-to-many" | "many-to-one"' and '"implicit"' have no overlap.
+src/validators/schema-validator.ts(303,62): error TS2339: Property 'model' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(305,71): error TS2339: Property 'model' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(310,22): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(311,44): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(335,40): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(340,57): error TS2339: Property 'relation' does not exist on type 'PrismaField'.
+src/validators/schema-validator.ts(360,29): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/schema-validator.ts(382,22): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(382,41): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(385,29): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(392,62): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(393,52): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(407,29): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/schema-validator.ts(505,41): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/schema-validator.ts(525,13): error TS2367: This comparison appears to be unintentional because the types '"CASCADE" | "SET_NULL" | "RESTRICT"' and '"Cascade"' have no overlap.
+src/validators/schema-validator.ts(546,24): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(546,36): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(547,21): error TS2339: Property 'fields' does not exist on type 'PrismaRelation'.
+src/validators/schema-validator.ts(568,32): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+src/validators/schema-validator.ts(607,27): error TS2339: Property 'requiresAccessControl' does not exist on type '{ isCore: boolean; businessEntity: string; estimatedSize: "medium" | "small" | "large"; accessPattern: "read-heavy" | "write-heavy" | "balanced"; }'.
+src/validators/schema-validator.ts(631,18): error TS2339: Property 'documentation' does not exist on type 'PrismaSchemaModel'.
+src/validators/schema-validator.ts(643,32): error TS2339: Property 'relation' does not exist on type 'PrismaField'.
+src/validators/schema-validator.ts(647,20): error TS2339: Property 'documentation' does not exist on type 'PrismaField'.
+src/validators/schema-validator.ts(723,16): error TS2339: Property 'directives' does not exist on type 'PrismaSchemaModel'.
+ ELIFECYCLE  Command failed with exit code 2.

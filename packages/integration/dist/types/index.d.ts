@@ -169,4 +169,5 @@ export interface AirbyteConfig {
         maxDelay: number;
     };
 }
+export { DiscoveredDataSource, DiscoveredSchema, DiscoveredTable, DiscoveredColumn, TableIndex, TableConstraint, SchemaRelationship, BusinessEntity } from '@opsai/shared';
 //# sourceMappingURL=index.d.ts.map

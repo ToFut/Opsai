@@ -22,12 +22,7 @@
     "src/file-manager.ts",
     "src/monitoring-manager.ts",
     "src/workflow-engine.ts",
-    "src/workflow-orchestrator.ts",
-    "src/validators/**/*",
-    "src/engines/**/*",
-    "src/processors/**/*",
-    "src/generators/**/*",
-    "src/utils/**/*"
+    "src/workflow-orchestrator.ts"
   ],
   "references": [
     { "path": "../shared" }

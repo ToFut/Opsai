@@ -196,7 +196,7 @@ export interface AlertingConfig {
   channels: AlertChannel[]
   
   // Rules
-  rules: AlertRule[]
+  rules: MonitoringAlertRule[]
   
   // Routing
   routing: AlertRouting[]
@@ -255,7 +255,7 @@ export interface AlertChannel {
   }
 }
 
-export interface AlertRule {
+export interface MonitoringAlertRule {
   id: string
   name: string
   description: string

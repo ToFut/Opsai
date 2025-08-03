@@ -9,7 +9,12 @@ interface AIInsightsReviewProps {
 }
 
 export default function AIInsightsReview({ analysis, onConfirm, onReject, loading = false }: AIInsightsReviewProps) {
-  const [confirmedInsights, setConfirmedInsights] = useState(analysis)
+  const [confirmedInsights, setConfirmedInsights] = useState(analysis || {
+    businessIntelligence: {},
+    technicalRequirements: {},
+    userManagement: {},
+    uiuxRecommendations: {}
+  })
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     businessIntelligence: true,
     technicalRequirements: false,
@@ -30,6 +35,9 @@ export default function AIInsightsReview({ analysis, onConfirm, onReject, loadin
       let current = updated
       
       for (let i = 0; i < path.length - 1; i++) {
+        if (!current[path[i]]) {
+          current[path[i]] = {}
+        }
         current = current[path[i]]
       }
       current[path[path.length - 1]] = value
@@ -106,7 +114,7 @@ export default function AIInsightsReview({ analysis, onConfirm, onReject, loadin
                       type="text"
                       value={stream}
                       onChange={(e) => {
-                        const newStreams = [...confirmedInsights.businessIntelligence.revenueStreams]
+                        const newStreams = [...(confirmedInsights.businessIntelligence?.revenueStreams || [])]
                         newStreams[index] = e.target.value
                         updateInsight(['businessIntelligence', 'revenueStreams'], newStreams)
                       }}

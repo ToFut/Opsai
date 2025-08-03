@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test OAuth Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .integration { border: 1px solid #ddd; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        button { background: #0066cc; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0052a3; }
+        .status { margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>OAuth Integration Test</h1>
+    <p>Click the buttons below to test OAuth URL creation for different providers:</p>
+    
+    <div class="integration">
+        <h3>🛍️ Shopify</h3>
+        <button onclick="testOAuth('shopify')">Connect Shopify</button>
+        <div id="shopify-status" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="integration">
+        <h3>💳 Stripe</h3>
+        <button onclick="testOAuth('stripe')">Connect Stripe</button>
+        <div id="stripe-status" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="integration">
+        <h3>📊 Google Analytics</h3>
+        <button onclick="testOAuth('google')">Connect Google</button>
+        <div id="google-status" class="status" style="display: none;"></div>
+    </div>
+    
+    <script>
+        async function testOAuth(provider) {
+            const statusDiv = document.getElementById(provider + '-status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '⏳ Creating OAuth URL...';
+            statusDiv.className = 'status';
+            
+            try {
+                console.log('🔗 Testing OAuth for:', provider);
+                
+                const response = await fetch('/api/oauth/create-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: provider,
+                        tenantId: 'test_tenant_' + Date.now(),
+                        redirectUri: window.location.origin + '/oauth-success'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('✅ OAuth response:', data);
+                
+                if (data.oauthUrl) {
+                    statusDiv.innerHTML = `✅ OAuth URL created successfully!<br><strong>Source:</strong> ${data.source}<br><strong>Demo Mode:</strong> ${data.demoMode ? 'Yes' : 'No'}`;
+                    statusDiv.className = 'status success';
+                    
+                    // Ask user if they want to test the redirect
+                    if (confirm(`OAuth URL created for ${provider}!\n\nWould you like to test the redirect?\n\n${data.message || 'This will redirect you to the OAuth page.'}`)) {
+                        console.log('🚀 Redirecting to:', data.oauthUrl);
+                        window.open(data.oauthUrl, '_blank');
+                    }
+                } else {
+                    statusDiv.innerHTML = `⚠️ No OAuth URL returned - using demo mode`;
+                    statusDiv.className = 'status error';
+                }
+                
+            } catch (error) {
+                console.error('❌ OAuth test failed:', error);
+                statusDiv.innerHTML = `❌ OAuth test failed: ${error.message}`;
+                statusDiv.className = 'status error';
+            }
+        }
+        
+        // Log to console for debugging
+        console.log('🧪 OAuth Test Page Loaded');
+        console.log('📍 Current URL:', window.location.href);
+    </script>
+</body>
+</html>

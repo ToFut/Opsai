@@ -14,10 +14,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DataDiscoveryService = void 0;
 // Integration services
 __exportStar(require("./services/integration-service"), exports);
 __exportStar(require("./services/sync-service"), exports);
 __exportStar(require("./services/webhook-service"), exports);
+__exportStar(require("./services/data-discovery-service"), exports);
 // Connectors
 __exportStar(require("./connectors/base-connector"), exports);
 __exportStar(require("./connectors/rest-connector"), exports);
@@ -32,4 +34,7 @@ __exportStar(require("./auth/oauth-manager"), exports);
 __exportStar(require("./credentials/credential-manager"), exports);
 // Types
 __exportStar(require("./types"), exports);
+// Re-export shared discovery types from services
+var data_discovery_service_1 = require("./services/data-discovery-service");
+Object.defineProperty(exports, "DataDiscoveryService", { enumerable: true, get: function () { return data_discovery_service_1.DataDiscoveryService; } });
 //# sourceMappingURL=index.js.map

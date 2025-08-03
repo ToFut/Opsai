@@ -189,4 +189,16 @@ export interface AirbyteConfig {
     initialDelay: number;
     maxDelay: number;
   };
-} 
+}
+
+// Re-export discovery types from shared
+export { 
+  DiscoveredDataSource,
+  DiscoveredSchema,
+  DiscoveredTable,
+  DiscoveredColumn,
+  TableIndex,
+  TableConstraint,
+  SchemaRelationship,
+  BusinessEntity
+} from '@opsai/shared'; 

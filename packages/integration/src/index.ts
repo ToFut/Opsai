@@ -2,6 +2,7 @@
 export * from './services/integration-service';
 export * from './services/sync-service';
 export * from './services/webhook-service';
+export * from './services/data-discovery-service';
 
 // Connectors
 export * from './connectors/base-connector';
@@ -19,4 +20,7 @@ export * from './auth/oauth-manager';
 export * from './credentials/credential-manager';
 
 // Types
-export * from './types'; 
+export * from './types';
+
+// Re-export shared discovery types from services
+export { DataDiscoveryService } from './services/data-discovery-service'; 

@@ -1,0 +1,162 @@
+version: "0.50.2"
+type: DeclarativeSource
+check:
+  type: CheckStream
+  stream_names: ["user"]
+
+definitions:
+  streams: {}
+  base_requester:
+    type: HttpRequester
+    url_base: https://api.github.com
+    http_method: GET
+    request_parameters: {}
+    request_headers:
+      Accept: application/json
+      User-Agent: Airbyte
+    request_rate_limiter:
+      type: FixedWindowRateLimiter
+      max_requests: 60
+      time_window: 60
+      
+  authenticator:
+    type: BearerAuthenticator
+    api_token: "{{ config['api_token'] }}"
+    
+  paginator:
+    type: DefaultPaginator
+    page_token_option:
+      type: RequestOption
+      inject_into: request_parameter
+      field_name: page
+    pagination_strategy:
+      type: PageIncrement
+      page_size: 100
+      start_from_page: 1
+
+streams:
+  - type: DeclarativeStream
+    name: user
+    primary_key: ["id"]
+    retriever:
+      type: SimpleRetriever
+      requester:
+        $ref: "#/definitions/base_requester"
+        path: /user
+        http_method: GET
+        authenticator:
+          $ref: "#/definitions/authenticator"
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path: ["$"]
+          
+  - type: DeclarativeStream
+    name: user_repos
+    primary_key: ["id"]
+    retriever:
+      type: SimpleRetriever
+      requester:
+        $ref: "#/definitions/base_requester"
+        path: /user/repos
+        http_method: GET
+        authenticator:
+          $ref: "#/definitions/authenticator"
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path: ["$"]
+      paginator:
+        $ref: "#/definitions/paginator"
+        
+  - type: DeclarativeStream
+    name: user_orgs
+    primary_key: ["id"]
+    retriever:
+      type: SimpleRetriever
+      requester:
+        $ref: "#/definitions/base_requester"
+        path: /user/orgs
+        http_method: GET
+        authenticator:
+          $ref: "#/definitions/authenticator"
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path: ["$"]
+      paginator:
+        $ref: "#/definitions/paginator"
+        
+  - type: DeclarativeStream
+    name: user_starred
+    primary_key: ["id"]
+    retriever:
+      type: SimpleRetriever
+      requester:
+        $ref: "#/definitions/base_requester"
+        path: /user/starred
+        http_method: GET
+        authenticator:
+          $ref: "#/definitions/authenticator"
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path: ["$"]
+      paginator:
+        $ref: "#/definitions/paginator"
+        
+  - type: DeclarativeStream
+    name: user_issues
+    primary_key: ["id"]
+    retriever:
+      type: SimpleRetriever
+      requester:
+        $ref: "#/definitions/base_requester"
+        path: /issues
+        http_method: GET
+        authenticator:
+          $ref: "#/definitions/authenticator"
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path: ["$"]
+      paginator:
+        $ref: "#/definitions/paginator"
+        
+  - type: DeclarativeStream
+    name: user_pull_requests
+    primary_key: ["id"]
+    retriever:
+      type: SimpleRetriever
+      requester:
+        $ref: "#/definitions/base_requester"
+        path: "/search/issues?q=type:pr+author:@me"
+        http_method: GET
+        authenticator:
+          $ref: "#/definitions/authenticator"
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path: ["items"]
+      paginator:
+        $ref: "#/definitions/paginator"
+
+spec:
+  type: Spec
+  connection_specification:
+    $schema: http://json-schema.org/draft-07/schema#
+    title: GitHub API Source Spec
+    type: object
+    required: ["api_token"]
+    properties:
+      api_token:
+        type: string
+        title: API Token
+        description: Bearer token for authentication
+        airbyte_secret: true

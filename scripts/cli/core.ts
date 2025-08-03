@@ -1,10 +1,11 @@
 #!/usr/bin/env tsx
 
 import { Command } from 'commander';
+import chalk from 'chalk';
 import { GenerateCommand } from './commands/generate';
 import { DeployCommand } from './commands/deploy';
+import { EnhancedDeployCommand } from './commands/enhanced-deploy';
 import { TestCommand } from './commands/test';
-import { TestIntegrationsCommand } from './commands/test-integrations';
 import { BackupCommand } from './commands/backup';
 
 const program = new Command();
@@ -29,16 +30,31 @@ program
     await generateCommand.execute(type, name, options);
   });
 
-// Deploy command
+// Deploy command (legacy)
 program
   .command('deploy')
-  .description('Deploy applications')
+  .description('Deploy applications (legacy)')
   .argument('<target>', 'Target to deploy (vertical, all)')
   .option('-e, --environment <env>', 'Environment (development, staging, production)')
   .option('-c, --config <path>', 'Configuration file path')
   .action(async (target, options) => {
     const deployCommand = new DeployCommand();
     await deployCommand.execute(target, options);
+  });
+
+// Enhanced Deploy command
+program
+  .command('deploy-enhanced')
+  .description('Enhanced deployment with multi-platform support')
+  .argument('[command]', 'Deployment command (all, platform, apps, list, status)')
+  .option('-e, --env <environment>', 'Deployment environment (staging, production, preview)', 'staging')
+  .option('-a, --app <name>', 'Specific app to deploy')
+  .option('-f, --force', 'Continue on errors', false)
+  .option('--apps-only', 'Deploy only generated apps')
+  .option('--platform-only', 'Deploy only main platform')
+  .action(async (command, options) => {
+    const enhancedDeployCommand = new EnhancedDeployCommand();
+    await enhancedDeployCommand.execute(command, options);
   });
 
 // Test command
@@ -53,18 +69,7 @@ program
     await testCommand.execute(type, options);
   });
 
-// Test integrations command
-program
-  .command('test-integrations')
-  .description('Test API integrations for authentication and data flow')
-  .argument('<config>', 'Configuration file path')
-  .option('--skip-env-check', 'Skip environment variable validation')
-  .option('--continue-on-failure', 'Continue even if some tests fail')
-  .option('-o, --output <path>', 'Save test report to file')
-  .action(async (config, options) => {
-    const testIntegrationsCommand = new TestIntegrationsCommand();
-    await testIntegrationsCommand.execute(config, options);
-  });
+
 
 // Database commands
 program
@@ -114,6 +119,57 @@ program
   .action(async (options) => {
     console.log('Viewing logs...');
     // Implementation for logs
+  });
+
+// Help command for deployment
+program
+  .command('deploy-help')
+  .description('Show deployment help and examples')
+  .action(() => {
+    console.log(chalk.blue('🚀 Deployment Commands Help\n'));
+    
+    console.log(chalk.yellow('📋 Available Commands:\n'));
+    
+    console.log(chalk.green('Legacy Commands (Original):'));
+    console.log('  pnpm deploy vertical <name> --environment=production');
+    console.log('  pnpm deploy all --environment=staging\n');
+    
+    console.log(chalk.green('Enhanced Commands (New):'));
+    console.log('  pnpm deploy:enhanced:staging          # Deploy everything to staging');
+    console.log('  pnpm deploy:enhanced:production       # Deploy everything to production');
+    console.log('  pnpm deploy:enhanced:apps             # Deploy only generated apps');
+    console.log('  pnpm deploy:enhanced:platform         # Deploy only main platform');
+    console.log('  pnpm deploy:enhanced:list             # List all available apps');
+    console.log('  pnpm deploy:enhanced:status           # Check deployment status\n');
+    
+    console.log(chalk.green('Direct CLI Commands:'));
+    console.log('  pnpm cli deploy-enhanced all --env=staging');
+    console.log('  pnpm cli deploy-enhanced apps --env=production');
+    console.log('  pnpm cli deploy-enhanced platform --env=staging');
+    console.log('  pnpm cli deploy-enhanced list');
+    console.log('  pnpm cli deploy-enhanced status\n');
+    
+    console.log(chalk.yellow('🎯 Examples:\n'));
+    
+    console.log(chalk.cyan('Deploy specific app to staging:'));
+    console.log('  pnpm cli deploy-enhanced apps --app=b2c-marketplace-1753994588864 --env=staging\n');
+    
+    console.log(chalk.cyan('Deploy main platform to production:'));
+    console.log('  pnpm cli deploy-enhanced platform --env=production\n');
+    
+    console.log(chalk.cyan('Deploy everything with force flag:'));
+    console.log('  pnpm cli deploy-enhanced all --env=production --force\n');
+    
+    console.log(chalk.yellow('🔧 Supported Platforms:'));
+    console.log('  ✅ Vercel (Frontend hosting)');
+    console.log('  ✅ Railway (Full-stack hosting)');
+    console.log('  ✅ Docker Compose (Local development)');
+    console.log('  ✅ Kubernetes (Enterprise deployment)\n');
+    
+    console.log(chalk.yellow('🌍 Environments:'));
+    console.log('  ✅ staging');
+    console.log('  ✅ production');
+    console.log('  ✅ preview\n');
   });
 
 program

@@ -52,6 +52,7 @@ model User {
   files    File[]
   auditLogs AuditLog[]
   userRoles UserRole[]
+  applications Application[] // User's created applications
 
   @@unique([email, tenantId])
   @@map("users")
@@ -299,4 +300,219 @@ model AlertDelivery {
   alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
 
   @@map("alert_deliveries")
+}
+
+// Discovery models
+model DiscoverySession {
+  id                String   @id @default(cuid())
+  tenantId          String
+  projectName       String
+  discoveredSources Json
+  schemaAnalysis    Json
+  businessFlows     Json
+  yamlConfig        String   @db.Text
+  uiStructure       Json
+  status            String   @default("running")
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("discovery_sessions")
+}
+
+model SchemaVersion {
+  id        String   @id @default(cuid())
+  tenantId  String
+  schema    Json
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("schema_versions")
+} 
+
+// New model for user applications
+model Application {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  url         String?
+  gitRepo     String?
+  previewUrl  String?
+  status      String   @default("running") // running, stopped, error
+  version     String   @default("1.0.0")
+  features    Json     @default("[]") // Array of feature strings
+  settings    Json     @default("{}") // App configuration
+  userId      String
+  tenantId    String
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customizations Customization[]
+  aiInsights     AIInsight[]
+  performanceMetrics PerformanceMetrics?
+  securityScore  SecurityScore?
+  codeQuality    CodeQuality?
+  collaborationSessions CollaborationSession[]
+
+  @@map("applications")
+}
+
+// Model for AI-generated customizations
+model Customization {
+  id          String   @id @default(cuid())
+  type        String   // feature, security, performance, ui, database, integration, auth
+  description String
+  status      String   @default("pending") // pending, processing, completed, failed
+  requestedAt DateTime @default(now())
+  completedAt DateTime?
+  changes     Json     @default("[]") // Array of change descriptions
+  filesModified Json   @default("[]") // Array of modified file paths
+  codeSnippets Json    @default("[]") // Array of code snippets
+  applicationId String
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customizations")
+}
+
+// Model for AI insights
+model AIInsight {
+  id              String   @id @default(cuid())
+  type            String   // performance, security, architecture, user_experience, business
+  title           String
+  description     String
+  impact          String   // high, medium, low
+  confidence      Int      // 0-100
+  suggestedActions Json    @default("[]") // Array of suggested actions
+  estimatedEffort String?
+  priority        Int      @default(1)
+  applicationId   String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("ai_insights")
+}
+
+// Model for performance metrics
+model PerformanceMetrics {
+  id              String   @id @default(cuid())
+  loadTime        Float
+  bundleSize      Int
+  lighthouseScore Int
+  coreWebVitals   Json     // { lcp: number, fid: number, cls: number }
+  recommendations Json     @default("[]") // Array of recommendations
+  applicationId   String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("performance_metrics")
+}
+
+// Model for security scores
+model SecurityScore {
+  id              String   @id @default(cuid())
+  overall         Int      // 0-100
+  categories      Json     // { authentication: number, authorization: number, etc. }
+  recommendations Json     @default("[]") // Array of recommendations
+  applicationId   String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  vulnerabilities SecurityVulnerability[]
+
+  @@map("security_scores")
+}
+
+// Model for security vulnerabilities
+model SecurityVulnerability {
+  id          String   @id @default(cuid())
+  severity    String   // critical, high, medium, low
+  title       String
+  description String
+  file        String?
+  line        Int?
+  fix         String?
+  securityScoreId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  securityScore SecurityScore @relation(fields: [securityScoreId], references: [id], onDelete: Cascade)
+
+  @@map("security_vulnerabilities")
+}
+
+// Model for code quality metrics
+model CodeQuality {
+  id            String   @id @default(cuid())
+  maintainability Int    // 0-100
+  testCoverage   Int     // 0-100
+  complexity     Int     // 0-100
+  duplication    Int     // 0-100
+  documentation  Int     // 0-100
+  suggestions    Json    @default("[]") // Array of suggestions
+  applicationId  String  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("code_quality")
+}
+
+// Model for collaboration sessions
+model CollaborationSession {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  name        String
+  isActive    Boolean  @default(true)
+  voiceChat   Boolean  @default(false)
+  screenShare Boolean  @default(false)
+  applicationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  participants CollaborationParticipant[]
+
+  @@map("collaboration_sessions")
+}
+
+// Model for collaboration participants
+model CollaborationParticipant {
+  id          String   @id @default(cuid())
+  userId      String
+  sessionId   String
+  role        String   @default("collaborator") // owner, collaborator, viewer
+  isOnline    Boolean  @default(true)
+  cursorPosition Json?  // { file: string, line: number, column: number }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     CollaborationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionId])
+  @@map("collaboration_participants")
 } 

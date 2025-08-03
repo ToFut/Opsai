@@ -359,6 +359,356 @@ const providers = {
     redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/jira/callback`,
     scope: ['read:jira-work', 'read:jira-user'],
     autoRefresh: true
+  },
+  // Security & Compliance Tools
+  'nudge-security': {
+    provider: 'nudge-security',
+    clientId: process.env.NUDGE_SECURITY_CLIENT_ID || 'demo_nudge_client_id',
+    clientSecret: process.env.NUDGE_SECURITY_CLIENT_SECRET || 'demo_nudge_client_secret',
+    authorizationUrl: 'https://api.nudgesecurity.com/oauth/authorize',
+    tokenUrl: 'https://api.nudgesecurity.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/nudge-security/callback`,
+    scope: ['read:apps', 'read:users', 'read:security'],
+    autoRefresh: true
+  },
+  okta: {
+    provider: 'okta',
+    clientId: process.env.OKTA_CLIENT_ID || 'demo_okta_client_id',
+    clientSecret: process.env.OKTA_CLIENT_SECRET || 'demo_okta_client_secret',
+    authorizationUrl: 'https://your-domain.okta.com/oauth2/v1/authorize',
+    tokenUrl: 'https://your-domain.okta.com/oauth2/v1/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/okta/callback`,
+    scope: ['openid', 'profile', 'email'],
+    autoRefresh: true
+  },
+  auth0: {
+    provider: 'auth0',
+    clientId: process.env.AUTH0_CLIENT_ID || 'demo_auth0_client_id',
+    clientSecret: process.env.AUTH0_CLIENT_SECRET || 'demo_auth0_client_secret',
+    authorizationUrl: 'https://your-domain.auth0.com/authorize',
+    tokenUrl: 'https://your-domain.auth0.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/auth0/callback`,
+    scope: ['openid', 'profile', 'email'],
+    autoRefresh: true
+  },
+  // Database Connectors (Airbyte Supported)
+  postgresql: {
+    provider: 'postgresql',
+    clientId: process.env.POSTGRESQL_CLIENT_ID || 'demo_postgresql_client_id',
+    clientSecret: process.env.POSTGRESQL_CLIENT_SECRET || 'demo_postgresql_client_secret',
+    authorizationUrl: 'https://api.postgresql.com/oauth/authorize',
+    tokenUrl: 'https://api.postgresql.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/postgresql/callback`,
+    scope: ['read', 'write'],
+    autoRefresh: true
+  },
+  mysql: {
+    provider: 'mysql',
+    clientId: process.env.MYSQL_CLIENT_ID || 'demo_mysql_client_id',
+    clientSecret: process.env.MYSQL_CLIENT_SECRET || 'demo_mysql_client_secret',
+    authorizationUrl: 'https://api.mysql.com/oauth/authorize',
+    tokenUrl: 'https://api.mysql.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/mysql/callback`,
+    scope: ['read', 'write'],
+    autoRefresh: true
+  },
+  snowflake: {
+    provider: 'snowflake',
+    clientId: process.env.SNOWFLAKE_CLIENT_ID || 'demo_snowflake_client_id',
+    clientSecret: process.env.SNOWFLAKE_CLIENT_SECRET || 'demo_snowflake_client_secret',
+    authorizationUrl: 'https://account.snowflakecomputing.com/oauth/authorize',
+    tokenUrl: 'https://account.snowflakecomputing.com/oauth/token-request',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/snowflake/callback`,
+    scope: ['refresh_token', 'session:role:accountadmin'],
+    autoRefresh: true
+  },
+  redshift: {
+    provider: 'redshift',
+    clientId: process.env.REDSHIFT_CLIENT_ID || 'demo_redshift_client_id',
+    clientSecret: process.env.REDSHIFT_CLIENT_SECRET || 'demo_redshift_client_secret',
+    authorizationUrl: 'https://redshift.amazonaws.com/oauth/authorize',
+    tokenUrl: 'https://redshift.amazonaws.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/redshift/callback`,
+    scope: ['read', 'write'],
+    autoRefresh: true
+  },
+  bigquery: {
+    provider: 'bigquery',
+    clientId: process.env.BIGQUERY_CLIENT_ID || 'demo_bigquery_client_id',
+    clientSecret: process.env.BIGQUERY_CLIENT_SECRET || 'demo_bigquery_client_secret',
+    authorizationUrl: 'https://accounts.google.com/o/oauth2/auth',
+    tokenUrl: 'https://oauth2.googleapis.com/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/bigquery/callback`,
+    scope: ['https://www.googleapis.com/auth/bigquery'],
+    autoRefresh: true
+  },
+  // E-commerce Platforms
+  magento: {
+    provider: 'magento',
+    clientId: process.env.MAGENTO_CLIENT_ID || 'demo_magento_client_id',
+    clientSecret: process.env.MAGENTO_CLIENT_SECRET || 'demo_magento_client_secret',
+    authorizationUrl: 'https://your-store.com/oauth/authorize',
+    tokenUrl: 'https://your-store.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/magento/callback`,
+    scope: ['admin'],
+    autoRefresh: true
+  },
+  woocommerce: {
+    provider: 'woocommerce',
+    clientId: process.env.WOOCOMMERCE_CLIENT_ID || 'demo_woocommerce_client_id',
+    clientSecret: process.env.WOOCOMMERCE_CLIENT_SECRET || 'demo_woocommerce_client_secret',
+    authorizationUrl: 'https://your-store.com/wc-auth/v1/authorize',
+    tokenUrl: 'https://your-store.com/wc-auth/v1/access_token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/woocommerce/callback`,
+    scope: ['read_write'],
+    autoRefresh: true
+  },
+  prestashop: {
+    provider: 'prestashop',
+    clientId: process.env.PRESTASHOP_CLIENT_ID || 'demo_prestashop_client_id',
+    clientSecret: process.env.PRESTASHOP_CLIENT_SECRET || 'demo_prestashop_client_secret',
+    authorizationUrl: 'https://your-store.com/oauth/authorize',
+    tokenUrl: 'https://your-store.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/prestashop/callback`,
+    scope: ['read', 'write'],
+    autoRefresh: true
+  },
+  // Marketing & Analytics
+  facebook: {
+    provider: 'facebook',
+    clientId: process.env.FACEBOOK_CLIENT_ID || 'demo_facebook_client_id',
+    clientSecret: process.env.FACEBOOK_CLIENT_SECRET || 'demo_facebook_client_secret',
+    authorizationUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
+    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/facebook/callback`,
+    scope: ['ads_read', 'business_management', 'pages_read_engagement'],
+    autoRefresh: true
+  },
+  instagram: {
+    provider: 'instagram',
+    clientId: process.env.INSTAGRAM_CLIENT_ID || 'demo_instagram_client_id',
+    clientSecret: process.env.INSTAGRAM_CLIENT_SECRET || 'demo_instagram_client_secret',
+    authorizationUrl: 'https://api.instagram.com/oauth/authorize',
+    tokenUrl: 'https://api.instagram.com/oauth/access_token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/instagram/callback`,
+    scope: ['user_profile', 'user_media'],
+    autoRefresh: true
+  },
+  linkedin: {
+    provider: 'linkedin',
+    clientId: process.env.LINKEDIN_CLIENT_ID || 'demo_linkedin_client_id',
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET || 'demo_linkedin_client_secret',
+    authorizationUrl: 'https://www.linkedin.com/oauth/v2/authorization',
+    tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/linkedin/callback`,
+    scope: ['r_liteprofile', 'r_emailaddress', 'w_member_social'],
+    autoRefresh: true
+  },
+  twitter: {
+    provider: 'twitter',
+    clientId: process.env.TWITTER_CLIENT_ID || 'demo_twitter_client_id',
+    clientSecret: process.env.TWITTER_CLIENT_SECRET || 'demo_twitter_client_secret',
+    authorizationUrl: 'https://twitter.com/i/oauth2/authorize',
+    tokenUrl: 'https://api.twitter.com/2/oauth2/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/twitter/callback`,
+    scope: ['tweet.read', 'users.read', 'offline.access'],
+    autoRefresh: true
+  },
+  tiktok: {
+    provider: 'tiktok',
+    clientId: process.env.TIKTOK_CLIENT_ID || 'demo_tiktok_client_id',
+    clientSecret: process.env.TIKTOK_CLIENT_SECRET || 'demo_tiktok_client_secret',
+    authorizationUrl: 'https://www.tiktok.com/auth/authorize/',
+    tokenUrl: 'https://open-api.tiktok.com/oauth/access_token/',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/tiktok/callback`,
+    scope: ['user.info.basic', 'video.list'],
+    autoRefresh: true
+  },
+  // Communication Tools
+  discord: {
+    provider: 'discord',
+    clientId: process.env.DISCORD_CLIENT_ID || 'demo_discord_client_id',
+    clientSecret: process.env.DISCORD_CLIENT_SECRET || 'demo_discord_client_secret',
+    authorizationUrl: 'https://discord.com/api/oauth2/authorize',
+    tokenUrl: 'https://discord.com/api/oauth2/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/discord/callback`,
+    scope: ['identify', 'guilds'],
+    autoRefresh: true
+  },
+  telegram: {
+    provider: 'telegram',
+    clientId: process.env.TELEGRAM_CLIENT_ID || 'demo_telegram_client_id',
+    clientSecret: process.env.TELEGRAM_CLIENT_SECRET || 'demo_telegram_client_secret',
+    authorizationUrl: 'https://oauth.telegram.org/auth',
+    tokenUrl: 'https://oauth.telegram.org/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/telegram/callback`,
+    scope: ['bot'],
+    autoRefresh: true
+  },
+  whatsapp: {
+    provider: 'whatsapp',
+    clientId: process.env.WHATSAPP_CLIENT_ID || 'demo_whatsapp_client_id',
+    clientSecret: process.env.WHATSAPP_CLIENT_SECRET || 'demo_whatsapp_client_secret',
+    authorizationUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
+    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/whatsapp/callback`,
+    scope: ['whatsapp_business_messaging'],
+    autoRefresh: true
+  },
+  // File Storage & Cloud Services
+  dropbox: {
+    provider: 'dropbox',
+    clientId: process.env.DROPBOX_CLIENT_ID || 'demo_dropbox_client_id',
+    clientSecret: process.env.DROPBOX_CLIENT_SECRET || 'demo_dropbox_client_secret',
+    authorizationUrl: 'https://www.dropbox.com/oauth2/authorize',
+    tokenUrl: 'https://api.dropboxapi.com/oauth2/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/dropbox/callback`,
+    scope: ['files.metadata.read', 'files.content.read'],
+    autoRefresh: true
+  },
+  box: {
+    provider: 'box',
+    clientId: process.env.BOX_CLIENT_ID || 'demo_box_client_id',
+    clientSecret: process.env.BOX_CLIENT_SECRET || 'demo_box_client_secret',
+    authorizationUrl: 'https://account.box.com/api/oauth2/authorize',
+    tokenUrl: 'https://api.box.com/oauth2/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/box/callback`,
+    scope: ['root_readwrite'],
+    autoRefresh: true
+  },
+  onedrive: {
+    provider: 'onedrive',
+    clientId: process.env.ONEDRIVE_CLIENT_ID || 'demo_onedrive_client_id',
+    clientSecret: process.env.ONEDRIVE_CLIENT_SECRET || 'demo_onedrive_client_secret',
+    authorizationUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+    tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/onedrive/callback`,
+    scope: ['Files.ReadWrite'],
+    autoRefresh: true
+  },
+  // HR & Recruiting
+  bamboohr: {
+    provider: 'bamboohr',
+    clientId: process.env.BAMBOOHR_CLIENT_ID || 'demo_bamboohr_client_id',
+    clientSecret: process.env.BAMBOOHR_CLIENT_SECRET || 'demo_bamboohr_client_secret',
+    authorizationUrl: 'https://api.bamboohr.com/api/gateway.php/your-domain/v1/oauth2/authorize',
+    tokenUrl: 'https://api.bamboohr.com/api/gateway.php/your-domain/v1/oauth2/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/bamboohr/callback`,
+    scope: ['read', 'write'],
+    autoRefresh: true
+  },
+  greenhouse: {
+    provider: 'greenhouse',
+    clientId: process.env.GREENHOUSE_CLIENT_ID || 'demo_greenhouse_client_id',
+    clientSecret: process.env.GREENHOUSE_CLIENT_SECRET || 'demo_greenhouse_client_secret',
+    authorizationUrl: 'https://app.greenhouse.io/oauth/authorize',
+    tokenUrl: 'https://app.greenhouse.io/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/greenhouse/callback`,
+    scope: ['candidates.read', 'jobs.read'],
+    autoRefresh: true
+  },
+  lever: {
+    provider: 'lever',
+    clientId: process.env.LEVER_CLIENT_ID || 'demo_lever_client_id',
+    clientSecret: process.env.LEVER_CLIENT_SECRET || 'demo_lever_client_secret',
+    authorizationUrl: 'https://auth.lever.co/authorize',
+    tokenUrl: 'https://auth.lever.co/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/lever/callback`,
+    scope: ['candidates:read', 'postings:read'],
+    autoRefresh: true
+  },
+  // Developer Tools
+  github: {
+    provider: 'github',
+    clientId: process.env.GITHUB_CLIENT_ID || 'demo_github_client_id',
+    clientSecret: process.env.GITHUB_CLIENT_SECRET || 'demo_github_client_secret',
+    authorizationUrl: 'https://github.com/login/oauth/authorize',
+    tokenUrl: 'https://github.com/login/oauth/access_token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/github/callback`,
+    scope: ['repo', 'user'],
+    autoRefresh: false
+  },
+  gitlab: {
+    provider: 'gitlab',
+    clientId: process.env.GITLAB_CLIENT_ID || 'demo_gitlab_client_id',
+    clientSecret: process.env.GITLAB_CLIENT_SECRET || 'demo_gitlab_client_secret',
+    authorizationUrl: 'https://gitlab.com/oauth/authorize',
+    tokenUrl: 'https://gitlab.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/gitlab/callback`,
+    scope: ['read_repository', 'read_user'],
+    autoRefresh: true
+  },
+  bitbucket: {
+    provider: 'bitbucket',
+    clientId: process.env.BITBUCKET_CLIENT_ID || 'demo_bitbucket_client_id',
+    clientSecret: process.env.BITBUCKET_CLIENT_SECRET || 'demo_bitbucket_client_secret',
+    authorizationUrl: 'https://bitbucket.org/site/oauth2/authorize',
+    tokenUrl: 'https://bitbucket.org/site/oauth2/access_token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/bitbucket/callback`,
+    scope: ['repositories'],
+    autoRefresh: true
+  },
+  // E-commerce & Payment Additional
+  amazon: {
+    provider: 'amazon',
+    clientId: process.env.AMAZON_CLIENT_ID || 'demo_amazon_client_id',
+    clientSecret: process.env.AMAZON_CLIENT_SECRET || 'demo_amazon_client_secret',
+    authorizationUrl: 'https://www.amazon.com/ap/oa',
+    tokenUrl: 'https://api.amazon.com/auth/o2/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/amazon/callback`,
+    scope: ['profile'],
+    autoRefresh: true
+  },
+  paypal: {
+    provider: 'paypal',
+    clientId: process.env.PAYPAL_CLIENT_ID || 'demo_paypal_client_id',
+    clientSecret: process.env.PAYPAL_CLIENT_SECRET || 'demo_paypal_client_secret',
+    authorizationUrl: 'https://www.paypal.com/signin/authorize',
+    tokenUrl: 'https://api.paypal.com/v1/oauth2/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/paypal/callback`,
+    scope: ['openid'],
+    autoRefresh: true
+  },
+  klarna: {
+    provider: 'klarna',
+    clientId: process.env.KLARNA_CLIENT_ID || 'demo_klarna_client_id',
+    clientSecret: process.env.KLARNA_CLIENT_SECRET || 'demo_klarna_client_secret',
+    authorizationUrl: 'https://api.klarna.com/oauth/authorize',
+    tokenUrl: 'https://api.klarna.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/klarna/callback`,
+    scope: ['payments'],
+    autoRefresh: true
+  },
+  // Additional Business Tools
+  typeform: {
+    provider: 'typeform',
+    clientId: process.env.TYPEFORM_CLIENT_ID || 'demo_typeform_client_id',
+    clientSecret: process.env.TYPEFORM_CLIENT_SECRET || 'demo_typeform_client_secret',
+    authorizationUrl: 'https://api.typeform.com/oauth/authorize',
+    tokenUrl: 'https://api.typeform.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/typeform/callback`,
+    scope: ['forms:read', 'responses:read'],
+    autoRefresh: true
+  },
+  surveymonkey: {
+    provider: 'surveymonkey',
+    clientId: process.env.SURVEYMONKEY_CLIENT_ID || 'demo_surveymonkey_client_id',
+    clientSecret: process.env.SURVEYMONKEY_CLIENT_SECRET || 'demo_surveymonkey_client_secret',
+    authorizationUrl: 'https://api.surveymonkey.com/oauth/authorize',
+    tokenUrl: 'https://api.surveymonkey.com/oauth/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/surveymonkey/callback`,
+    scope: ['surveys_read', 'responses_read'],
+    autoRefresh: true
+  },
+  airtable: {
+    provider: 'airtable',
+    clientId: process.env.AIRTABLE_CLIENT_ID || 'demo_airtable_client_id',
+    clientSecret: process.env.AIRTABLE_CLIENT_SECRET || 'demo_airtable_client_secret',
+    authorizationUrl: 'https://airtable.com/oauth2/v1/authorize',
+    tokenUrl: 'https://airtable.com/oauth2/v1/token',
+    redirectUri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3010'}/api/oauth/airtable/callback`,
+    scope: ['data.records:read', 'data.records:write'],
+    autoRefresh: true
   }
 }
 
@@ -378,6 +728,7 @@ export function getConfiguredProviders(): string[] {
 
 // Helper to get provider display names
 export const providerDisplayNames: Record<string, string> = {
+  // Core Business & Finance
   quickbooks: 'QuickBooks',
   square: 'Square',
   stripe: 'Stripe',
@@ -385,21 +736,72 @@ export const providerDisplayNames: Record<string, string> = {
   hubspot: 'HubSpot',
   salesforce: 'Salesforce',
   xero: 'Xero',
+  paypal: 'PayPal',
+  klarna: 'Klarna',
+  amazon: 'Amazon',
+
+  // Security & Compliance
+  'nudge-security': 'Nudge Security',
+  okta: 'Okta',
+  auth0: 'Auth0',
+
+  // Google & Microsoft Ecosystem
   'google-workspace': 'Google Workspace',
   'microsoft-365': 'Microsoft 365',
-  slack: 'Slack',
-  twilio: 'Twilio',
+  bigquery: 'Google BigQuery',
+  onedrive: 'OneDrive',
+
+  // Database Connectors (Airbyte Supported)
+  postgresql: 'PostgreSQL',
+  mysql: 'MySQL',
+  snowflake: 'Snowflake',
+  redshift: 'Amazon Redshift',
+
+  // E-commerce Platforms
+  magento: 'Magento',
+  woocommerce: 'WooCommerce',
+  prestashop: 'PrestaShop',
+
+  // Marketing & Social Media
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  linkedin: 'LinkedIn',
+  twitter: 'Twitter/X',
+  tiktok: 'TikTok',
   mailchimp: 'Mailchimp',
+
+  // Communication Tools
+  slack: 'Slack',
+  discord: 'Discord',
+  telegram: 'Telegram',
+  whatsapp: 'WhatsApp Business',
+  twilio: 'Twilio',
+  zoom: 'Zoom',
+
+  // File Storage & Cloud
+  dropbox: 'Dropbox',
+  box: 'Box',
+
+  // HR & Recruiting
+  bamboohr: 'BambooHR',
+  greenhouse: 'Greenhouse',
+  lever: 'Lever',
+
+  // Developer Tools
+  github: 'GitHub',
+  gitlab: 'GitLab',
+  bitbucket: 'Bitbucket',
+
+  // Survey & Forms
+  typeform: 'Typeform',
+  surveymonkey: 'SurveyMonkey',
+  airtable: 'Airtable',
+
+  // Support & Customer Service
   zendesk: 'Zendesk',
   calendly: 'Calendly',
-  paypal: 'PayPal',
-  woocommerce: 'WooCommerce',
-  amazon: 'Amazon',
-  intercom: 'Intercom',
-  sendgrid: 'SendGrid',
-  zoho: 'Zoho CRM',
   canva: 'Canva',
-  zoom: 'Zoom',
+
   // Restaurant/Food Service
   doordash: 'DoorDash',
   'uber-eats': 'Uber Eats',
@@ -407,11 +809,13 @@ export const providerDisplayNames: Record<string, string> = {
   resy: 'Resy',
   toast: 'Toast POS',
   restaurant365: 'Restaurant365',
+
   // Enterprise ERP
   netsuite: 'NetSuite ERP',
   sap: 'SAP',
   oracle: 'Oracle',
   workday: 'Workday',
+
   // Project Management
   asana: 'Asana',
   trello: 'Trello',

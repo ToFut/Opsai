@@ -1,0 +1,27 @@
+{
+  "name": "@opsai/schema-generator",
+  "version": "1.0.0",
+  "description": "Dynamic schema generation from real data sources",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.8.0",
+    "openai": "^4.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "prisma": "^5.8.0"
+  },
+  "peerDependencies": {
+    "@opsai/shared": "workspace:*"
+  }
+}

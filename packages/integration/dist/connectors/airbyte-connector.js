@@ -347,6 +347,7 @@ function createAirbyteConnector(config) {
         clientSecret: config?.clientSecret || process.env.AIRBYTE_CLIENT_SECRET || '',
         baseUrl: config?.baseUrl || process.env.AIRBYTE_BASE_URL || 'https://api.airbyte.com/v1',
         workspaceId: config?.workspaceId || process.env.AIRBYTE_WORKSPACE_ID,
+        capabilities: config?.capabilities || ['discovery', 'sync', 'schema-detection'],
         retryConfig: {
             maxRetries: 3,
             initialDelay: 1000,

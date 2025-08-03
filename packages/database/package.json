@@ -21,6 +21,7 @@
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "@opsai/shared": "workspace:*",
+    "@opsai/core": "workspace:*",
     "prisma": "^5.7.0"
   },
   "devDependencies": {

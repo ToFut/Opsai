@@ -18,6 +18,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./client"), exports);
 // Generators
 __exportStar(require("./generators/schema-generator"), exports);
+// Analyzers
+__exportStar(require("./analyzers/schema-analyzer"), exports);
+// Validators
+__exportStar(require("./validators/schema-validator"), exports);
+__exportStar(require("./validators/migration-validator"), exports);
 // Utils
 __exportStar(require("./utils/seed"), exports);
 __exportStar(require("./utils/backup"), exports);

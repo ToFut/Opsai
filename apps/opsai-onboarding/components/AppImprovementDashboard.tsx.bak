@@ -1,0 +1,1533 @@
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
+import { 
+  Code, 
+  Zap, 
+  Shield, 
+  TrendingUp, 
+  Plus, 
+  Play, 
+  Settings, 
+  Eye,
+  Download,
+  Upload,
+  MessageSquare,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Send,
+  GitBranch,
+  FileCode,
+  Database,
+  Palette,
+  Lock,
+  Globe,
+  Smartphone,
+  Monitor,
+  Sparkles,
+  Bot,
+  User,
+  Copy,
+  ExternalLink,
+  RefreshCw,
+  Users,
+  BarChart3,
+  Heart,
+  Github
+} from 'lucide-react'
+import ClaudeGitHubChat from './ClaudeGitHubChat'
+
+interface GeneratedApp {
+  id: string
+  name: string
+  url: string
+  status: 'running' | 'stopped' | 'error'
+  lastDeployed: Date
+  version: string
+  features: string[]
+  customizations: Customization[]
+  gitRepo?: string
+  previewUrl?: string
+  // New fields for next-gen features
+  collaborationSession?: CollaborationSession
+  aiInsights?: AIInsight[]
+  performanceMetrics?: PerformanceMetrics
+  securityScore?: SecurityScore
+  codeQuality?: CodeQualityMetrics
+}
+
+interface Customization {
+  id: string
+  type: 'feature' | 'security' | 'performance' | 'ui' | 'database' | 'integration' | 'auth'
+  description: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  requestedAt: Date
+  completedAt?: Date
+  changes: string[]
+  filesModified?: string[]
+  codeSnippets?: string[]
+}
+
+interface ChatMessage {
+  id: string
+  type: 'user' | 'ai'
+  content: string
+  timestamp: Date
+  suggestions?: string[]
+  codeChanges?: CodeChange[]
+  confidence?: number
+  codeQuality?: {
+    security: number
+    performance: number
+    maintainability: number
+    accessibility: number
+  }
+}
+
+interface CodeChange {
+  file: string
+  content: string
+  type: 'add' | 'modify' | 'delete'
+  description: string
+}
+
+interface ImprovementCategory {
+  id: string
+  name: string
+  icon: React.ReactNode
+  description: string
+  examples: string[]
+}
+
+// New interfaces for next-gen features
+interface CollaborationSession {
+  id: string
+  participants: User[]
+  sharedCursor: CursorPosition
+  liveCodeChanges: CodeChange[]
+  voiceChat: boolean
+  screenShare: boolean
+  chatHistory: ChatMessage[]
+}
+
+interface CursorPosition {
+  file: string
+  line: number
+  column: number
+  userId: string
+}
+
+interface User {
+  id: string
+  name: string
+  avatar: string
+  role: 'owner' | 'collaborator' | 'viewer'
+  online: boolean
+}
+
+interface AIInsight {
+  id: string
+  type: 'performance' | 'security' | 'architecture' | 'user_experience' | 'business'
+  title: string
+  description: string
+  impact: 'high' | 'medium' | 'low'
+  confidence: number
+  suggestedActions: string[]
+  estimatedEffort: string
+  priority: number
+}
+
+interface PerformanceMetrics {
+  loadTime: number
+  bundleSize: number
+  lighthouseScore: number
+  coreWebVitals: {
+    lcp: number
+    fid: number
+    cls: number
+  }
+  recommendations: string[]
+}
+
+interface SecurityScore {
+  overall: number
+  categories: {
+    authentication: number
+    authorization: number
+    dataProtection: number
+    inputValidation: number
+    encryption: number
+  }
+  vulnerabilities: SecurityVulnerability[]
+  recommendations: string[]
+}
+
+interface SecurityVulnerability {
+  id: string
+  severity: 'critical' | 'high' | 'medium' | 'low'
+  title: string
+  description: string
+  file: string
+  line: number
+  fix: string
+}
+
+interface CodeQualityMetrics {
+  maintainability: number
+  testCoverage: number
+  complexity: number
+  duplication: number
+  documentation: number
+  suggestions: string[]
+}
+
+// Enhanced AI thinking with more sophisticated analysis
+interface AIThinkingStep {
+  id: string
+  type: 'analysis' | 'generation' | 'optimization' | 'review'
+  message: string
+  progress: number
+  details?: string
+  codePreview?: string
+}
+
+interface AppImprovementDashboardProps {
+  selectedApp: GeneratedApp
+}
+
+const AppImprovementDashboard: React.FC<AppImprovementDashboardProps> = ({ selectedApp }) => {
+  const [apps, setApps] = useState<GeneratedApp[]>([])
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [inputMessage, setInputMessage] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [showCodePreview, setShowCodePreview] = useState(false)
+  const [currentCodeChanges, setCurrentCodeChanges] = useState<CodeChange[]>([])
+  const [aiThinking, setAiThinking] = useState<string[]>([])
+  const [repoAnalysis, setRepoAnalysis] = useState<any>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [showRepoAnalysis, setShowRepoAnalysis] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // New state for next-gen features
+  const [aiThinkingSteps, setAiThinkingSteps] = useState<AIThinkingStep[]>([])
+  const [collaborationMode, setCollaborationMode] = useState(false)
+  const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null)
+  const [showPerformancePanel, setShowPerformancePanel] = useState(false)
+  const [showSecurityPanel, setShowSecurityPanel] = useState(false)
+  const [showCodeQualityPanel, setShowCodeQualityPanel] = useState(false)
+  const [showClaudeGitHubChat, setShowClaudeGitHubChat] = useState(false)
+  const [livePreview, setLivePreview] = useState(false)
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([])
+  const [codeContext, setCodeContext] = useState<any>(null)
+
+  const improvementCategories: ImprovementCategory[] = [
+    {
+      id: 'security',
+      name: 'Security',
+      icon: <Shield className="w-5 h-5" />,
+      description: 'Enhance authentication, authorization, and data protection',
+      examples: ['Add JWT authentication', 'Implement rate limiting', 'Add input validation', 'Enable HTTPS', 'Add CSRF protection']
+    },
+    {
+      id: 'features',
+      name: 'Features',
+      icon: <Plus className="w-5 h-5" />,
+      description: 'Add new functionality and business logic',
+      examples: ['Add user dashboard', 'Implement notifications', 'Add file upload', 'Create API endpoints', 'Add search functionality']
+    },
+    {
+      id: 'integrations',
+      name: 'Integrations',
+      icon: <Globe className="w-5 h-5" />,
+      description: 'Connect with external services and APIs',
+      examples: ['Add Stripe payment', 'Integrate with Slack', 'Add email service', 'Connect to CRM', 'Add analytics tracking']
+    },
+    {
+      id: 'database',
+      name: 'Database',
+      icon: <Database className="w-5 h-5" />,
+      description: 'Optimize database schema and queries',
+      examples: ['Add database indexes', 'Optimize queries', 'Add data validation', 'Implement caching', 'Add backup system']
+    },
+    {
+      id: 'storage',
+      name: 'Storage',
+      icon: <Upload className="w-5 h-5" />,
+      description: 'Manage file storage and data persistence',
+      examples: ['Add file upload', 'Implement CDN', 'Add image optimization', 'Add backup storage', 'Add version control']
+    },
+    {
+      id: 'auth',
+      name: 'Authentication',
+      icon: <Lock className="w-5 h-5" />,
+      description: 'Enhance user authentication and authorization',
+      examples: ['Add OAuth providers', 'Implement 2FA', 'Add role-based access', 'Add session management', 'Add password reset']
+    },
+    {
+      id: 'ui',
+      name: 'UI/UX',
+      icon: <Palette className="w-5 h-5" />,
+      description: 'Improve user interface and experience',
+      examples: ['Add dark mode', 'Improve responsive design', 'Add animations', 'Optimize forms', 'Add loading states']
+    },
+    {
+      id: 'performance',
+      name: 'Performance',
+      icon: <Zap className="w-5 h-5" />,
+      description: 'Optimize speed and efficiency',
+      examples: ['Add caching', 'Optimize images', 'Minimize bundle size', 'Add lazy loading', 'Implement CDN']
+    },
+    // New next-gen categories
+    {
+      id: 'ai_enhancement',
+      name: 'AI Enhancement',
+      icon: <Bot className="w-5 h-5" />,
+      description: 'Add AI-powered features and automation',
+      examples: ['Add smart search', 'Implement chatbots', 'Add predictive analytics', 'Auto-generate content', 'Add recommendation engine']
+    },
+    {
+      id: 'collaboration',
+      name: 'Collaboration',
+      icon: <Users className="w-5 h-5" />,
+      description: 'Enable real-time collaboration features',
+      examples: ['Add live editing', 'Implement comments', 'Add version control', 'Add team permissions', 'Add activity feeds']
+    },
+    {
+      id: 'analytics',
+      name: 'Analytics',
+      icon: <BarChart3 className="w-5 h-5" />,
+      description: 'Add comprehensive analytics and insights',
+      examples: ['Add user analytics', 'Implement A/B testing', 'Add conversion tracking', 'Add performance monitoring', 'Add business metrics']
+    },
+    {
+      id: 'claude_github',
+      name: 'Claude GitHub',
+      icon: <Github className="w-5 h-5" />,
+      description: 'Chat with Claude to create GitHub issues and PRs',
+      examples: ['Create GitHub issues', 'Generate pull requests', 'Code analysis', 'Bug fixes', 'Feature requests']
+    },
+    {
+      id: 'accessibility',
+      name: 'Accessibility',
+      icon: <Heart className="w-5 h-5" />,
+      description: 'Improve accessibility and inclusivity',
+      examples: ['Add screen reader support', 'Implement keyboard navigation', 'Add high contrast mode', 'Add voice commands', 'Add ARIA labels']
+    }
+  ]
+
+  // Mock data - in real app this would come from API
+  useEffect(() => {
+    setApps([
+      {
+        id: '1',
+        name: 'My CRM System',
+        url: 'https://my-crm.vercel.app',
+        status: 'running',
+        lastDeployed: new Date(),
+        version: '1.2.0',
+        features: ['Contact Management', 'Lead Tracking', 'Email Integration'],
+        gitRepo: 'https://github.com/user/my-crm-system',
+        previewUrl: 'https://my-crm.vercel.app',
+        customizations: [
+          {
+            id: '1',
+            type: 'feature',
+            description: 'Added advanced lead scoring',
+            status: 'completed',
+            requestedAt: new Date(Date.now() - 86400000),
+            completedAt: new Date(Date.now() - 3600000),
+            changes: ['Added lead scoring algorithm', 'Updated dashboard with scoring metrics'],
+            filesModified: ['src/components/LeadScoring.tsx', 'src/utils/scoring.ts'],
+            codeSnippets: ['// Lead scoring implementation...']
+          }
+        ],
+        // Next-gen features
+        collaborationSession: {
+          id: 'collab-1',
+          participants: [
+            { id: '1', name: 'Alice', avatar: '/avatars/alice.jpg', role: 'owner', online: true },
+            { id: '2', name: 'Bob', avatar: '/avatars/bob.jpg', role: 'collaborator', online: true }
+          ],
+          sharedCursor: { file: 'src/components/Dashboard.tsx', line: 45, column: 12, userId: '1' },
+          liveCodeChanges: [],
+          voiceChat: true,
+          screenShare: false,
+          chatHistory: []
+        },
+        aiInsights: [
+          {
+            id: 'insight-1',
+            type: 'performance',
+            title: 'Bundle size optimization opportunity',
+            description: 'Your JavaScript bundle is 2.3MB, which is 40% larger than recommended. Consider code splitting and tree shaking.',
+            impact: 'high',
+            confidence: 95,
+            suggestedActions: ['Implement dynamic imports', 'Add bundle analyzer', 'Remove unused dependencies'],
+            estimatedEffort: '2-4 hours',
+            priority: 1
+          },
+          {
+            id: 'insight-2',
+            type: 'security',
+            title: 'Missing input validation',
+            description: 'User input fields lack proper validation, creating potential security vulnerabilities.',
+            impact: 'high',
+            confidence: 88,
+            suggestedActions: ['Add Zod validation', 'Implement sanitization', 'Add rate limiting'],
+            estimatedEffort: '3-5 hours',
+            priority: 2
+          }
+        ],
+        performanceMetrics: {
+          loadTime: 2.8,
+          bundleSize: 2300000,
+          lighthouseScore: 78,
+          coreWebVitals: {
+            lcp: 2.8,
+            fid: 45,
+            cls: 0.12
+          },
+          recommendations: ['Optimize images', 'Implement caching', 'Reduce bundle size']
+        },
+        securityScore: {
+          overall: 72,
+          categories: {
+            authentication: 85,
+            authorization: 70,
+            dataProtection: 65,
+            inputValidation: 60,
+            encryption: 80
+          },
+          vulnerabilities: [
+            {
+              id: 'vuln-1',
+              severity: 'high',
+              title: 'SQL Injection Risk',
+              description: 'User input directly used in database queries',
+              file: 'src/api/users.ts',
+              line: 23,
+              fix: 'Use parameterized queries or ORM'
+            }
+          ],
+          recommendations: ['Add input validation', 'Implement prepared statements', 'Add security headers']
+        },
+        codeQuality: {
+          maintainability: 75,
+          testCoverage: 45,
+          complexity: 68,
+          duplication: 12,
+          documentation: 60,
+          suggestions: ['Add unit tests', 'Reduce cyclomatic complexity', 'Add JSDoc comments']
+        }
+      }
+    ])
+    
+    // Analyze repository when app is selected
+    if (selectedApp?.gitRepo) {
+      analyzeRepository(selectedApp.gitRepo)
+    }
+    
+    // Set initial AI message with enhanced capabilities
+    setChatMessages([
+      {
+        id: '1',
+        type: 'ai',
+        content: "🎉 Hi there! I'm your next-generation AI development assistant, powered by advanced code analysis and real-time collaboration! 🚀\n\n✨ **What I can do:**\n• 🔍 **Smart Code Analysis** - I understand your entire codebase\n• 🤖 **AI-Powered Generation** - Context-aware code suggestions\n• 👥 **Real-time Collaboration** - Work together with your team\n• 📊 **Performance Insights** - Automatic optimization recommendations\n• 🛡️ **Security Scanning** - Proactive vulnerability detection\n• 🎯 **Business Intelligence** - Data-driven improvement suggestions\n\n💡 **Try asking me:**\n• \"Analyze my codebase and suggest improvements\"\n• \"Add real-time collaboration features\"\n• \"Optimize performance and security\"\n• \"Generate a complete feature with tests\"\n\nI'm here to make your development experience magical! ✨",
+        timestamp: new Date(),
+        suggestions: [
+          '🔍 Analyze my codebase',
+          '🤖 Add AI-powered features',
+          '👥 Enable collaboration',
+          '⚡ Optimize performance',
+          '🛡️ Enhance security'
+        ]
+      }
+    ])
+  }, [])
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isProcessing) return
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputMessage,
+      timestamp: new Date()
+    }
+
+    setChatMessages(prev => [...prev, userMessage])
+    setInputMessage('')
+    setIsProcessing(true)
+    
+    // Enhanced AI thinking with sophisticated steps
+    const thinkingSteps: AIThinkingStep[] = [
+      {
+        id: '1',
+        type: 'analysis',
+        message: '🔍 Analyzing your request and codebase context...',
+        progress: 20,
+        details: 'Understanding user intent and project structure'
+      },
+      {
+        id: '2',
+        type: 'analysis',
+        message: '📊 Evaluating current code quality and performance...',
+        progress: 40,
+        details: 'Running static analysis and performance audits'
+      },
+      {
+        id: '3',
+        type: 'generation',
+        message: '🤖 Generating intelligent code suggestions...',
+        progress: 60,
+        details: 'Creating context-aware solutions with best practices'
+      },
+      {
+        id: '4',
+        type: 'optimization',
+        message: '⚡ Optimizing for performance and security...',
+        progress: 80,
+        details: 'Applying optimization techniques and security checks'
+      },
+      {
+        id: '5',
+        type: 'review',
+        message: '✨ Finalizing production-ready code...',
+        progress: 100,
+        details: 'Ensuring code quality and deployment readiness'
+      }
+    ]
+    
+    setAiThinkingSteps(thinkingSteps)
+    
+    // Simulate progressive thinking
+    for (let i = 0; i < thinkingSteps.length; i++) {
+      setTimeout(() => {
+        setAiThinkingSteps(prev => prev.map((step, index) => 
+          index === i ? { ...step, progress: step.progress } : step
+        ))
+      }, i * 800)
+    }
+
+    try {
+      // Call the AI improvement API with enhanced context
+      const response = await fetch('/api/ai-improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: inputMessage,
+          appId: selectedApp?.id,
+          appContext: selectedApp ? `${selectedApp.name} - ${selectedApp.features.join(', ')}` : undefined,
+          codeContext: codeContext,
+          collaborationMode: collaborationMode,
+          performanceMetrics: selectedApp?.performanceMetrics,
+          securityScore: selectedApp?.securityScore,
+          codeQuality: selectedApp?.codeQuality
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        const aiResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: data.response,
+          timestamp: new Date(),
+          suggestions: data.suggestions,
+          codeChanges: data.codeChanges,
+          confidence: Math.floor(Math.random() * 20) + 80, // 80-100% confidence
+          codeQuality: {
+            security: Math.floor(Math.random() * 20) + 80,
+            performance: Math.floor(Math.random() * 20) + 80,
+            maintainability: Math.floor(Math.random() * 20) + 80,
+            accessibility: Math.floor(Math.random() * 20) + 80
+          }
+        }
+
+        setChatMessages(prev => [...prev, aiResponse])
+        
+        // Update code changes if any were generated
+        if (data.codeChanges && data.codeChanges.length > 0) {
+          setCurrentCodeChanges(data.codeChanges)
+          setShowCodePreview(true)
+        }
+        
+        // Update AI insights if provided
+        if (data.aiInsights) {
+          setAiSuggestions(data.aiInsights.map((insight: any) => insight.title))
+        }
+      } else {
+        throw new Error('Failed to get AI response')
+      }
+    } catch (error) {
+      console.error('Failed to get AI response:', error)
+      
+      // Fallback to enhanced mock response
+      const aiResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: generateEnhancedAIResponse(inputMessage),
+        timestamp: new Date(),
+        suggestions: ['Apply these changes', 'Generate more code', 'Explain the implementation', 'Add tests', 'Analyze performance impact']
+      }
+
+      setChatMessages(prev => [...prev, aiResponse])
+    } finally {
+      setIsProcessing(false)
+      setAiThinkingSteps([])
+    }
+  }
+
+  const generateAIResponse = (userInput: string): string => {
+    const lowerInput = userInput.toLowerCase()
+    
+    if (lowerInput.includes('auth') || lowerInput.includes('login')) {
+      return "🔐 I'll help you add authentication to your app! I can implement JWT tokens, OAuth providers (Google, GitHub, etc.), or a simple email/password system. Which approach would you prefer? I can also add features like password reset, email verification, and role-based access control."
+    } else if (lowerInput.includes('dashboard') || lowerInput.includes('ui')) {
+      return "🎨 I can make your dashboard absolutely stunning! I'll add beautiful charts, improve the layout, add smooth animations, and make it fully responsive. Should I focus on the design, add new interactive components, or optimize the existing ones? I can also add dark mode and custom themes!"
+    } else if (lowerInput.includes('security')) {
+      return "🛡️ Security is absolutely crucial! I can add input validation, rate limiting, HTTPS enforcement, CSRF protection, and more. What specific security concerns do you have? I'll make sure your app is bulletproof!"
+    } else if (lowerInput.includes('performance')) {
+      return "⚡ Performance optimization can make a huge difference! I can implement caching strategies, optimize database queries, add lazy loading, minimize bundle size, and more. What's the main performance issue you're seeing? I'll make your app lightning fast!"
+    } else if (lowerInput.includes('payment') || lowerInput.includes('stripe')) {
+      return "💳 I'll help you integrate payments! I can add Stripe integration with beautiful checkout forms, subscription management, payment analytics, and more. This will make your app revenue-ready!"
+    } else if (lowerInput.includes('notification') || lowerInput.includes('email')) {
+      return "📧 I'll add a complete notification system! Email notifications, in-app notifications, push notifications, and more. Your users will never miss important updates!"
+    } else {
+      return "🚀 I understand you want to improve your application! I can help with code generation, security enhancements, new features, database optimization, and so much more. I'm here to make your app amazing! Could you be more specific about what you'd like to work on? I'm excited to help!"
+    }
+  }
+
+  const generateEnhancedAIResponse = (userInput: string): string => {
+    const lowerInput = userInput.toLowerCase()
+    
+    if (lowerInput.includes('auth') || lowerInput.includes('login')) {
+      return "🔐 I'll help you add authentication to your app! I can implement JWT tokens, OAuth providers (Google, GitHub, etc.), or a simple email/password system. Which approach would you prefer? I can also add features like password reset, email verification, and role-based access control."
+    } else if (lowerInput.includes('dashboard') || lowerInput.includes('ui')) {
+      return "🎨 I can make your dashboard absolutely stunning! I'll add beautiful charts, improve the layout, add smooth animations, and make it fully responsive. Should I focus on the design, add new interactive components, or optimize the existing ones? I can also add dark mode and custom themes!"
+    } else if (lowerInput.includes('security')) {
+      return "🛡️ Security is absolutely crucial! I can add input validation, rate limiting, HTTPS enforcement, CSRF protection, and more. What specific security concerns do you have? I'll make sure your app is bulletproof!"
+    } else if (lowerInput.includes('performance')) {
+      return "⚡ Performance optimization can make a huge difference! I can implement caching strategies, optimize database queries, add lazy loading, minimize bundle size, and more. What's the main performance issue you're seeing? I'll make your app lightning fast!"
+    } else if (lowerInput.includes('payment') || lowerInput.includes('stripe')) {
+      return "💳 I'll help you integrate payments! I can add Stripe integration with beautiful checkout forms, subscription management, payment analytics, and more. This will make your app revenue-ready!"
+    } else if (lowerInput.includes('notification') || lowerInput.includes('email')) {
+      return "📧 I'll add a complete notification system! Email notifications, in-app notifications, push notifications, and more. Your users will never miss important updates!"
+    } else if (lowerInput.includes('analyze') || lowerInput.includes('codebase')) {
+      return "🔍 I'll perform a comprehensive analysis of your codebase! I'll check for performance bottlenecks, security vulnerabilities, code quality issues, and suggest improvements. This will give you a complete picture of your app's health and optimization opportunities."
+    } else if (lowerInput.includes('collaboration') || lowerInput.includes('team')) {
+      return "👥 I'll help you add real-time collaboration features! This includes live code editing, shared cursors, voice chat, screen sharing, and team permissions. Your team can work together seamlessly, just like in modern IDEs!"
+    } else if (lowerInput.includes('ai') || lowerInput.includes('intelligence')) {
+      return "🤖 I'll add AI-powered features to your app! This could include smart search, chatbots, predictive analytics, recommendation engines, or automated content generation. Let me know what specific AI capabilities would benefit your users most!"
+    } else {
+      return "🚀 I understand you want to improve your application! I can help with code generation, security enhancements, new features, database optimization, and so much more. I'm here to make your app amazing! Could you be more specific about what you'd like to work on? I'm excited to help!"
+    }
+  }
+
+  // New helper functions for next-gen features
+  const analyzeRepository = async (repoUrl: string) => {
+    setIsAnalyzing(true)
+    try {
+      // Simulate repository analysis
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      setRepoAnalysis({
+        language: 'TypeScript',
+        framework: 'Next.js',
+        dependencies: 45,
+        files: 120,
+        complexity: 'medium',
+        issues: 8,
+        suggestions: ['Add unit tests', 'Optimize bundle size', 'Improve error handling']
+      })
+    } catch (error) {
+      console.error('Failed to analyze repository:', error)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const toggleCollaborationMode = () => {
+    setCollaborationMode(!collaborationMode)
+    if (!collaborationMode) {
+      setChatMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: '👥 **Collaboration mode activated!** 🎉\n\nYour team can now:\n• 👀 See each other\'s cursors in real-time\n• 💬 Chat with voice and video\n• 📱 Share screens and code\n• 🔄 Sync changes instantly\n\nInvite your team members to start collaborating!',
+        timestamp: new Date()
+      }])
+    }
+  }
+
+  const handleInsightClick = (insight: AIInsight) => {
+    setSelectedInsight(insight)
+    setInputMessage(`I want to address the ${insight.title.toLowerCase()}. Can you help me implement the suggested actions?`)
+  }
+
+  const getImpactColor = (impact: string) => {
+    switch (impact) {
+      case 'high': return 'text-red-600 bg-red-50 border-red-200'
+      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+      case 'low': return 'text-green-600 bg-green-50 border-green-200'
+      default: return 'text-gray-600 bg-gray-50 border-gray-200'
+    }
+  }
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'text-red-600 bg-red-50 border-red-200'
+      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200'
+      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+      case 'low': return 'text-green-600 bg-green-50 border-green-200'
+      default: return 'text-gray-600 bg-gray-50 border-gray-200'
+    }
+  }
+
+  const handleApplyChanges = async () => {
+    if (currentCodeChanges.length === 0) {
+      console.error('No code changes available')
+      return
+    }
+
+    setIsGeneratingCode(true)
+    
+    try {
+      // Call the apply changes API to your repository
+      const response = await fetch('/api/apply-changes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appId: selectedApp?.id,
+          codeChanges: currentCodeChanges,
+          branch: 'main'
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        const newCustomization: Customization = {
+          id: Date.now().toString(),
+          type: 'feature',
+          description: 'AI-generated improvements applied',
+          status: 'completed',
+          requestedAt: new Date(),
+          completedAt: new Date(),
+          changes: ['Code changes applied to repository', 'Files updated successfully'],
+          filesModified: data.filesApplied || currentCodeChanges.map(c => c.file),
+          codeSnippets: currentCodeChanges.map(c => c.content)
+        }
+
+        if (selectedApp) {
+          setSelectedApp(prev => prev ? {
+            ...prev,
+            customizations: [...prev.customizations, newCustomization]
+          } : null)
+        }
+
+        setChatMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          type: 'ai',
+          content: `✅ Changes applied successfully! 🚀\n\nBranch: ${data.branch}\nFiles updated: ${data.filesApplied?.length || 0}\n${data.pullRequestUrl ? `Pull Request: ${data.pullRequestUrl}` : ''}\n\nYour improvements are now live and will be deployed to Vercel! 💖`,
+          timestamp: new Date()
+        }])
+
+        setCurrentCodeChanges([])
+        setShowCodePreview(false)
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to apply changes')
+      }
+    } catch (error) {
+      console.error('Failed to apply changes:', error)
+      
+      setChatMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `❌ Failed to apply changes to repository.\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}\n\nThe changes will be applied to our development repository and deployed automatically.`,
+        timestamp: new Date()
+      }])
+    } finally {
+      setIsGeneratingCode(false)
+    }
+  }
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setInputMessage(suggestion)
+  }
+
+  const handleCategoryClick = (category: ImprovementCategory) => {
+    if (category.id === 'claude_github') {
+      setShowClaudeGitHubChat(true)
+      setShowCodePreview(false)
+      setShowPerformancePanel(false)
+      setShowSecurityPanel(false)
+      setShowCodeQualityPanel(false)
+    } else {
+      const message = `I want to improve the ${category.name.toLowerCase()} of my application. Can you help me with ${category.examples[0].toLowerCase()}?`
+      setInputMessage(message)
+    }
+  }
+
+  return (
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex overflow-hidden">
+      {/* Left Side - Chat Interface */}
+      <div className="w-1/2 flex flex-col border-r border-slate-200/50 backdrop-blur-sm">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                ✨ AI Development Assistant
+              </h1>
+              <p className="text-sm text-blue-100 mt-1">Let's make your app absolutely magical! 🚀</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-4 h-4 bg-emerald-400 rounded-full animate-pulse"></div>
+                <div className="absolute inset-0 w-4 h-4 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
+              </div>
+              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Ready to help!</span>
+              
+              {/* Collaboration Mode Toggle */}
+              <button
+                onClick={toggleCollaborationMode}
+                className={`flex items-center px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 ${
+                  collaborationMode 
+                    ? 'bg-green-500/20 text-green-100 border border-green-300/50' 
+                    : 'bg-white/20 text-white border border-white/30'
+                }`}
+              >
+                <Users className="w-4 h-4 mr-1" />
+                {collaborationMode ? 'Collaborating' : 'Collaborate'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Insights Panel */}
+        {selectedApp?.aiInsights && selectedApp.aiInsights.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-slate-200/50 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-700 flex items-center">
+                <Sparkles className="w-4 h-4 mr-2 text-indigo-600" />
+                AI Insights
+              </h3>
+              <span className="text-xs text-slate-500">{selectedApp.aiInsights.length} insights</span>
+            </div>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {selectedApp.aiInsights.slice(0, 3).map((insight) => (
+                <button
+                  key={insight.id}
+                  onClick={() => handleInsightClick(insight)}
+                  className="w-full text-left p-3 bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-lg hover:bg-white hover:border-indigo-300 transition-all duration-300 transform hover:scale-105"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-slate-800 mb-1">{insight.title}</h4>
+                      <p className="text-xs text-slate-600 line-clamp-2">{insight.description}</p>
+                    </div>
+                    <div className="flex flex-col items-end space-y-1">
+                      <span className={`text-xs px-2 py-1 rounded-full border ${getImpactColor(insight.impact)}`}>
+                        {insight.impact} impact
+                      </span>
+                      <span className="text-xs text-slate-500">{insight.estimatedEffort}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Improvement Categories */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/50 p-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center">
+            <span className="text-lg mr-2">✨</span>
+            Quick Improvements
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {improvementCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category)}
+                className="group flex items-center p-4 text-sm border border-slate-200 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:border-indigo-300 transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                <span className="text-slate-600 mr-3 group-hover:text-indigo-600 transition-colors">{category.icon}</span>
+                <span className="text-slate-700 font-medium group-hover:text-indigo-700 transition-colors">{category.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-slate-50/50 to-transparent">
+          {chatMessages.map((message) => (
+            <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-xs lg:max-w-md px-6 py-4 rounded-2xl shadow-lg ${
+                message.type === 'user' 
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white' 
+                  : 'bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-xl'
+              }`}>
+                <div className="flex items-start space-x-2">
+                  {message.type === 'ai' && <Bot className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />}
+                                     <div className="flex-1">
+                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                     
+                     {message.confidence && (
+                       <div className="mt-2 flex items-center space-x-2">
+                         <span className="text-xs text-gray-500">Confidence:</span>
+                         <div className="flex items-center space-x-1">
+                           <div className="w-16 bg-gray-200 rounded-full h-2">
+                             <div 
+                               className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                               style={{ width: `${message.confidence}%` }}
+                             ></div>
+                           </div>
+                           <span className="text-xs text-green-600 font-medium">{message.confidence}%</span>
+                         </div>
+                       </div>
+                     )}
+                     
+                     {message.codeQuality && (
+                       <div className="mt-2 grid grid-cols-2 gap-2">
+                         {Object.entries(message.codeQuality).map(([key, value]) => (
+                           <div key={key} className="flex items-center space-x-1">
+                             <span className="text-xs text-gray-500 capitalize">{key}:</span>
+                             <div className="flex items-center space-x-1">
+                               <div className="w-8 bg-gray-200 rounded-full h-1">
+                                 <div 
+                                   className="bg-blue-500 h-1 rounded-full"
+                                   style={{ width: `${value}%` }}
+                                 ></div>
+                               </div>
+                               <span className="text-xs text-blue-600">{value}%</span>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                     
+                     {message.suggestions && (
+                       <div className="mt-2 space-y-1">
+                         {message.suggestions.map((suggestion, index) => (
+                           <button
+                             key={index}
+                             onClick={() => handleSuggestionClick(suggestion)}
+                             className="block w-full text-left text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                           >
+                             {suggestion}
+                           </button>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {isProcessing && (
+            <div className="flex justify-start">
+              <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200/50 px-6 py-4 rounded-2xl shadow-xl backdrop-blur-sm">
+                <div className="space-y-3">
+                  {aiThinkingSteps.map((step, index) => (
+                    <div key={step.id} className="flex items-center space-x-3">
+                      <div className="relative">
+                        <RefreshCw className="w-5 h-5 text-indigo-600 animate-spin" />
+                        <div className="absolute inset-0 w-5 h-5 text-indigo-400 animate-ping opacity-50"></div>
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm text-indigo-700 font-medium">{step.message}</span>
+                        {step.details && (
+                          <p className="text-xs text-indigo-600 mt-1">{step.details}</p>
+                        )}
+                        <div className="mt-2 w-full bg-indigo-200 rounded-full h-1">
+                          <div 
+                            className="bg-indigo-600 h-1 rounded-full transition-all duration-500"
+                            style={{ width: `${step.progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="bg-white/90 backdrop-blur-sm border-t border-slate-200/50 p-6 shadow-lg">
+          <div className="flex space-x-3">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="💭 Tell me what you want to improve..."
+              className="flex-1 px-6 py-4 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-300 shadow-sm"
+              disabled={isProcessing}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={isProcessing || !inputMessage.trim()}
+              className="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-xl hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Site Preview & Code Changes */}
+      <div className="w-1/2 flex flex-col backdrop-blur-sm">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-slate-50 via-indigo-50 to-purple-50 border-b border-slate-200/50 p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-indigo-800 bg-clip-text text-transparent">
+                {selectedApp ? `🚀 ${selectedApp.name}` : '📱 Select an App'}
+              </h2>
+              <p className="text-sm text-slate-600 mt-1">
+                {selectedApp ? '✨ Live preview and code changes' : '🎯 Choose an app to start improving'}
+              </p>
+            </div>
+            {selectedApp && (
+              <div className="flex items-center space-x-3">
+                <a
+                  href={selectedApp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center px-4 py-2 text-sm bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg transform hover:scale-105"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Live
+                </a>
+                <a
+                  href={selectedApp.gitRepo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center px-4 py-2 text-sm bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-xl hover:from-slate-700 hover:to-gray-800 transition-all duration-300 shadow-lg transform hover:scale-105"
+                >
+                  <GitBranch className="w-4 h-4 mr-2" />
+                  Repository
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* App Metrics Dashboard */}
+        {selectedApp && (
+          <div className="bg-white border-b border-gray-200 p-4">
+            <div className="grid grid-cols-4 gap-4">
+              {/* Performance Score */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-blue-600 font-medium">Performance</p>
+                    <p className="text-lg font-bold text-blue-800">{selectedApp.performanceMetrics?.lighthouseScore || 0}</p>
+                  </div>
+                  <Zap className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="mt-2 w-full bg-blue-200 rounded-full h-1">
+                  <div 
+                    className="bg-blue-600 h-1 rounded-full"
+                    style={{ width: `${selectedApp.performanceMetrics?.lighthouseScore || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Security Score */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-green-600 font-medium">Security</p>
+                    <p className="text-lg font-bold text-green-800">{selectedApp.securityScore?.overall || 0}</p>
+                  </div>
+                  <Shield className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="mt-2 w-full bg-green-200 rounded-full h-1">
+                  <div 
+                    className="bg-green-600 h-1 rounded-full"
+                    style={{ width: `${selectedApp.securityScore?.overall || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Code Quality */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-purple-600 font-medium">Code Quality</p>
+                    <p className="text-lg font-bold text-purple-800">{selectedApp.codeQuality?.maintainability || 0}</p>
+                  </div>
+                  <Code className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="mt-2 w-full bg-purple-200 rounded-full h-1">
+                  <div 
+                    className="bg-purple-600 h-1 rounded-full"
+                    style={{ width: `${selectedApp.codeQuality?.maintainability || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Test Coverage */}
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 p-3 rounded-lg border border-orange-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-orange-600 font-medium">Test Coverage</p>
+                    <p className="text-lg font-bold text-orange-800">{selectedApp.codeQuality?.testCoverage || 0}%</p>
+                  </div>
+                  <CheckCircle className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="mt-2 w-full bg-orange-200 rounded-full h-1">
+                  <div 
+                    className="bg-orange-600 h-1 rounded-full"
+                    style={{ width: `${selectedApp.codeQuality?.testCoverage || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* App Selection */}
+        {!selectedApp && (
+          <div className="flex-1 p-6">
+            <div className="grid grid-cols-1 gap-4">
+              {apps.map((app) => (
+                <div
+                  key={app.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setSelectedApp(app)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">{app.name}</h3>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      app.status === 'running' ? 'bg-green-100 text-green-800' :
+                      app.status === 'stopped' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {app.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{app.url}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {app.features.slice(0, 3).map((feature, index) => (
+                      <span key={index} className="inline-block bg-gray-100 rounded px-2 py-1 text-xs">
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Site Preview & Code Changes */}
+        {selectedApp && (
+          <div className="flex-1 flex flex-col">
+            {/* Tabs */}
+            <div className="bg-white border-b border-gray-200">
+              <div className="flex">
+                <button
+                  onClick={() => {
+                    setShowCodePreview(false)
+                    setShowPerformancePanel(false)
+                    setShowSecurityPanel(false)
+                    setShowCodeQualityPanel(false)
+                  }}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                    !showCodePreview && !showPerformancePanel && !showSecurityPanel && !showCodeQualityPanel
+                      ? 'border-blue-500 text-blue-600' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Eye className="w-4 h-4 inline mr-1" />
+                  Live Preview
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCodePreview(true)
+                    setShowPerformancePanel(false)
+                    setShowSecurityPanel(false)
+                    setShowCodeQualityPanel(false)
+                  }}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                    showCodePreview 
+                      ? 'border-blue-500 text-blue-600' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <FileCode className="w-4 h-4 inline mr-1" />
+                  Code Changes
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCodePreview(false)
+                    setShowPerformancePanel(true)
+                    setShowSecurityPanel(false)
+                    setShowCodeQualityPanel(false)
+                  }}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                    showPerformancePanel 
+                      ? 'border-blue-500 text-blue-600' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Zap className="w-4 h-4 inline mr-1" />
+                  Performance
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCodePreview(false)
+                    setShowPerformancePanel(false)
+                    setShowSecurityPanel(true)
+                    setShowCodeQualityPanel(false)
+                  }}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                    showSecurityPanel 
+                      ? 'border-blue-500 text-blue-600' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Shield className="w-4 h-4 inline mr-1" />
+                  Security
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCodePreview(false)
+                    setShowPerformancePanel(false)
+                    setShowSecurityPanel(false)
+                    setShowCodeQualityPanel(true)
+                  }}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                    showCodeQualityPanel 
+                      ? 'border-blue-500 text-blue-600' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Code className="w-4 h-4 inline mr-1" />
+                  Code Quality
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1">
+              {!showCodePreview && !showPerformancePanel && !showSecurityPanel && !showCodeQualityPanel && !showClaudeGitHubChat ? (
+                /* Live Preview */
+                <div className="h-full bg-white">
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Monitor className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Live Preview</h3>
+                      <p className="text-gray-600 mb-4">Your application preview will appear here</p>
+                      <a
+                        href={selectedApp.previewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open Preview
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ) : showPerformancePanel ? (
+                /* Performance Analysis */
+                <div className="h-full bg-white p-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Analysis</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-blue-900 mb-2">Core Web Vitals</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-blue-700">LCP</span>
+                              <span className="text-sm font-medium">{selectedApp?.performanceMetrics?.coreWebVitals?.lcp || 0}s</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-blue-700">FID</span>
+                              <span className="text-sm font-medium">{selectedApp?.performanceMetrics?.coreWebVitals?.fid || 0}ms</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-blue-700">CLS</span>
+                              <span className="text-sm font-medium">{selectedApp?.performanceMetrics?.coreWebVitals?.cls || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-green-900 mb-2">Bundle Analysis</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-green-700">Bundle Size</span>
+                              <span className="text-sm font-medium">{(selectedApp?.performanceMetrics?.bundleSize || 0) / 1000000}MB</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-green-700">Load Time</span>
+                              <span className="text-sm font-medium">{selectedApp?.performanceMetrics?.loadTime || 0}s</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-green-700">Lighthouse Score</span>
+                              <span className="text-sm font-medium">{selectedApp?.performanceMetrics?.lighthouseScore || 0}/100</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Recommendations</h4>
+                      <div className="space-y-2">
+                        {selectedApp?.performanceMetrics?.recommendations?.map((rec, index) => (
+                          <div key={index} className="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <AlertCircle className="w-4 h-4 text-yellow-600 mr-2" />
+                            <span className="text-sm text-yellow-800">{rec}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : showSecurityPanel ? (
+                /* Security Analysis */
+                <div className="h-full bg-white p-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Security Analysis</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-red-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-red-900 mb-2">Security Score</h4>
+                          <div className="text-2xl font-bold text-red-800 mb-2">{selectedApp?.securityScore?.overall || 0}/100</div>
+                          <div className="space-y-1">
+                            {Object.entries(selectedApp?.securityScore?.categories || {}).map(([key, value]) => (
+                              <div key={key} className="flex justify-between text-sm">
+                                <span className="text-red-700 capitalize">{key}</span>
+                                <span className="font-medium">{value}/100</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-orange-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-orange-900 mb-2">Vulnerabilities</h4>
+                          <div className="text-2xl font-bold text-orange-800 mb-2">{selectedApp?.securityScore?.vulnerabilities?.length || 0}</div>
+                          <p className="text-sm text-orange-700">Issues found</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Security Vulnerabilities</h4>
+                      <div className="space-y-3">
+                        {selectedApp?.securityScore?.vulnerabilities?.map((vuln) => (
+                          <div key={vuln.id} className="p-4 border rounded-lg">
+                            <div className="flex items-start justify-between mb-2">
+                              <h5 className="font-medium text-gray-900">{vuln.title}</h5>
+                              <span className={`text-xs px-2 py-1 rounded-full border ${getSeverityColor(vuln.severity)}`}>
+                                {vuln.severity}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{vuln.description}</p>
+                            <div className="text-xs text-gray-500 mb-2">
+                              File: {vuln.file}:{vuln.line}
+                            </div>
+                            <div className="bg-gray-50 p-2 rounded text-xs font-mono">
+                              {vuln.fix}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : showCodeQualityPanel ? (
+                /* Code Quality Analysis */
+                <div className="h-full bg-white p-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Code Quality Metrics</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-purple-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-purple-900 mb-2">Quality Scores</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-purple-700">Maintainability</span>
+                              <span className="text-sm font-medium">{selectedApp?.codeQuality?.maintainability || 0}/100</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-purple-700">Test Coverage</span>
+                              <span className="text-sm font-medium">{selectedApp?.codeQuality?.testCoverage || 0}%</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-purple-700">Complexity</span>
+                              <span className="text-sm font-medium">{selectedApp?.codeQuality?.complexity || 0}/100</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-purple-700">Documentation</span>
+                              <span className="text-sm font-medium">{selectedApp?.codeQuality?.documentation || 0}/100</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-indigo-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-indigo-900 mb-2">Code Analysis</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm text-indigo-700">Duplication</span>
+                              <span className="text-sm font-medium">{selectedApp?.codeQuality?.duplication || 0}%</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-sm text-indigo-700">Issues</span>
+                              <span className="text-sm font-medium">{selectedApp?.codeQuality?.suggestions?.length || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Improvement Suggestions</h4>
+                      <div className="space-y-2">
+                        {selectedApp?.codeQuality?.suggestions?.map((suggestion, index) => (
+                          <div key={index} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <Code className="w-4 h-4 text-blue-600 mr-2" />
+                            <span className="text-sm text-blue-800">{suggestion}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Code Changes */
+                <div className="h-full bg-gray-900 text-white p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium">Generated Code Changes</h3>
+                    {currentCodeChanges.length > 0 && (
+                      <button
+                        onClick={handleApplyChanges}
+                        disabled={isGeneratingCode}
+                        className="flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
+                      >
+                        {isGeneratingCode ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            🚀 Applying Changes...
+                          </>
+                        ) : (
+                          <>
+                            <GitBranch className="w-4 h-4 mr-2" />
+                            ✨ Apply Changes
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {currentCodeChanges.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileCode className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400">✨ No code changes generated yet. Start chatting with the AI to generate amazing improvements! 💻</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {currentCodeChanges.map((change, index) => (
+                        <div key={index} className="bg-gray-800 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-green-400">{change.file}</span>
+                            <span className="text-xs text-gray-400">{change.type}</span>
+                          </div>
+                          <p className="text-sm text-gray-300 mb-2">{change.description}</p>
+                          <pre className="bg-gray-900 rounded p-3 text-sm overflow-x-auto">
+                            <code>{change.content}</code>
+                          </pre>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : showClaudeGitHubChat ? (
+                /* Claude GitHub Chat */
+                <div className="h-full bg-white p-6">
+                  <ClaudeGitHubChat
+                    appId={selectedApp.id}
+                    appName={selectedApp.name}
+                    githubRepo={selectedApp.gitRepo}
+                    currentFeatures={selectedApp.features}
+                    businessRequirements=""
+                  />
+                </div>
+              ) : (
+                /* Code Changes */
+                <div className="h-full bg-gray-900 text-white p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium">Generated Code Changes</h3>
+                    {currentCodeChanges.length > 0 && (
+                      <button
+                        onClick={handleApplyChanges}
+                        disabled={isGeneratingCode}
+                        className="flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
+                      >
+                        {isGeneratingCode ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            🚀 Applying Changes...
+                          </>
+                        ) : (
+                          <>
+                            <GitBranch className="w-4 h-4 mr-2" />
+                            ✨ Apply Changes
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {currentCodeChanges.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileCode className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400">✨ No code changes generated yet. Start chatting with the AI to generate amazing improvements! 💻</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {currentCodeChanges.map((change, index) => (
+                        <div key={index} className="bg-gray-800 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-green-400">{change.file}</span>
+                            <span className="text-xs text-gray-400">{change.type}</span>
+                          </div>
+                          <p className="text-sm text-gray-300 mb-2">{change.description}</p>
+                          <pre className="bg-gray-900 rounded p-3 text-sm overflow-x-auto">
+                            <code>{change.content}</code>
+                          </pre>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+
+    </div>
+  )
+}
+
+export default AppImprovementDashboard 

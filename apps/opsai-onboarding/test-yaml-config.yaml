@@ -1,0 +1,536 @@
+# Test YAML Configuration for Healthcare B2B Platform
+vertical:
+  name: "healthcare-b2b-platform"
+  description: "Comprehensive healthcare B2B management platform for medical device companies"
+  version: "1.0.0"
+  industry: "healthcare"
+  businessModel: "B2B SaaS Platform"
+
+business:
+  name: "MedTech Solutions Platform"
+  type: "healthcare-b2b"
+  website: "https://medtech-solutions.com"
+  contact:
+    email: "admin@medtech-solutions.com"
+    phone: "+1-555-0123"
+  settings:
+    timezone: "America/New_York"
+    currency: "USD"
+    language: "en"
+
+database:
+  provider: "postgresql"
+  models:
+    - name: "MedicalDevice"
+      displayName: "Medical Device"
+      description: "Medical devices and equipment inventory"
+      fields:
+        - name: "deviceName"
+          type: "string"
+          required: true
+          unique: true
+          validation: "min:3,max:100"
+          ui:
+            label: "Device Name"
+            widget: "text"
+        - name: "serialNumber"
+          type: "string"
+          required: true
+          unique: true
+          validation: "alphanumeric"
+          ui:
+            label: "Serial Number"
+            widget: "text"
+        - name: "deviceType"
+          type: "enum"
+          required: true
+          validation: "in:diagnostic,surgical,monitoring,therapeutic"
+          ui:
+            label: "Device Type"
+            widget: "select"
+            options: ["diagnostic", "surgical", "monitoring", "therapeutic"]
+        - name: "manufacturer"
+          type: "string"
+          required: true
+          ui:
+            label: "Manufacturer"
+            widget: "text"
+        - name: "modelNumber"
+          type: "string"
+          required: true
+          ui:
+            label: "Model Number"
+            widget: "text"
+        - name: "purchaseDate"
+          type: "date"
+          required: true
+          ui:
+            label: "Purchase Date"
+            widget: "date"
+        - name: "warrantyExpiry"
+          type: "date"
+          ui:
+            label: "Warranty Expiry"
+            widget: "date"
+        - name: "status"
+          type: "enum"
+          required: true
+          validation: "in:active,maintenance,retired,recalled"
+          ui:
+            label: "Status"
+            widget: "select"
+            options: ["active", "maintenance", "retired", "recalled"]
+        - name: "location"
+          type: "string"
+          ui:
+            label: "Location"
+            widget: "text"
+        - name: "lastServiceDate"
+          type: "date"
+          ui:
+            label: "Last Service Date"
+            widget: "date"
+      relationships:
+        - "hasMany:ComplianceRecord"
+        - "hasMany:TrainingSession"
+      indexes: ["serialNumber", "deviceType", "status"]
+      permissions:
+        admin: ["create", "read", "update", "delete"]
+        manager: ["read", "update"]
+        technician: ["read"]
+
+    - name: "ComplianceRecord"
+      displayName: "Compliance Record"
+      description: "Regulatory compliance and certification records"
+      fields:
+        - name: "recordType"
+          type: "enum"
+          required: true
+          validation: "in:fda_approval,ce_marking,iso_certification,quality_audit"
+          ui:
+            label: "Record Type"
+            widget: "select"
+            options: ["fda_approval", "ce_marking", "iso_certification", "quality_audit"]
+        - name: "certificationNumber"
+          type: "string"
+          required: true
+          unique: true
+          ui:
+            label: "Certification Number"
+            widget: "text"
+        - name: "issuingAuthority"
+          type: "string"
+          required: true
+          ui:
+            label: "Issuing Authority"
+            widget: "text"
+        - name: "issueDate"
+          type: "date"
+          required: true
+          ui:
+            label: "Issue Date"
+            widget: "date"
+        - name: "expiryDate"
+          type: "date"
+          required: true
+          ui:
+            label: "Expiry Date"
+            widget: "date"
+        - name: "status"
+          type: "enum"
+          required: true
+          validation: "in:valid,expired,pending,suspended"
+          ui:
+            label: "Status"
+            widget: "select"
+            options: ["valid", "expired", "pending", "suspended"]
+        - name: "documentPath"
+          type: "string"
+          ui:
+            label: "Document Path"
+            widget: "file"
+        - name: "medicalDeviceId"
+          type: "string"
+          required: true
+      relationships:
+        - "belongsTo:MedicalDevice"
+      indexes: ["certificationNumber", "status", "expiryDate"]
+
+    - name: "TrainingSession"
+      displayName: "Training Session"
+      description: "Staff training sessions for medical device operation"
+      fields:
+        - name: "sessionTitle"
+          type: "string"
+          required: true
+          ui:
+            label: "Session Title"
+            widget: "text"
+        - name: "trainingType"
+          type: "enum"
+          required: true
+          validation: "in:initial,refresher,emergency,compliance"
+          ui:
+            label: "Training Type"
+            widget: "select"
+            options: ["initial", "refresher", "emergency", "compliance"]
+        - name: "instructor"
+          type: "string"
+          required: true
+          ui:
+            label: "Instructor"
+            widget: "text"
+        - name: "scheduledDate"
+          type: "datetime"
+          required: true
+          ui:
+            label: "Scheduled Date"
+            widget: "datetime"
+        - name: "duration"
+          type: "number"
+          required: true
+          validation: "min:1,max:480"
+          ui:
+            label: "Duration (minutes)"
+            widget: "number"
+        - name: "maxParticipants"
+          type: "number"
+          ui:
+            label: "Max Participants"
+            widget: "number"
+        - name: "completionRequired"
+          type: "boolean"
+          ui:
+            label: "Completion Required"
+            widget: "checkbox"
+        - name: "medicalDeviceId"
+          type: "string"
+          required: true
+      relationships:
+        - "belongsTo:MedicalDevice"
+      indexes: ["scheduledDate", "trainingType"]
+
+apis:
+  integrations:
+    - name: "fda_api"
+      type: "rest"
+      enabled: true
+      provider: "FDA"
+      baseUrl: "https://api.fda.gov/device"
+      authentication:
+        type: "api_key"
+        keyLocation: "query"
+        keyName: "api_key"
+      endpoints:
+        - path: "/enforcement.json"
+          method: "GET"
+          description: "Get device recalls and enforcements"
+        - path: "/event.json"
+          method: "GET"
+          description: "Get adverse event reports"
+      rateLimits:
+        requestsPerMinute: 240
+        requestsPerDay: 120000
+      errorHandling:
+        retryAttempts: 3
+        backoffStrategy: "exponential"
+
+    - name: "quickbooks_online"
+      type: "rest"
+      enabled: true
+      provider: "Intuit QuickBooks"
+      baseUrl: "https://sandbox-quickbooks.api.intuit.com"
+      authentication:
+        type: "oauth2"
+        authUrl: "https://appcenter.intuit.com/connect/oauth2"
+        tokenUrl: "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
+        scope: "com.intuit.quickbooks.accounting"
+      endpoints:
+        - path: "/v3/company/{realmId}/items"
+          method: "GET"
+          description: "Get inventory items"
+        - path: "/v3/company/{realmId}/purchases"
+          method: "GET"
+          description: "Get purchase transactions"
+      rateLimits:
+        requestsPerMinute: 500
+
+    - name: "slack_notifications"
+      type: "webhook"
+      enabled: true
+      provider: "Slack"
+      baseUrl: "https://hooks.slack.com/services"
+      authentication:
+        type: "webhook_url"
+      endpoints:
+        - path: "/webhook-token"
+          method: "POST"
+          description: "Send compliance alerts to Slack"
+
+workflows:
+  - name: "compliance_expiry_alert"
+    description: "Monitor compliance record expiry dates and send alerts"
+    trigger:
+      type: "schedule"
+      schedule: "0 9 * * *"  # Daily at 9 AM
+    steps:
+      - name: "check_expiring_compliance"
+        type: "database_query"
+        description: "Find compliance records expiring within 30 days"
+        configuration:
+          query: "SELECT * FROM ComplianceRecord WHERE expiryDate <= NOW() + INTERVAL 30 DAY AND status = 'valid'"
+      - name: "send_slack_alert"
+        type: "api_call"
+        description: "Send expiry alerts to Slack"
+        configuration:
+          api: "slack_notifications"
+          endpoint: "/webhook-token"
+          payload:
+            text: "⚠️ Compliance Alert: {{count}} records expiring within 30 days"
+    errorHandling:
+      onFailure: "log_and_continue"
+      retryAttempts: 2
+    monitoring:
+      successMetric: "alerts_sent"
+
+  - name: "device_maintenance_workflow"
+    description: "Schedule and track medical device maintenance"
+    trigger:
+      type: "event"
+      event: "device.maintenance_due"
+    steps:
+      - name: "create_maintenance_ticket"
+        type: "data_transformation"
+        description: "Create maintenance ticket with device details"
+      - name: "assign_technician"
+        type: "calculation"
+        description: "Auto-assign available technician based on location and expertise"
+      - name: "schedule_downtime"
+        type: "api_call"
+        description: "Block device calendar for maintenance window"
+    errorHandling:
+      onFailure: "escalate_to_manager"
+
+authentication:
+  providers: ["email_password", "oauth_google", "sso_saml"]
+  roles:
+    - name: "admin"
+      description: "Full system administrator"
+      permissions: ["*"]
+    - name: "compliance_manager"
+      description: "Manages compliance and regulatory affairs"
+      permissions: ["read_devices", "manage_compliance", "view_reports", "manage_training"]
+    - name: "device_technician"
+      description: "Handles device maintenance and operations"
+      permissions: ["read_devices", "update_device_status", "read_compliance", "attend_training"]
+    - name: "auditor"
+      description: "Read-only access for auditing purposes"
+      permissions: ["read_devices", "read_compliance", "read_training", "export_reports"]
+  security:
+    passwordPolicy:
+      minLength: 12
+      requireUppercase: true
+      requireLowercase: true
+      requireNumbers: true
+      requireSpecialChars: true
+    sessionManagement:
+      sessionTimeout: 480  # 8 hours
+      concurrentSessions: 2
+    auditLogging:
+      logAllActions: true
+      retentionPeriod: "7 years"
+
+ui:
+  theme:
+    primaryColor: "#2563EB"  # Blue
+    secondaryColor: "#DC2626"  # Red for alerts
+    layout: "sidebar_navigation"
+  pages:
+    - name: "dashboard"
+      path: "/"
+      layout: "dashboard"
+      components:
+        - type: "compliance_overview"
+          dataSource: "compliance_records"
+          config:
+            showExpiringCount: true
+            alertThreshold: 30
+        - type: "device_status_grid"
+          dataSource: "medical_devices"
+          config:
+            groupBy: "status"
+            showMaintenanceDue: true
+        - type: "recent_training"
+          dataSource: "training_sessions"
+          config:
+            limit: 5
+            showUpcoming: true
+      permissions: ["admin", "compliance_manager", "device_technician"]
+
+    - name: "medical_devices"
+      path: "/devices"
+      layout: "data_management"
+      components:
+        - type: "device_inventory_table"
+          dataSource: "medical_devices"
+          config:
+            searchable: true
+            filterable: ["deviceType", "status", "location"]
+            sortable: true
+            exportable: true
+        - type: "device_maintenance_calendar"
+          dataSource: "medical_devices"
+          config:
+            viewTypes: ["month", "week"]
+            showMaintenanceSchedule: true
+      permissions: ["admin", "compliance_manager", "device_technician"]
+
+    - name: "compliance"
+      path: "/compliance"
+      layout: "compliance_dashboard"
+      components:
+        - type: "compliance_status_overview"
+          dataSource: "compliance_records"
+          config:
+            showExpiryAlerts: true
+            groupBy: "recordType"
+        - type: "regulatory_timeline"
+          dataSource: "compliance_records"
+          config:
+            timeRange: "12_months"
+            showMilestones: true
+        - type: "audit_trail"
+          dataSource: "audit_logs"
+          config:
+            filterBy: "compliance_actions"
+      permissions: ["admin", "compliance_manager", "auditor"]
+
+    - name: "training"
+      path: "/training"
+      layout: "training_management"
+      components:
+        - type: "training_calendar"
+          dataSource: "training_sessions"
+          config:
+            allowScheduling: true
+            showAvailability: true
+        - type: "training_progress_tracker"
+          dataSource: "training_sessions"
+          config:
+            showCompletionRates: true
+            groupBy: "trainingType"
+      permissions: ["admin", "compliance_manager", "device_technician"]
+
+alerts:
+  channels:
+    - type: "email"
+      config:
+        from: "alerts@medtech-solutions.com"
+        smtp:
+          host: "smtp.sendgrid.net"
+          port: 587
+          secure: true
+    - type: "slack"
+      enabled: true
+      config:
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+    - type: "sms"
+      enabled: false
+      config:
+        provider: "twilio"
+  rules:
+    - name: "compliance_expiry_critical"
+      description: "Critical alert for compliance records expiring within 7 days"
+      condition: "compliance_record.expiry_date <= NOW() + INTERVAL 7 DAY AND compliance_record.status = 'valid'"
+      severity: "critical"
+      channels: ["email", "slack", "sms"]
+      throttling:
+        maxPerHour: 10
+    - name: "device_maintenance_overdue"
+      description: "Alert when device maintenance is overdue"
+      condition: "medical_device.last_service_date + INTERVAL 6 MONTH < NOW() AND medical_device.status = 'active'"
+      severity: "warning"
+      channels: ["email", "slack"]
+    - name: "training_completion_required"
+      description: "Alert when required training is not completed"
+      condition: "training_session.completion_required = true AND training_session.scheduled_date < NOW() - INTERVAL 1 DAY"
+      severity: "warning"
+      channels: ["email"]
+
+deployment:
+  environment: "production"
+  platform: "aws"
+  resources:
+    api:
+      instances: 3
+      memory: "2Gi"
+      cpu: "1000m"
+      autoscaling:
+        minReplicas: 2
+        maxReplicas: 10
+        targetCPU: 70
+    database:
+      type: "rds_postgresql"
+      size: "100Gi"
+      connections: 200
+      backups:
+        automated: true
+        retention: "30 days"
+    storage:
+      type: "s3"
+      size: "1Ti"
+      versioning: true
+  domains:
+    - "medtech-platform.com"
+    - "api.medtech-platform.com"
+  ssl: true
+  monitoring:
+    apm: "datadog"
+    logging: "cloudwatch"
+    alerting: "pagerduty"
+
+features:
+  authentication: true
+  workflows: true
+  integrations: true
+  fileUpload: true
+  notifications: true
+  analytics: true
+  multiTenancy: true
+  audit: true
+  reporting: true
+  api: true
+
+security:
+  encryption:
+    atRest: true
+    inTransit: true
+    keyManagement: "aws_kms"
+  compliance:
+    standards: ["HIPAA", "FDA_21_CFR_Part_11", "ISO_13485", "SOX"]
+    dataRetention:
+      auditLogs: "7 years"
+      complianceRecords: "lifetime"
+      trainingRecords: "10 years"
+  accessLogging: true
+  vulnerabilityScanning: true
+  penetrationTesting:
+    frequency: "quarterly"
+
+performance:
+  caching:
+    strategy: "redis_cluster"
+    ttl: "1 hour"
+    layers: ["api", "database", "static"]
+  scaling:
+    type: "horizontal"
+    triggers:
+      cpu: "70%"
+      memory: "80%"
+      requests: "1000/minute"
+  monitoring:
+    metrics: ["response_time", "error_rate", "throughput", "availability"]
+    alerting:
+      responseTime: "> 500ms"
+      errorRate: "> 1%"
+      availability: "< 99.9%"

@@ -2,19 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { 
   ChevronLeft, 
   CheckCircle, 
-  AlertCircle, 
-  ExternalLink, 
   Search, 
-  Filter,
-  Star,
-  Clock,
   Zap,
-  Settings,
   Globe,
   Key,
   Shield,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  Plus,
+  X,
+  Play,
+  Mail,
+  Database,
+  Send,
+  GitBranch
 } from 'lucide-react';
 
 interface APIConnector {
@@ -64,6 +65,7 @@ const APIIntegrationOnboarding: React.FC = () => {
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [generatedYAML, setGeneratedYAML] = useState('');
   const [isGeneratingApp, setIsGeneratingApp] = useState(false);
+  const [schemaEntities, setSchemaEntities] = useState<any[]>([]);
 
   const steps: OnboardingStep[] = [
     {

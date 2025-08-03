@@ -21,7 +21,8 @@ import {
   FileText,
   Folder,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  ChevronLeft
 } from 'lucide-react'
 
 interface AppGenerationProgressProps {
@@ -188,15 +189,20 @@ export default function AppGenerationProgress({ yamlConfig, appName, onComplete,
       }
 
       if (result.success) {
-        setGeneratedAppUrl(result.appUrl)
+        setGeneratedAppUrl(result.appUrl || `http://localhost:${result.port}`)
         addTerminalEntry('success', `✅ ${result.message}`)
-        addTerminalEntry('success', `🌐 App URL: ${result.appUrl}`)
-        onComplete(result.appUrl)
+        addTerminalEntry('success', `🌐 App URL: ${result.appUrl || `http://localhost:${result.port}`}`)
+        onComplete(result.appUrl || `http://localhost:${result.port}`)
       } else {
         addTerminalEntry('error', `❌ Generation failed: ${result.error}`)
+        if (result.details) {
+          addTerminalEntry('error', `📋 Details: ${JSON.stringify(result.details)}`)
+        }
+        console.error('Generation failed:', result)
       }
     } catch (error) {
       addTerminalEntry('error', `❌ Generation error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Generation error:', error)
     }
   }
 
@@ -322,6 +328,13 @@ ${yamlConfig}
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              <button
+                onClick={onBack}
+                className="flex items-center px-3 py-1.5 text-slate-400 hover:text-white transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 mr-1" />
+                Back
+              </button>
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>

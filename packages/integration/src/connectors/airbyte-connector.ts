@@ -519,20 +519,21 @@ export class AirbyteConnector extends BaseConnector {
 
 // Factory function for easy instantiation
 export function createAirbyteConnector(config?: Partial<AirbyteConnectorConfig>): AirbyteConnector {
-          const airbyteConfig: AirbyteConnectorConfig = {
-      name: 'airbyte',
-      version: '1.0.0',
-      type: 'airbyte',
-      apiKey: config?.apiKey || process.env.AIRBYTE_API_KEY || '',
-      clientId: config?.clientId || process.env.AIRBYTE_CLIENT_ID || '',
-      clientSecret: config?.clientSecret || process.env.AIRBYTE_CLIENT_SECRET || '',
-      baseUrl: config?.baseUrl || process.env.AIRBYTE_BASE_URL || 'https://api.airbyte.com/v1',
-      workspaceId: config?.workspaceId || process.env.AIRBYTE_WORKSPACE_ID,
+  const airbyteConfig: AirbyteConnectorConfig = {
+    name: 'airbyte',
+    version: '1.0.0',
+    type: 'airbyte',
+    apiKey: config?.apiKey || process.env.AIRBYTE_API_KEY || '',
+    clientId: config?.clientId || process.env.AIRBYTE_CLIENT_ID || '',
+    clientSecret: config?.clientSecret || process.env.AIRBYTE_CLIENT_SECRET || '',
+    baseUrl: config?.baseUrl || process.env.AIRBYTE_BASE_URL || 'https://api.airbyte.com/v1',
+    workspaceId: config?.workspaceId || process.env.AIRBYTE_WORKSPACE_ID,
+    capabilities: config?.capabilities || ['discovery', 'sync', 'schema-detection'],
     retryConfig: {
       maxRetries: 3,
       initialDelay: 1000,
-              backoffStrategy: 'exponential',
-        maxDelay: 10000
+      backoffStrategy: 'exponential',
+      maxDelay: 10000
     },
     ...config
   };

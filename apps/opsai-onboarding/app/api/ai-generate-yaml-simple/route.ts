@@ -172,6 +172,14 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('✅ YAML Generation completed')
+    console.log('📊 Generated YAML info:', {
+      yamlLength: yamlString.length,
+      yamlPreview: yamlString.substring(0, 300),
+      hasVertical: !!yamlConfig.vertical,
+      hasBusiness: !!yamlConfig.business,
+      hasDatabase: !!yamlConfig.database,
+      modelCount: yamlConfig.database?.models?.length || 0
+    })
     
     return NextResponse.json({
       success: true,

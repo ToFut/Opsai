@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm, FormProvider, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -54,7 +53,7 @@ export interface FormConfig {
 export interface FormGeneratorProps {
   config: FormConfig;
   onSubmit: (data: FieldValues) => void | Promise<void>;
-  onReset?: () => void;
+  onReset: () => void;
   loading?: boolean;
   className?: string;
   defaultValues?: Record<string, any>;
@@ -187,7 +186,7 @@ export function FormGenerator({
       <FormField
         key={field.name}
         field={field}
-        disabled={loading || field.disabled}
+        disabled={loading || field.disabled || false}
       />
     );
   };

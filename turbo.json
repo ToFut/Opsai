@@ -62,6 +62,21 @@
     },
     "security:scan": {
       "cache": false
+    },
+    "deploy:enhanced": {
+      "cache": false
+    },
+    "deploy:enhanced:staging": {
+      "cache": false
+    },
+    "deploy:enhanced:production": {
+      "cache": false
+    },
+    "deploy:enhanced:apps": {
+      "cache": false
+    },
+    "deploy:enhanced:platform": {
+      "cache": false
     }
   }
 } 

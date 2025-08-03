@@ -50,6 +50,10 @@ export async function POST(request: NextRequest) {
 
 // Helper function to try parsing JSON with various cleanup strategies
 async function tryParseJson(jsonString: string): Promise<any | null> {
+  if (!jsonString || jsonString.trim().length === 0) {
+    return null
+  }
+
   const strategies = [
     // Strategy 1: Parse as-is
     (str: string) => JSON.parse(str),
@@ -76,35 +80,56 @@ async function tryParseJson(jsonString: string): Promise<any | null> {
     // Strategy 5: Try to fix truncated JSON by adding missing closing braces
     (str: string) => {
       let braceCount = 0
+      let bracketCount = 0
       let cleanStr = str.replace(/,(\s*[}\]])/g, '$1')
       
       for (const char of cleanStr) {
         if (char === '{') braceCount++
         else if (char === '}') braceCount--
+        else if (char === '[') bracketCount++
+        else if (char === ']') bracketCount--
       }
       
-      // Add missing closing braces
+      // Add missing closing braces and brackets
       while (braceCount > 0) {
         cleanStr += '}'
         braceCount--
       }
+      while (bracketCount > 0) {
+        cleanStr += ']'
+        bracketCount--
+      }
       
       return JSON.parse(cleanStr)
+    },
+    
+    // Strategy 6: Remove surrounding text and try again
+    (str: string) => {
+      // Look for the first { and last }
+      const firstBrace = str.indexOf('{')
+      const lastBrace = str.lastIndexOf('}')
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const extracted = str.substring(firstBrace, lastBrace + 1)
+        return JSON.parse(extracted)
+      }
+      throw new Error('No valid JSON object found')
     }
   ]
   
-  for (const strategy of strategies) {
+  for (let i = 0; i < strategies.length; i++) {
     try {
-      const result = strategy(jsonString.trim())
-      console.log('✅ JSON parsing strategy succeeded')
-      return result
+      const result = strategies[i](jsonString.trim())
+      if (result && typeof result === 'object') {
+        console.log(`✅ JSON parsing strategy ${i + 1} succeeded`)
+        return result
+      }
     } catch (e) {
       // Continue to next strategy
       continue
     }
   }
   
-  console.log('❌ All JSON parsing strategies failed')
+  console.log('❌ All JSON parsing strategies failed for string:', jsonString.substring(0, 200))
   return null
 }
 
@@ -310,6 +335,7 @@ CRITICAL OUTPUT REQUIREMENTS:
 - NO markdown code blocks (no backticks)
 - NO explanations or comments
 - NO additional text before or after the JSON
+- Start immediately with { and end with }
 
 Return a JSON object with this exact structure:
 {
@@ -324,7 +350,7 @@ Return a JSON object with this exact structure:
 IMPORTANT: This YAML must be UNIQUELY CUSTOMIZED for ${businessProfile.businessName} in the ${confirmedInsights.businessIntelligence?.industryCategory || businessProfile.businessType} industry. 
 Do NOT generate generic templates - use the specific business intelligence, data models, integrations, and workflows provided above.
 
-Start your response with { and end with } - nothing else.
+CRITICAL INSTRUCTION: Your response must start with the character { and end with the character }. Do not include any other text, explanations, or formatting. Only valid JSON.
 `
 
   try {
@@ -335,7 +361,7 @@ Start your response with { and end with } - nothing else.
       messages: [
         {
           role: "system",
-          content: "You are an expert software architect specializing in business application configuration. You have deep expertise in YAML, database design, API integrations, workflow automation, and modern web application architecture. You generate production-ready configurations that solve real business problems. CRITICAL: Return ONLY valid JSON with no markdown formatting, no code blocks, no explanations - just the raw JSON object exactly as specified in the prompt."
+          content: "You are an expert software architect specializing in business application configuration. You have deep expertise in YAML, database design, API integrations, workflow automation, and modern web application architecture. You generate production-ready configurations that solve real business problems. CRITICAL: Your response must be ONLY a valid JSON object starting with { and ending with }. No markdown code blocks, no backticks, no explanations, no text before or after the JSON. Just pure JSON."
         },
         {
           role: "user",
@@ -355,20 +381,26 @@ Start your response with { and end with } - nothing else.
     // Strategy 1: Check for markdown code blocks FIRST (most common from OpenAI)
     console.log('🔍 Checking for markdown code blocks first...')
     
-    // Check for markdown code blocks
-    const codeBlockMatches = [
-      responseContent.match(/```json\s*\n?([\s\S]*?)\n?```/),
-      responseContent.match(/```\s*\n?([\s\S]*?)\n?```/),
+    // More comprehensive markdown code block patterns
+    const codeBlockPatterns = [
+      /```json\s*\n?([\s\S]*?)\n?```/,
+      /```javascript\s*\n?([\s\S]*?)\n?```/,
+      /```\s*\n?([\s\S]*?)\n?```/,
+      /`{3,}\s*json\s*\n?([\s\S]*?)\n?`{3,}/,
+      /`{3,}\s*\n?([\s\S]*?)\n?`{3,}/
     ]
     
-    for (const codeBlockMatch of codeBlockMatches) {
-      if (codeBlockMatch) {
+    for (const pattern of codeBlockPatterns) {
+      const match = responseContent.match(pattern)
+      if (match && match[1]) {
         console.log('📝 Found markdown code block, extracting content...')
-        let extractedContent = codeBlockMatch[1].trim()
+        let extractedContent = match[1].trim()
         console.log('Extracted content length:', extractedContent.length)
+        console.log('First 200 chars:', extractedContent.substring(0, 200))
         
-        if (await tryParseJson(extractedContent)) {
-          yamlResult = await tryParseJson(extractedContent)
+        const parsed = await tryParseJson(extractedContent)
+        if (parsed) {
+          yamlResult = parsed
           console.log('✅ Successfully parsed JSON from code block')
           break
         }
@@ -378,19 +410,18 @@ Start your response with { and end with } - nothing else.
     // Strategy 2: Try raw JSON parsing (in case OpenAI returns pure JSON)
     if (!yamlResult) {
       console.log('🔄 Code blocks failed, trying raw JSON parsing...')
-      try {
-        yamlResult = JSON.parse(responseContent)
+      const parsed = await tryParseJson(responseContent)
+      if (parsed) {
+        yamlResult = parsed
         console.log('✅ Successfully parsed raw JSON response')
-      } catch (rawParseError) {
-        console.log('❌ Raw JSON parsing failed, trying JSON object extraction...')
       }
     }
     
-    // Strategy 3: If no code block or raw JSON worked, try to find JSON objects
+    // Strategy 3: Find JSON objects by looking for balanced braces
     if (!yamlResult) {
       console.log('📄 Raw JSON failed, trying JSON object extraction...')
       
-      // Find the most complete JSON object by looking for balanced braces
+      // Find all potential JSON objects
       const jsonCandidates = []
       let braceCount = 0
       let startIndex = -1
@@ -403,7 +434,10 @@ Start your response with { and end with } - nothing else.
         } else if (char === '}') {
           braceCount--
           if (braceCount === 0 && startIndex !== -1) {
-            jsonCandidates.push(responseContent.substring(startIndex, i + 1))
+            const candidate = responseContent.substring(startIndex, i + 1)
+            if (candidate.length > 50) { // Only consider substantial candidates
+              jsonCandidates.push(candidate)
+            }
           }
         }
       }
@@ -413,8 +447,9 @@ Start your response with { and end with } - nothing else.
       console.log(`Found ${jsonCandidates.length} JSON candidates`)
       
       for (const candidate of jsonCandidates) {
+        console.log(`Trying candidate of length ${candidate.length}`)
         const parsed = await tryParseJson(candidate)
-        if (parsed) {
+        if (parsed && parsed.yaml && parsed.structured) {
           yamlResult = parsed
           console.log('✅ Successfully parsed JSON candidate')
           break
@@ -422,14 +457,56 @@ Start your response with { and end with } - nothing else.
       }
     }
     
-    // Strategy 4: Last resort - use fallback generation
+    // Strategy 4: Try to extract JSON by looking for specific patterns
     if (!yamlResult) {
-      console.log('🔧 All parsing strategies failed, using fallback generation...')
+      console.log('🔧 JSON extraction failed, trying pattern matching...')
+      
+      // Look for JSON starting with { "yaml": or { "structured":
+      const jsonPatterns = [
+        /\{\s*"yaml"\s*:\s*"[\s\S]*?"structured"[\s\S]*?\}/,
+        /\{\s*"structured"[\s\S]*?"yaml"\s*:[\s\S]*?\}/,
+        /\{[\s\S]*?"yaml"[\s\S]*?"structured"[\s\S]*?\}/
+      ]
+      
+      for (const pattern of jsonPatterns) {
+        const match = responseContent.match(pattern)
+        if (match) {
+          console.log('Found JSON pattern match')
+          const parsed = await tryParseJson(match[0])
+          if (parsed && parsed.yaml && parsed.structured) {
+            yamlResult = parsed
+            console.log('✅ Successfully parsed JSON from pattern')
+            break
+          }
+        }
+      }
+    }
+    
+    // Strategy 5: Last resort - generate fallback or throw detailed error
+    if (!yamlResult) {
+      console.log('🔧 All parsing strategies failed')
       console.log('Full response for debugging:', responseContent.substring(0, 2000))
-      throw new Error('Could not extract valid JSON from OpenAI response. Will use fallback generation.')
+      console.log('Response ends with:', responseContent.substring(responseContent.length - 200))
+      
+      // Try to provide helpful error information
+      const hasCodeBlocks = responseContent.includes('```')
+      const hasJsonStart = responseContent.includes('{"')
+      const hasYamlKey = responseContent.includes('"yaml"')
+      const hasStructuredKey = responseContent.includes('"structured"')
+      
+      console.log('Debug info:', { hasCodeBlocks, hasJsonStart, hasYamlKey, hasStructuredKey })
+      
+      throw new Error(`Could not extract valid JSON from OpenAI response. Debug: blocks=${hasCodeBlocks}, json=${hasJsonStart}, yaml=${hasYamlKey}, structured=${hasStructuredKey}`)
     }
     
     console.log('✅ AI YAML Generation completed');
+    console.log('📊 YAML Result structure:', {
+      hasYaml: !!yamlResult.yaml,
+      yamlLength: yamlResult.yaml?.length,
+      yamlPreview: yamlResult.yaml?.substring(0, 200),
+      hasStructured: !!yamlResult.structured,
+      structuredKeys: yamlResult.structured ? Object.keys(yamlResult.structured) : []
+    });
     return yamlResult;
 
   } catch (error) {

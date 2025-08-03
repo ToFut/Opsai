@@ -1,0 +1,37 @@
+{
+  "name": "tovfurniture",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8991",
+    "build": "next build",
+    "start": "next start",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@prisma/client": "^5.7.0",
+    "lucide-react": "^0.300.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "tailwindcss": "^3.3.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "@monaco-editor/react": "^4.6.0",
+    "prisma": "^5.7.0",
+    "swr": "^2.2.4",
+    "zustand": "^4.4.7",
+    "react-hot-toast": "^2.4.1",
+    "@tanstack/react-query": "^5.17.0",
+    "axios": "^1.6.0",
+    "date-fns": "^3.0.0",
+    "recharts": "^2.10.0"
+  }
+}

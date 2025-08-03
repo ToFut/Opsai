@@ -219,6 +219,26 @@ export interface UnifiedModel {
   computedFields: ComputedField[]
 }
 
+export interface ModelRelationship {
+  name: string
+  type: 'one-to-one' | 'one-to-many' | 'many-to-many'
+  targetModel: string
+  foreignKey?: string
+  cascade?: boolean
+}
+
+export interface FieldValidation {
+  type: 'required' | 'unique' | 'pattern' | 'range' | 'custom'
+  value?: any
+  message?: string
+}
+
+export interface FieldTransformation {
+  type: 'format' | 'convert' | 'calculate' | 'custom'
+  operation: string
+  parameters?: Record<string, any>
+}
+
 export interface UnifiedField {
   name: string
   type: string

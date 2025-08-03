@@ -92,12 +92,13 @@ const SmartOnboarding = ({
   onComplete: (config: any) => void;
   initialUrl?: string;
 }) => {
-  const [step, setStep] = useState<'input' | 'analyzing' | 'results' | 'integrations' | 'generating'>('analyzing')
+  const [step, setStep] = useState<'input' | 'analyzing' | 'results' | 'integrations' | 'generating'>('input')
   const [websiteUrl, setWebsiteUrl] = useState(initialUrl)
   const [analysis, setAnalysis] = useState<BusinessAnalysis | null>(null)
   const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus>({})
   const [error, setError] = useState('')
   const [sessionId] = useState(() => Math.random().toString(36).substr(2, 9))
+  const [useAIAnalysis, setUseAIAnalysis] = useState(true)
 
   // Auto-start analysis if initialUrl is provided
   useEffect(() => {
@@ -105,6 +106,45 @@ const SmartOnboarding = ({
       analyzeWebsite()
     }
   }, [initialUrl])
+
+  // Generate mock analysis data
+  const generateMockAnalysis = (url: string): BusinessAnalysis => {
+    const domain = new URL(url).hostname.replace('www.', '')
+    const businessName = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1)
+    
+    return {
+      websiteAnalysis: {
+        url: url,
+        title: `${businessName} - Business Website`,
+        description: `Professional business website for ${businessName}`,
+        industry: 'Technology',
+        industryConfidence: 85,
+        detectedContact: {
+          phone: '+1-555-0123',
+          email: `contact@${domain}`,
+          socialMedia: [
+            { platform: 'LinkedIn', url: `https://linkedin.com/company/${businessName.toLowerCase()}` },
+            { platform: 'Twitter', url: `https://twitter.com/${businessName.toLowerCase()}` }
+          ]
+        },
+        businessHours: 'Mon-Fri 9AM-6PM'
+      },
+      businessProfile: {
+        businessName: businessName,
+        businessType: 'SaaS Platform',
+        yearFounded: 2020,
+        suggestedIntegrations: ['stripe', 'google-workspace', 'slack', 'hubspot'],
+        dataModels: ['Users', 'Projects', 'Teams', 'Billing'],
+        workflows: ['User Onboarding', 'Project Management', 'Billing Cycle'],
+        uniqueFeatures: ['Dashboard Analytics', 'Team Collaboration', 'Automated Billing']
+      },
+      suggestedIntegrations: ['stripe', 'google-workspace', 'slack', 'hubspot', 'mailchimp'],
+      dataSchema: {
+        models: ['Users', 'Projects', 'Teams', 'Billing', 'Analytics'],
+        workflows: ['User Onboarding', 'Project Management', 'Billing Cycle', 'Support Tickets']
+      }
+    }
+  }
 
   // Website Analysis
   const analyzeWebsite = async () => {
@@ -117,7 +157,18 @@ const SmartOnboarding = ({
     setError('')
 
     try {
-              const response = await fetch('/api/discover', {
+      if (!useAIAnalysis) {
+        // Use mock analysis
+        setTimeout(() => {
+          const mockAnalysis = generateMockAnalysis(websiteUrl.trim())
+          setAnalysis(mockAnalysis)
+          setStep('results')
+        }, 2000) // Simulate analysis time
+        return
+      }
+
+      // Use real AI analysis
+      const response = await fetch('/api/discover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ websiteUrl: websiteUrl.trim() })
@@ -290,7 +341,7 @@ const SmartOnboarding = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Your Business Website
                 </label>
-                <div className="flex space-x-3">
+                <div className="flex space-x-3 mb-4">
                   <input
                     type="url"
                     value={websiteUrl}
@@ -305,6 +356,42 @@ const SmartOnboarding = ({
                   >
                     Analyze
                   </button>
+                </div>
+                
+                {/* Analysis Mode Toggle */}
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-gray-700">Analysis Mode</label>
+                    <div className="text-xs text-gray-500">💡 Dev mode saves API credits</div>
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setUseAIAnalysis(true)}
+                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                        useAIAnalysis 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      🤖 AI Analysis
+                    </button>
+                    <button
+                      onClick={() => setUseAIAnalysis(false)}
+                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                        !useAIAnalysis 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      🎭 Mock Data
+                    </button>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600">
+                    {useAIAnalysis 
+                      ? 'Uses OpenAI/Claude to analyze your website (costs API credits)'
+                      : 'Generates realistic mock data based on URL (free for development)'
+                    }
+                  </div>
                 </div>
                 
                 {error && (
@@ -323,12 +410,28 @@ const SmartOnboarding = ({
           {step === 'analyzing' && (
             <div className="bg-white rounded-xl shadow-lg p-12 text-center">
               <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Analyzing Your Business...</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {useAIAnalysis ? 'AI Analyzing Your Business...' : 'Generating Mock Analysis...'}
+              </h2>
               <div className="space-y-2 text-gray-600">
-                <p>🔍 Scanning your website content</p>
-                <p>🤖 Detecting your industry and business type</p>
-                <p>📊 Generating data models and workflows</p>
-                <p>🔗 Identifying integration opportunities</p>
+                {useAIAnalysis ? (
+                  <>
+                    <p>🔍 Scanning your website content</p>
+                    <p>🤖 Detecting your industry and business type</p>
+                    <p>📊 Generating data models and workflows</p>
+                    <p>🔗 Identifying integration opportunities</p>
+                  </>
+                ) : (
+                  <>
+                    <p>🎭 Generating realistic mock data</p>
+                    <p>🏗️ Creating sample business profile</p>
+                    <p>📊 Building demo data models</p>
+                    <p>🔗 Setting up test integrations</p>
+                  </>
+                )}
+              </div>
+              <div className="mt-4 px-4 py-2 bg-gray-100 rounded-lg text-sm">
+                <strong>Mode:</strong> {useAIAnalysis ? '🤖 AI Analysis (uses API credits)' : '🎭 Mock Data (free)'}
               </div>
             </div>
           )}
@@ -456,15 +559,24 @@ const SmartOnboarding = ({
 
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-600">
-                      You can connect more integrations later. {connectedCount > 0 ? `${connectedCount} integration${connectedCount > 1 ? 's' : ''} ready to sync data.` : 'Skip for now if you prefer.'}
-                    </div>
                     <button
-                      onClick={generateApp}
-                      className="px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 font-medium"
+                      onClick={() => setStep('results')}
+                      className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800"
                     >
-                      Generate My App
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Back to Analysis
                     </button>
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm text-gray-600">
+                        {connectedCount > 0 ? `${connectedCount} integration${connectedCount > 1 ? 's' : ''} ready to sync data.` : 'You can connect integrations later.'}
+                      </div>
+                      <button
+                        onClick={generateApp}
+                        className="px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-lg hover:from-green-700 hover:to-blue-700 font-medium"
+                      >
+                        Generate My App
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
