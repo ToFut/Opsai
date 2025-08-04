@@ -13,7 +13,7 @@ interface CachedToken {
   expiresAt: number
 }
 
-class AirbyteTokenManager {
+export class AirbyteTokenManager {
   private static instance: AirbyteTokenManager
   private cachedToken: CachedToken | null = null
   private tokenEndpoint = 'https://cloud.airbyte.com/auth/realms/_airbyte-application-clients/protocol/openid-connect/token'

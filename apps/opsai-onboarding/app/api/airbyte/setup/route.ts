@@ -209,8 +209,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Airbyte setup error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to setup Airbyte connection' },
+      { 
+        error: 'Failed to setup Airbyte connection',
+        details: errorMessage,
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      },
       { status: 500 }
     )
   }
