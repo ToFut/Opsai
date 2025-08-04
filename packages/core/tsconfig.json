@@ -22,7 +22,18 @@
     "src/file-manager.ts",
     "src/monitoring-manager.ts",
     "src/workflow-engine.ts",
-    "src/workflow-orchestrator.ts"
+    "src/workflow-orchestrator.ts",
+    "src/context/discovery-context.ts",
+    "src/engines/business-flow-engine.ts",
+    "src/transformers/data-transformation-pipeline.ts",
+    "src/generators/advanced-ui-generator.ts",
+    "src/generators/advanced-workflow-generator.ts",
+    "src/generators/dynamic-yaml-generator.ts",
+    "src/bridges/workflow-ui-bridge.ts",
+    "src/orchestrators/discovery-orchestrator.ts",
+    "src/sync/state-synchronizer.ts",
+    "src/state/realtime-state-manager.ts",
+    "src/services/ai-code-generator.ts"
   ],
   "references": [
     { "path": "../shared" }

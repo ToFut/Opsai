@@ -15,25 +15,25 @@ export type { YamlConfig, AppConfig, GenerationOptions } from './types'
 export { FileUtils } from './utils/file-utils'
 export { Logger } from './utils/logger'
 
-// Context
-export { discoveryContext, DiscoveryContextManager } from './context/discovery-context'
-export type { DiscoveryContext, DiscoveryPhase } from './context/discovery-context'
+// Context - temporarily disabled due to build dependency issues
+// export { discoveryContext, DiscoveryContextManager } from './context/discovery-context'
+// export type { DiscoveryContext, DiscoveryPhase } from './context/discovery-context'
 
-// State Management
-export { createStateSynchronizer, StateSynchronizer } from './sync/state-synchronizer'
-export type { StateSynchronizerConfig, WorkflowState, UIComponentState } from './sync/state-synchronizer'
+// State Management - temporarily disabled due to build dependency issues
+// export { createStateSynchronizer, StateSynchronizer } from './sync/state-synchronizer'
+// export type { StateSynchronizerConfig, WorkflowState, UIComponentState } from './sync/state-synchronizer'
 
-// Bridges
-export { createWorkflowUIBridge, WorkflowUIBridge } from './bridges/workflow-ui-bridge'
-export type { WorkflowUIBridgeConfig, BridgeConnection, DataBinding, EventMapping } from './bridges/workflow-ui-bridge'
+// Bridges - temporarily disabled due to build dependency issues
+// export { createWorkflowUIBridge, WorkflowUIBridge } from './bridges/workflow-ui-bridge'
+// export type { WorkflowUIBridgeConfig, BridgeConnection, DataBinding, EventMapping } from './bridges/workflow-ui-bridge'
 
-// Real-time State
-export { createRealtimeStateManager, RealtimeStateManager } from './state/realtime-state-manager'
-export type { RealtimeStateConfig, StateChannel, StateUpdate, StateSubscription } from './state/realtime-state-manager'
+// Real-time State - temporarily disabled due to build dependency issues
+// export { createRealtimeStateManager, RealtimeStateManager } from './state/realtime-state-manager'
+// export type { RealtimeStateConfig, StateChannel, StateUpdate, StateSubscription } from './state/realtime-state-manager'
 
-// Transformation
-export { createDataTransformationPipeline, DataTransformationPipeline } from './transformers/data-transformation-pipeline'
-export type { TransformationResult } from './transformers/data-transformation-pipeline'
+// Transformation - temporarily disabled due to build dependency issues
+// export { createDataTransformationPipeline, DataTransformationPipeline } from './transformers/data-transformation-pipeline'
+// export type { TransformationResult } from './transformers/data-transformation-pipeline'
 
-// Orchestration
-export { createDiscoveryOrchestrator, DiscoveryOrchestrator } from './orchestrators/discovery-orchestrator' 
+// Orchestration - temporarily disabled due to build dependency issues
+// export { createDiscoveryOrchestrator, DiscoveryOrchestrator } from './orchestrators/discovery-orchestrator' 

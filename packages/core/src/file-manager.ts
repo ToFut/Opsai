@@ -57,14 +57,14 @@ export class FileManager {
   private supabase: SupabaseClient
   private storageConfig: StorageConfig
   private processingJobs: Map<string, FileProcessingJob> = new Map()
-  private documentParser: DocumentParser
+  private documentParser: any // DocumentParser - TODO: implement
 
   constructor() {
     this.supabase = createClient(
       process.env.SUPABASE_URL || '',
       process.env.SUPABASE_ANON_KEY || ''
     )
-    this.documentParser = new DocumentParser()
+    this.documentParser = null // new DocumentParser() - TODO: implement
     
     this.storageConfig = {
       provider: 'supabase',

@@ -1,7 +1,119 @@
-import { DiscoveredSchema, BusinessEntity } from '@opsai/integration';
-import { PrismaSchemaModel, PrismaField } from '@opsai/database/src/analyzers/schema-analyzer';
+import { DiscoveredSchema, BusinessEntity } from '@opsai/shared';
+// Local stub for PrismaSchemaModel to avoid circular dependency
+interface PrismaSchemaModel {
+  name: string;
+  tableName: string;
+  fields: any[];
+  relations: any[];
+}
+interface PrismaField {
+  name: string;
+  type: string;
+  isOptional: boolean;
+}
 import { BusinessFlowAnalysis } from '../engines/business-flow-engine';
 import { GeneratedWorkflowSystem } from './advanced-workflow-generator';
+import {
+  ThemeConfiguration,
+  LayoutSystem,
+  UIStateManagement,
+  RoutingConfiguration,
+  ThemingSystem,
+  AccessibilityFeatures,
+  ResponsiveDesign,
+  DependencyConfiguration,
+  FrameworkConfiguration,
+  BuildConfiguration,
+  DirectoryStructure,
+  EntryPoint,
+  RouteDefinition,
+  MiddlewareDefinition,
+  ProviderDefinition,
+  UtilityDefinition,
+  LayoutComponent,
+  FormComponent,
+  DataComponent,
+  NavigationComponent,
+  FeedbackComponent,
+  OverlayComponent,
+  ChartComponent,
+  SpecializationComponent,
+  ComponentProp,
+  ComponentVariant,
+  ComponentState,
+  AccessibilitySpec,
+  ResponsiveSpec,
+  ThemingSpec,
+  BusinessComponentContext,
+  ComponentImplementation,
+  DataRequirement,
+  BusinessLogicSpec,
+  ValidationSpec,
+  PermissionSpec,
+  NotificationSpec,
+  IntegrationSpec,
+  WorkflowIntegrationSpec,
+  RealTimeFeatureSpec,
+  ComponentHook,
+  ServiceIntegration,
+  StateIntegration,
+  EventHandlerSpec,
+  LifecycleHook,
+  ErrorHandlingSpec,
+  LoadingStateSpec,
+  CachingSpec,
+  NavigationStructure,
+  PagePermissionSpec,
+  SEOConfiguration,
+  AnalyticsConfiguration,
+  ComponentInstance,
+  PageDataRequirement,
+  PageSEOSpec,
+  PageAnalyticsSpec,
+  PageResponsiveSpec,
+  PageLoadingSpec,
+  PageErrorHandlingSpec,
+  PageImplementation,
+  AlertThreshold,
+  DashboardLayout,
+  DashboardTheme,
+  FilteringSystem,
+  DrillDownConfiguration,
+  ExportConfiguration,
+  SchedulingConfiguration,
+  DashboardAlertingSystem,
+  DashboardLayoutSpec,
+  WidgetInstance,
+  FilterDefinition,
+  RealTimeUpdateSpec,
+  CustomizationSpec,
+  PerformanceSpec,
+  DashboardImplementation,
+  DecisionSupportSpec,
+  BusinessAlertingSpec,
+  ComplianceReportingSpec,
+  DataSourceSpec,
+  VisualizationSpec,
+  InteractionSpec,
+  WidgetResponsiveSpec,
+  WidgetCustomizationSpec,
+  WidgetImplementation,
+  BenchmarkSpec,
+  FieldTypeDefinition,
+  ValidationRuleDefinition,
+  ConditionalLogicDefinition,
+  WizardDefinition,
+  FormTemplateDefinition,
+  FormAccessibilitySpec,
+  FormLocalizationSpec,
+  FormSection,
+  FormValidationSpec,
+  FormBusinessRuleSpec,
+  FormConditionalLogicSpec,
+  FormWorkflowIntegration,
+  FormAccessibilityFeatures,
+  FormResponsiveSpec
+} from './ui-types';
 
 export interface AdvancedUIConfig {
   schema: DiscoveredSchema;

@@ -77,14 +77,23 @@ export class YamlProcessor {
     }
 
     if (configs.length === 1) {
-      return configs[0]
+      const config = configs[0]
+      if (!config) {
+        throw new Error('Configuration is undefined')
+      }
+      return config
     }
 
     this.logger.info(`Merging ${configs.length} configurations...`)
+    
+    const firstConfig = configs[0]
+    if (!firstConfig) {
+      throw new Error('First configuration is undefined')
+    }
 
     const merged: YamlConfig = {
-      vertical: { ...configs[0].vertical },
-      business: { ...configs[0].business },
+      vertical: { ...firstConfig.vertical },
+      business: { ...firstConfig.business },
       database: { models: [] },
       apis: { integrations: [] },
       workflows: [],

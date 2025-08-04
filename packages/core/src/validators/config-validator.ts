@@ -212,11 +212,19 @@ export class ConfigValidator {
       }
     })
 
-    return {
-      success: errors.length === 0,
-      errors: errors.length > 0 ? errors : undefined,
-      warnings: warnings.length > 0 ? warnings : undefined
+    const result: { success: boolean; errors?: string[]; warnings?: string[] } = {
+      success: errors.length === 0
+    };
+    
+    if (errors.length > 0) {
+      result.errors = errors;
     }
+    
+    if (warnings.length > 0) {
+      result.warnings = warnings;
+    }
+    
+    return result;
   }
 
   /**
