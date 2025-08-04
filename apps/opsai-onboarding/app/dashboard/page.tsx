@@ -9,11 +9,13 @@ function DashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const analysisUrl = searchParams.get('analysis')
+  const savedAppId = searchParams.get('saved')
   
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [showAnalysis, setShowAnalysis] = useState(false)
   const [analysisResults, setAnalysisResults] = useState<any>(null)
+  const [showSavedMessage, setShowSavedMessage] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -29,6 +31,13 @@ function DashboardContent() {
         if (analysisUrl) {
           await performAnalysis(analysisUrl)
         }
+        
+        // If there's a saved app ID, show success message
+        if (savedAppId) {
+          setShowSavedMessage(true)
+          // Auto-hide after 5 seconds
+          setTimeout(() => setShowSavedMessage(false), 5000)
+        }
       } catch (error) {
         console.error('Auth check failed:', error)
         router.push('/login')
@@ -37,7 +46,7 @@ function DashboardContent() {
       }
     }
     checkAuth()
-  }, [router, analysisUrl])
+  }, [router, analysisUrl, savedAppId])
 
   const performAnalysis = async (url: string) => {
     setShowAnalysis(true)
@@ -93,6 +102,29 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Success message for saved apps */}
+      {showSavedMessage && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg shadow-lg flex items-center max-w-sm">
+            <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <p className="font-medium">App Saved Successfully!</p>
+              <p className="text-sm">Your application has been added to your dashboard.</p>
+            </div>
+            <button
+              onClick={() => setShowSavedMessage(false)}
+              className="ml-4 text-green-400 hover:text-green-600"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Analysis Modal for logged-in users */}
       {showAnalysis && analysisResults && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

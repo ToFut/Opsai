@@ -1,0 +1,79 @@
+# Airbyte Configuration
+airbyte_api_key       = "your-airbyte-api-key"
+airbyte_api_url       = "https://api.airbyte.com/v1"
+airbyte_workspace_id  = "your-workspace-id"
+airbyte_client_id     = "your-client-id"
+airbyte_client_secret = "your-client-secret"
+
+# Project Configuration
+environment   = "dev"
+project_name  = "opsai"
+
+# OAuth Provider Configurations
+oauth_providers = {
+  github = {
+    client_id     = "your-github-client-id"
+    client_secret = "your-github-client-secret"
+    enabled       = true
+  }
+  google = {
+    client_id     = "your-google-client-id"
+    client_secret = "your-google-client-secret"
+    enabled       = true
+  }
+  salesforce = {
+    client_id     = "your-salesforce-client-id"
+    client_secret = "your-salesforce-client-secret"
+    enabled       = true
+  }
+  shopify = {
+    client_id     = "your-shopify-client-id"
+    client_secret = "your-shopify-client-secret"
+    enabled       = true
+  }
+  quickbooks = {
+    client_id     = "your-quickbooks-client-id"
+    client_secret = "your-quickbooks-client-secret"
+    enabled       = true
+  }
+  hubspot = {
+    client_id     = "your-hubspot-client-id"
+    client_secret = "your-hubspot-client-secret"
+    enabled       = true
+  }
+  stripe = {
+    client_id     = "your-stripe-client-id"
+    client_secret = "your-stripe-client-secret"
+    enabled       = true
+  }
+  square = {
+    client_id     = "your-square-client-id"
+    client_secret = "your-square-client-secret"
+    enabled       = true
+  }
+  xero = {
+    client_id     = "your-xero-client-id"
+    client_secret = "your-xero-client-secret"
+    enabled       = true
+  }
+  slack = {
+    client_id     = "your-slack-client-id"
+    client_secret = "your-slack-client-secret"
+    enabled       = true
+  }
+  mailchimp = {
+    client_id     = "your-mailchimp-client-id"
+    client_secret = "your-mailchimp-client-secret"
+    enabled       = true
+  }
+  zendesk = {
+    client_id     = "your-zendesk-client-id"
+    client_secret = "your-zendesk-client-secret"
+    enabled       = true
+  }
+  calendly = {
+    client_id     = "your-calendly-client-id"
+    client_secret = "your-calendly-client-secret"
+    enabled       = true
+  }
+}

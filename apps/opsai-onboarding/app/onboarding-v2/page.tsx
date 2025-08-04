@@ -61,13 +61,13 @@ export default function OnboardingV2Page() {
             dashboardUrl: appData.adminUrl
           },
           monitoring: {
-            sentryDsn: 'mock-sentry-dsn',
-            posthogApiKey: 'mock-posthog-key'
+            sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN || '',
+            posthogApiKey: process.env.NEXT_PUBLIC_POSTHOG_KEY || ''
           },
           apiKeys: {
-            supabaseUrl: 'https://mock.supabase.co',
-            supabaseAnonKey: 'mock-anon-key',
-            supabaseServiceKey: 'mock-service-key'
+            supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xvwmnmwzrpftufjpojvb.supabase.co',
+            supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY || ''
           },
           integrations: config.integrations.map((name: string) => ({
             provider: name,

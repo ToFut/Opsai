@@ -4,13 +4,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
-const supabase_js_1 = require("@supabase/supabase-js");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const database_1 = require("@opsai/database");
+const supabase_config_1 = require("../config/supabase-config");
 class AuthService {
     constructor(config) {
-        this.config = config;
-        this.supabase = (0, supabase_js_1.createClient)(config.supabaseUrl, config.supabaseAnonKey);
+        // Merge provided config with Supabase config
+        const supabaseConf = supabase_config_1.supabaseConfig.getConfig();
+        this.config = {
+            supabaseUrl: config?.supabaseUrl || supabaseConf.url,
+            supabaseAnonKey: config?.supabaseAnonKey || supabaseConf.anonKey,
+            jwtSecret: config?.jwtSecret || supabaseConf.jwtSecret,
+            jwtExpiresIn: config?.jwtExpiresIn || '15m',
+            refreshTokenExpiresIn: config?.refreshTokenExpiresIn || '7d'
+        };
+        // Validate configuration
+        const validation = supabase_config_1.supabaseConfig.validateConfig();
+        if (!validation.valid) {
+            throw new Error(`Invalid Supabase configuration: ${validation.errors.join(', ')}`);
+        }
+        this.supabase = supabase_config_1.supabaseConfig.getClient();
     }
     /**
      * Register a new user
@@ -192,6 +205,130 @@ class AuthService {
             exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
         };
         return jsonwebtoken_1.default.sign(payload, this.config.jwtSecret);
+    }
+    /**
+     * Sign in with OAuth provider
+     */
+    async signInWithOAuth(provider, options) {
+        return await this.supabase.auth.signInWithOAuth({
+            provider,
+            options: {
+                redirectTo: options?.redirectTo || `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+                scopes: options?.scopes
+            }
+        });
+    }
+    /**
+     * Sign in with magic link
+     */
+    async signInWithMagicLink(email, options) {
+        return await this.supabase.auth.signInWithOtp({
+            email,
+            options: {
+                emailRedirectTo: options?.redirectTo || `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+            }
+        });
+    }
+    /**
+     * Verify OTP for magic link or SMS
+     */
+    async verifyOtp(email, token, type = 'magiclink') {
+        const { data, error } = await this.supabase.auth.verifyOtp({
+            email,
+            token,
+            type
+        });
+        if (error) {
+            throw new Error(`OTP verification failed: ${error.message}`);
+        }
+        if (!data.user) {
+            throw new Error('OTP verification failed');
+        }
+        // Get or create user in our database
+        let user = await database_1.prisma.user.findUnique({
+            where: { id: data.user.id }
+        });
+        if (!user) {
+            // Create user if doesn't exist (for magic link signups)
+            user = await database_1.prisma.user.create({
+                data: {
+                    id: data.user.id,
+                    email: data.user.email,
+                    firstName: data.user.user_metadata?.first_name || '',
+                    lastName: data.user.user_metadata?.last_name || '',
+                    tenantId: data.user.user_metadata?.tenant_id || 'default',
+                    role: 'user',
+                    isActive: true
+                }
+            });
+        }
+        // Generate tokens
+        const accessToken = this.generateAccessToken(user);
+        const refreshToken = this.generateRefreshToken(user);
+        return {
+            user: user,
+            session: data.session,
+            accessToken,
+            refreshToken
+        };
+    }
+    /**
+     * Get current session from Supabase
+     */
+    async getCurrentSession() {
+        const { data: { session }, error } = await this.supabase.auth.getSession();
+        if (error) {
+            throw new Error(`Failed to get session: ${error.message}`);
+        }
+        return session;
+    }
+    /**
+     * Check authentication health
+     */
+    async healthCheck() {
+        try {
+            const connectionTest = await supabase_config_1.supabaseConfig.testConnection();
+            const session = await this.getCurrentSession();
+            return {
+                status: connectionTest.success ? 'healthy' : 'unhealthy',
+                details: {
+                    supabaseConnection: connectionTest,
+                    hasActiveSession: !!session,
+                    configValid: supabase_config_1.supabaseConfig.validateConfig().valid
+                }
+            };
+        }
+        catch (error) {
+            return {
+                status: 'unhealthy',
+                details: {
+                    error: error.message,
+                    configValid: supabase_config_1.supabaseConfig.validateConfig().valid
+                }
+            };
+        }
+    }
+    /**
+     * Initialize tenant-specific auth
+     */
+    async initializeTenant(tenantId, tenantConfig) {
+        // Create tenant-specific auth configuration
+        if (tenantConfig) {
+            await database_1.prisma.tenantAuthConfig.upsert({
+                where: { tenantId },
+                update: {
+                    allowedDomains: tenantConfig.allowedDomains || [],
+                    ssoProviders: tenantConfig.ssoProviders || [],
+                    passwordPolicy: tenantConfig.passwordPolicy || {}
+                },
+                create: {
+                    tenantId,
+                    allowedDomains: tenantConfig.allowedDomains || [],
+                    ssoProviders: tenantConfig.ssoProviders || [],
+                    passwordPolicy: tenantConfig.passwordPolicy || {}
+                }
+            });
+        }
     }
 }
 exports.AuthService = AuthService;

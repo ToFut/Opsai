@@ -1,0 +1,146 @@
+# PostgreSQL Destination (Primary Data Warehouse)
+resource "airbyte_destination_postgres" "postgres_destination" {
+  definition_id = "25c5221d-dce2-4163-ade9-739ef790f503" # PostgreSQL destination definition ID
+  name          = "${var.project_name}-postgres-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    host     = "your-postgres-host"
+    port     = 5432
+    database = "${var.project_name}_${var.environment}"
+    schema   = "public"
+    username = "your-postgres-user"
+    password = "your-postgres-password"
+    ssl_mode = {
+      mode = "require"
+    }
+  }
+}
+
+# Supabase Destination (Alternative PostgreSQL with built-in auth)
+resource "airbyte_destination_postgres" "supabase_destination" {
+  definition_id = "25c5221d-dce2-4163-ade9-739ef790f503" # PostgreSQL destination definition ID  
+  name          = "${var.project_name}-supabase-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    host     = "your-supabase-db-host"
+    port     = 5432
+    database = "postgres"
+    schema   = "public"
+    username = "postgres"
+    password = "your-supabase-db-password"
+    ssl_mode = {
+      mode = "require"
+    }
+  }
+}
+
+# BigQuery Destination (For Analytics)
+resource "airbyte_destination_bigquery" "bigquery_destination" {
+  definition_id = "22f6c74f-5699-40ff-af54-d775532323ac" # BigQuery destination definition ID
+  name          = "${var.project_name}-bigquery-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    project_id       = "your-gcp-project-id"
+    dataset_location = "US"
+    dataset_id       = "${var.project_name}_${var.environment}"
+    credentials_json = jsonencode({
+      type                        = "service_account"
+      project_id                  = "your-gcp-project-id"
+      private_key_id              = "your-private-key-id"
+      private_key                 = "your-private-key"
+      client_email                = "your-service-account-email"
+      client_id                   = "your-client-id"
+      auth_uri                    = "https://accounts.google.com/o/oauth2/auth"
+      token_uri                   = "https://oauth2.googleapis.com/token"
+      auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
+    })
+    loading_method = {
+      method = "Standard Inserts"
+    }
+  }
+}
+
+# Snowflake Destination (For Enterprise Analytics)
+resource "airbyte_destination_snowflake" "snowflake_destination" {
+  definition_id = "424892c4-daac-4491-b35d-c6688ba547ba" # Snowflake destination definition ID
+  name          = "${var.project_name}-snowflake-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    host            = "your-snowflake-account.snowflakecomputing.com"
+    role            = "ACCOUNTADMIN"
+    warehouse       = "COMPUTE_WH"
+    database        = upper("${var.project_name}_${var.environment}")
+    schema          = "PUBLIC"
+    username        = "your-snowflake-username"
+    password        = "your-snowflake-password"
+    jdbc_url_params = ""
+  }
+}
+
+# S3 Destination (For Data Lake)
+resource "airbyte_destination_s3" "s3_destination" {
+  definition_id = "4816b78f-1489-44c1-9060-4b19d5fa9362" # S3 destination definition ID
+  name          = "${var.project_name}-s3-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    s3_bucket_name    = "${var.project_name}-data-lake-${var.environment}"
+    s3_bucket_path    = "airbyte-data"
+    s3_bucket_region  = "us-east-1"
+    access_key_id     = "your-aws-access-key-id"
+    secret_access_key = "your-aws-secret-access-key"
+    format = {
+      format_type = "JSONL"
+    }
+  }
+}
+
+# Local JSON Destination (For Development/Testing)
+resource "airbyte_destination_local_json" "local_json_destination" {
+  count = var.environment == "dev" ? 1 : 0
+
+  definition_id = "8be1cf83-fae2-4619-81e0-00b1b7d84c4a" # Local JSON destination definition ID
+  name          = "${var.project_name}-local-json-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    destination_path = "/tmp/airbyte_local/${var.project_name}"
+  }
+}
+
+# ClickHouse Destination (For Real-time Analytics)
+resource "airbyte_destination_clickhouse" "clickhouse_destination" {
+  definition_id = "ce0d828e-1dc4-496c-b122-2da42e637e48" # ClickHouse destination definition ID
+  name          = "${var.project_name}-clickhouse-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    host     = "your-clickhouse-host"
+    port     = 8123
+    database = "${var.project_name}_${var.environment}"
+    username = "your-clickhouse-username"
+    password = "your-clickhouse-password"
+    ssl      = true
+  }
+}
+
+# Elasticsearch Destination (For Search and Analytics)
+resource "airbyte_destination_elasticsearch" "elasticsearch_destination" {
+  definition_id = "7b1283d4-5204-4d68-a62d-c85b6f0d4e1c" # Elasticsearch destination definition ID
+  name          = "${var.project_name}-elasticsearch-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    endpoint       = "https://your-elasticsearch-endpoint:9200"
+    ca_certificate = "your-ca-certificate"
+    auth_method = {
+      method   = "secret"
+      user     = "your-elasticsearch-username"
+      password = "your-elasticsearch-password"
+    }
+  }
+}

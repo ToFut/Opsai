@@ -299,7 +299,7 @@ Provide analysis in this exact JSON format:
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4-turbo-preview',
         messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' },
+  
         temperature: 0.3
       })
       

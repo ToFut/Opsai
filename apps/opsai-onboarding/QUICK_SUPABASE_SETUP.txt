@@ -1,0 +1,19 @@
+🚀 QUICK SUPABASE SETUP (2 minutes)
+
+1. OPEN THIS LINK:
+   https://supabase.com/dashboard/project/dqmufpexuuvlulpilirt/editor
+
+2. CLICK "SQL Editor" (left sidebar)
+
+3. CLICK "New Query"
+
+4. COPY & PASTE THIS SQL:
+
+CREATE TABLE tenant_integrations (id SERIAL PRIMARY KEY, tenant_id VARCHAR(255), provider VARCHAR(100), access_token TEXT, connected_at TIMESTAMPTZ DEFAULT NOW(), status VARCHAR(50) DEFAULT 'connected');
+CREATE TABLE tenant_sample_data (id SERIAL PRIMARY KEY, tenant_id VARCHAR(255), provider VARCHAR(100), sample_data JSONB, collected_at TIMESTAMPTZ DEFAULT NOW());
+CREATE TABLE tenant_data_schemas (id SERIAL PRIMARY KEY, tenant_id VARCHAR(255), providers TEXT[], entities JSONB, created_at TIMESTAMPTZ DEFAULT NOW());
+CREATE TABLE tenant_dynamic_data (id SERIAL PRIMARY KEY, tenant_id VARCHAR(255), entity_type VARCHAR(255), entity_id VARCHAR(255), data JSONB, created_at TIMESTAMPTZ DEFAULT NOW());
+
+5. CLICK "RUN" BUTTON
+
+✅ DONE! Now your OAuth flow will save to Supabase instead of temp files.

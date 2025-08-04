@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "YAML validation and schema management for OPSAI",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

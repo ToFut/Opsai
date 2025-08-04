@@ -171,6 +171,12 @@ export class AirbyteClient {
     return this.request(`/jobs/${jobId}`)
   }
 
+  async getConnectionBySourceId(sourceId: string) {
+    const connections = await this.request('/connections')
+    const connection = connections.data?.find((conn: any) => conn.sourceId === sourceId)
+    return connection || null
+  }
+
   // 4. OAUTH MANAGEMENT
   async initiateOAuth(sourceDefinitionId: string, redirectUrl: string, oAuthInputConfiguration?: any) {
     // Airbyte OAuth endpoint is 'initiate_oauth' not 'get_consent_url'

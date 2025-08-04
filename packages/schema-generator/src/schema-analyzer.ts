@@ -242,12 +242,22 @@ export class SchemaAnalyzer {
             5. Integration opportunities`
           }
         ],
-        response_format: { type: 'json_object' }
+  
       })
-      
-      return JSON.parse(response.choices[0].message.content || '{}')
+
+      if (
+        !response ||
+        !response.choices ||
+        !response.choices[0] ||
+        !response.choices[0].message ||
+        typeof response.choices[0].message.content !== 'string'
+      ) {
+        throw new Error('Invalid response from OpenAI');
+      }
+
+      return JSON.parse(response.choices[0].message.content || '{}');
     } catch (error) {
-      console.warn('AI insights failed, using defaults')
+      console.warn('AI insights failed, using defaults');
       return {
         businessLogic: ['Standard e-commerce data model detected'],
         computedFields: ['totalRevenue', 'customerLifetimeValue'],

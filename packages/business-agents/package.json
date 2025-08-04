@@ -1,0 +1,33 @@
+{
+  "name": "@opsai/business-agents",
+  "version": "1.0.0",
+  "description": "Specialized business intelligence agents for OpsAI platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@opsai/agent-core": "file:../agent-core",
+    "@langchain/core": "^0.1.48",
+    "@langchain/openai": "^0.0.21",
+    "@langchain/anthropic": "^0.1.15",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.22.4",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "@types/js-yaml": "^4.0.9",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "eslint": "^8.57.0"
+  },
+  "keywords": ["ai", "agents", "business", "yaml", "app-generation"],
+  "author": "OpsAI",
+  "license": "MIT"
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { 
   ExternalLink, 
   GitBranch, 
@@ -200,13 +201,13 @@ const AppCard: React.FC<AppCardProps> = ({ app, onEdit, onDelete, onImprove }) =
           </div>
           
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onImprove(app.id)}
+            <Link
+              href={`/dashboard/${app.id}`}
               className="flex items-center px-4 py-2 text-sm bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
             >
               <Sparkles className="w-4 h-4 mr-1" />
-              Improve
-            </button>
+              Manage
+            </Link>
             <button
               onClick={() => onEdit(app.id)}
               className="flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"

@@ -1,0 +1,177 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  role String @default("user")
+  isActive Boolean? @default(true) @map("is_active")
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  @@map("user")
+}
+
+model Project {
+  id String @id @default(cuid())
+  name String
+  description String?
+  ownerId String @map("owner_id")
+  status String? @default("draft")
+  createdAt DateTime @map("created_at")
+  updatedAt DateTime @map("updated_at")
+
+  @@map("project")
+}
+// Analytics and Business Intelligence Models
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  eventType     String   // 'page_view', 'action', 'conversion', etc.
+  entityType    String?  // Related entity type
+  entityId      String?  // Related entity ID
+  userId        String?
+  sessionId     String?
+  properties    Json?
+  timestamp     DateTime @default(now())
+  ipAddress     String?
+  userAgent     String?
+  referrer      String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  
+  
+  @@index([eventType, timestamp])
+  @@index([entityType, entityId])
+  @@index([userId])
+  
+  @@map("analytics_events")
+}
+
+model BusinessMetric {
+  id            String   @id @default(cuid())
+  metricName    String   // 'revenue', 'users', 'conversions', etc.
+  metricValue   Float
+  period        String   // 'daily', 'weekly', 'monthly'
+  periodStart   DateTime
+  periodEnd     DateTime
+  dimensions    Json? // Additional breakdown data
+  
+  createdAt     DateTime @default(now())
+  
+  @@unique([metricName, period, periodStart, id])
+  @@index([metricName, periodStart])
+  
+  @@map("business_metrics")
+}
+
+model DataQualityCheck {
+  id            String   @id @default(cuid())
+  tableName     String
+  checkType     String   // 'completeness', 'uniqueness', 'validity', 'consistency'
+  checkRule     String   // Description of the rule
+  passed        Boolean
+  score         Float?   // Quality score 0-100
+  details       Json?
+  checkedAt     DateTime @default(now())
+  
+  
+  @@index([tableName, checkType])
+  @@index([checkedAt])
+  
+  @@map("data_quality_checks")
+}
+
+model UserSession {
+  id            String   @id @default(cuid())
+  userId        String?
+  sessionId     String   @unique
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+  duration      Int?     // Session duration in seconds
+  pageViews     Int      @default(0)
+  events        Int      @default(0)
+  ipAddress     String?
+  userAgent     String?
+  country       String?
+  city          String?
+  device        String?
+  browser       String?
+  
+  
+  @@index([userId])
+  @@index([startTime])
+  
+  @@map("user_sessions")
+}
+
+// Comprehensive Audit Trail System
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  tableName     String
+  recordId      String
+  action        String   // 'CREATE', 'UPDATE', 'DELETE', 'READ'
+  userId        String?
+  oldValues     Json?
+  newValues     Json?
+  changedFields String[] // Array of field names that changed
+  ipAddress     String?
+  userAgent     String?
+  timestamp     DateTime @default(now())
+  
+  
+  @@index([tableName, recordId])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action])
+  
+  @@map("audit_logs")
+}
+
+model SystemLog {
+  id            String   @id @default(cuid())
+  level         String   // 'ERROR', 'WARN', 'INFO', 'DEBUG'
+  message       String
+  source        String   // Service/component that generated the log
+  context       Json?
+  userId        String?
+  requestId     String?
+  timestamp     DateTime @default(now())
+  
+  
+  @@index([level, timestamp])
+  @@index([source])
+  @@index([requestId])
+  
+  @@map("system_logs")
+}
+
+model SecurityEvent {
+  id            String   @id @default(cuid())
+  eventType     String   // 'login_attempt', 'permission_denied', 'suspicious_activity'
+  severity      String   // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+  userId        String?
+  ipAddress     String?
+  userAgent     String?
+  details       Json?
+  resolved      Boolean  @default(false)
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  timestamp     DateTime @default(now())
+  
+  
+  @@index([eventType, timestamp])
+  @@index([severity])
+  @@index([userId])
+  
+  @@map("security_events")
+}

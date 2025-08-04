@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { initiateOAuthRedirect } from '@/lib/oauth-redirect'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
@@ -49,6 +51,7 @@ export default function AirbyteIntegrationHub({
   businessProfile: any
   onIntegrationsComplete: (connections: Connection[]) => void
 }) {
+  const searchParams = useSearchParams()
   const [availableSources, setAvailableSources] = useState<AirbyteSource[]>([])
   const [recommendedSources, setRecommendedSources] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('recommended')
@@ -82,6 +85,14 @@ export default function AirbyteIntegrationHub({
     description: cat.description,
     sources: getProvidersByCategory(cat.id).map(p => p.sourceType)
   }))
+
+  // Check if provider has OAuth credentials configured
+  const checkProviderCredentials = (provider: string) => {
+    // In the browser, we can only access NEXT_PUBLIC_ env vars
+    // For now, assume OAuth is configured for these providers
+    const configuredProviders = ['github', 'google', 'stripe', 'shopify']
+    return configuredProviders.includes(provider.toLowerCase())
+  }
 
   // Helper function to get category icons
   function getCategoryIcon(categoryId: string) {
@@ -136,6 +147,51 @@ export default function AirbyteIntegrationHub({
 
   // Check if user returned from OAuth
   const checkForOAuthSuccess = () => {
+    // Check URL params first (from OAuth callback)
+    const oauthParam = searchParams.get('oauth')
+    const providerParam = searchParams.get('provider')
+    
+    if (oauthParam === 'success' && providerParam) {
+      console.log(`✅ OAuth success detected from URL params: ${providerParam}`)
+      
+      // Add the successful connection
+      const connection: Connection = {
+        sourceId: `oauth_${Date.now()}_${providerParam}`,
+        sourceName: providerParam,
+        status: 'connected',
+        lastSync: new Date(),
+        recordsExtracted: 0
+      }
+      
+      setConnections(prev => [...prev, connection])
+      
+      // Clear URL params to prevent re-processing
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('oauth')
+      newUrl.searchParams.delete('provider')
+      newUrl.searchParams.delete('error')
+      window.history.replaceState({}, '', newUrl.toString())
+      
+      return
+    }
+    
+    // Check for OAuth error
+    if (oauthParam === 'error') {
+      const errorMessage = searchParams.get('error') || 'OAuth connection failed'
+      console.error(`❌ OAuth error detected: ${errorMessage}`)
+      setError(errorMessage)
+      
+      // Clear URL params
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('oauth')
+      newUrl.searchParams.delete('provider')
+      newUrl.searchParams.delete('error')
+      window.history.replaceState({}, '', newUrl.toString())
+      
+      return
+    }
+    
+    // Fallback to localStorage check
     const oauthSuccess = localStorage.getItem('oauth_success')
     if (oauthSuccess) {
       try {
@@ -275,60 +331,12 @@ export default function AirbyteIntegrationHub({
         return
       }
       
-      // Attempt OAuth connection only if likely configured
-      const oauthResult = await createOAuthUrl(sourceType, tenantId)
+      // Use the redirect OAuth handler
+      console.log(`🚀 Starting OAuth redirect for ${sourceType}`)
+      initiateOAuthRedirect(sourceType, tenantId, window.location.pathname)
       
-      if (!oauthResult || oauthResult.error) {
-        // Check if Airbyte is configured - if so, always show Airbyte Cloud instructions
-        if (isAirbyteConfigured) {
-          // Show Airbyte Cloud-specific instructions
-          setShowOAuthSetupDialog({ 
-            provider: source.name, 
-            instructions: [
-              'Airbyte Cloud manages OAuth authentication for you. No need to create OAuth apps manually.',
-              'This integration requires configuration in Airbyte Cloud:',
-              '',
-              '1. Log in to https://cloud.airbyte.com',
-              `2. Navigate to Settings > Sources > ${source.name}`,
-              '3. Click "Set up OAuth" for this source',
-              '4. Follow Airbyte\'s instructions to configure the OAuth app',
-              '5. Airbyte will handle the OAuth flow automatically',
-              '',
-              'Note: You do NOT need to add OAuth credentials to your .env file.',
-              'Airbyte Cloud manages OAuth for you.'
-            ]
-          })
-        } else {
-          // Show regular OAuth setup instructions
-          setShowOAuthSetupDialog({ 
-            provider: source.name, 
-            instructions: oauthResult?.setupInstructions || [
-              `Set up OAuth application in ${source.name} developer console`,
-              'Configure redirect URI as shown below',
-              'Add client ID and secret to environment variables',
-              'Restart your application'
-            ]
-          })
-        }
-        setConnectingSource(null)
-        return
-      }
-
-      // Successful OAuth URL - redirect
-      if (oauthResult.url) {
-        // Store the connection attempt and return context
-        localStorage.setItem('connecting_source', JSON.stringify({
-          sourceType,
-          tenantId,
-          timestamp: Date.now()
-        }))
-
-        // Store return context so OAuth success knows where to redirect
-        localStorage.setItem('oauth_return_to', window.location.pathname)
-
-        // Redirect to OAuth URL
-        window.location.href = oauthResult.url
-      }
+      // The page will redirect and handle success/error via URL params
+      return
       
     } catch (error) {
       console.error('Connection failed:', error)
@@ -355,7 +363,7 @@ export default function AirbyteIntegrationHub({
         body: JSON.stringify({
           provider: sourceType,
           tenantId,
-          redirectUri: `${window.location.origin}/oauth-success`
+          redirectUri: `${window.location.origin}/api/oauth/callback`
         })
       })
 

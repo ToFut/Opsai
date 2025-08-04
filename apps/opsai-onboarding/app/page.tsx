@@ -11,7 +11,7 @@ export default function HomePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [useNewOnboarding, setUseNewOnboarding] = useState<'classic' | 'v2' | 'v3'>('v3') // Default to ultra simple
+  const [useNewOnboarding, setUseNewOnboarding] = useState<'classic' | 'v2' | 'v3' | 'enhanced-v3' | 'airbyte-v2' | 'intelligent' | 'ultimate'>('ultimate') // Default to ultimate
   const router = useRouter()
 
   useEffect(() => {
@@ -46,10 +46,14 @@ export default function HomePage() {
         const onboardingPaths = {
           'classic': 'onboarding',
           'v2': 'onboarding-v2',
-          'v3': 'onboarding-v3'
+          'v3': 'simple', // Ultra-simple maps to /simple
+          'enhanced-v3': 'test-integrations', // Use the simple working Airbyte integration
+          'airbyte-v2': 'test-integrations',
+          'intelligent': 'intelligent', // AI-driven intelligent onboarding
+          'ultimate': 'test-integrations' // Use the simple working Airbyte integration
         }
         const onboardingPath = onboardingPaths[useNewOnboarding]
-        router.push(`/${onboardingPath}?url=${encodeURIComponent(websiteUrl)}&mock=true`)
+        router.push(`/${onboardingPath}?url=${encodeURIComponent(websiteUrl)}`)
       }
     } catch (error) {
       console.error('Analysis failed:', error)
@@ -157,40 +161,89 @@ export default function HomePage() {
 
             {/* Onboarding Version Toggle - for development */}
             <div className="mb-6 flex justify-center">
-              <div className="inline-flex items-center gap-3 px-4 py-2 bg-gray-100 rounded-lg">
-                <span className="text-sm text-gray-600">Onboarding Version:</span>
-                <button
-                  onClick={() => setUseNewOnboarding('classic')}
-                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                    useNewOnboarding === 'classic' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Classic (7 stages)
-                </button>
-                <button
-                  onClick={() => setUseNewOnboarding('v2')}
-                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                    useNewOnboarding === 'v2' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Sparkles className="w-3 h-3 inline mr-1" />
-                  New (4 phases)
-                </button>
-                <button
-                  onClick={() => setUseNewOnboarding('v3')}
-                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                    useNewOnboarding === 'v3' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Zap className="w-3 h-3 inline mr-1" />
-                  Ultra Simple
-                </button>
+              <div className="bg-gray-100 rounded-lg p-3">
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm text-gray-600 font-medium text-center mb-1">Choose Onboarding Experience:</span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <button
+                      onClick={() => setUseNewOnboarding('ultimate')}
+                      className={`px-4 py-3 rounded text-sm font-medium transition-all col-span-2 ${
+                        useNewOnboarding === 'ultimate' 
+                          ? 'bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white shadow-xl' 
+                          : 'bg-gradient-to-r from-yellow-100 to-orange-100 text-gray-800 hover:from-yellow-200 hover:to-orange-200 border border-orange-300'
+                      }`}
+                    >
+                      <div className="font-bold text-lg">🔥 Ultimate</div>
+                      <div className="text-xs opacity-90">Best of all - 3 modes, real data, no mocks</div>
+                    </button>
+                    <button
+                      onClick={() => setUseNewOnboarding('classic')}
+                      className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                        useNewOnboarding === 'classic' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      <div className="font-semibold">Production</div>
+                      <div className="text-xs opacity-80">Full 7-stage flow</div>
+                    </button>
+                    <button
+                      onClick={() => setUseNewOnboarding('v2')}
+                      className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                        useNewOnboarding === 'v2' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      <div className="font-semibold">Smart V2</div>
+                      <div className="text-xs opacity-80">4-phase journey</div>
+                    </button>
+                    <button
+                      onClick={() => setUseNewOnboarding('v3')}
+                      className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                        useNewOnboarding === 'v3' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      <div className="font-semibold">Ultra Simple</div>
+                      <div className="text-xs opacity-80">3 quick steps</div>
+                    </button>
+                    <button
+                      onClick={() => setUseNewOnboarding('enhanced-v3')}
+                      className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                        useNewOnboarding === 'enhanced-v3' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      <div className="font-semibold">Enhanced V3</div>
+                      <div className="text-xs opacity-80">With Supabase</div>
+                    </button>
+                    <button
+                      onClick={() => setUseNewOnboarding('airbyte-v2')}
+                      className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                        useNewOnboarding === 'airbyte-v2' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      <div className="font-semibold">Airbyte Flow</div>
+                      <div className="text-xs opacity-80">Direct integrations</div>
+                    </button>
+                    <button
+                      onClick={() => setUseNewOnboarding('intelligent')}
+                      className={`px-4 py-2 rounded text-sm font-medium transition-all ${
+                        useNewOnboarding === 'intelligent' 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' 
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                    >
+                      <div className="font-semibold">Intelligent</div>
+                      <div className="text-xs opacity-80">AI-driven flow</div>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -221,15 +274,35 @@ export default function HomePage() {
                       </>
                     ) : (
                       <>
-                        <Brain className="w-5 h-5 mr-2" />
-                        AI Analysis
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        Build App with Real Data
                       </>
                     )}
                   </button>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mt-3">
-                🤖 Advanced AI will analyze your business model, identify integrations, and generate custom workflows
+                🚀 Ultra-simple 4-step process: Connect real integrations → AI analyzes your data → Generate custom app
+              </p>
+              
+              {/* OR divider */}
+              <div className="flex items-center my-6">
+                <div className="flex-1 border-t border-gray-300"></div>
+                <span className="px-4 text-gray-500 text-sm">OR</span>
+                <div className="flex-1 border-t border-gray-300"></div>
+              </div>
+              
+              {/* Ultra-Simple CTA */}
+              <button
+                onClick={() => router.push('/simple')}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-purple-700 hover:to-blue-700 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3 shadow-lg"
+              >
+                <Rocket className="w-6 h-6" />
+                Skip Analysis - Start Building Now!
+                <ArrowRight className="w-5 h-5" />
+              </button>
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                ⚡ Connect real Stripe, Shopify, Google Analytics in minutes
               </p>
             </div>
 

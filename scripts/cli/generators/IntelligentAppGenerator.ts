@@ -182,7 +182,7 @@ export class IntelligentAppGenerator {
               patterns: analysis
             })
           }],
-          response_format: { type: 'json_object' }
+
         })
 
         const suggestion = JSON.parse(aiAnalysis.choices[0].message.content!)
@@ -229,7 +229,7 @@ export class IntelligentAppGenerator {
             schema: schema
           })
         }],
-        response_format: { type: 'json_object' }
+
       })
 
       const logic = JSON.parse(aiRules.choices[0].message.content!)

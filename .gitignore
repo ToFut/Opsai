@@ -18,6 +18,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Temporary storage
+apps/opsai-onboarding/.temp-storage/
+
 # Runtime data
 pids
 *.pid
@@ -43,3 +46,8 @@ ehthumbs.db
 Thumbs.db
 .env
 apps/opsai-onboarding/.env.local
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/terraform.tfvars
+terraform/.terraform/
+*.tfvars

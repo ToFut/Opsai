@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { auth } from '@/lib/supabase'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { auth, supabase } from '@/lib/supabase'
 import AuthForm from '@/components/auth/AuthForm'
 
 const SignupPage: React.FC = () => {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -15,7 +17,7 @@ const SignupPage: React.FC = () => {
       try {
         const { user } = await auth.getCurrentUser()
         if (user) {
-          router.push('/dashboard')
+          handlePostSignup(user)
         }
       } catch (error) {
         console.error('Auth check failed:', error)
@@ -26,8 +28,90 @@ const SignupPage: React.FC = () => {
     checkAuth()
   }, [router])
 
-  const handleSuccess = () => {
+  const handlePostSignup = async (user: any) => {
+    // Check if this is from onboarding flow
+    if (redirect === 'onboarding-complete') {
+      // First check for temp deployment to save
+      const tempDeployment = sessionStorage.getItem('tempDeployment')
+      if (tempDeployment) {
+        try {
+          const deployment = JSON.parse(tempDeployment)
+          const state = deployment.onboardingState
+          
+          // Create application with temp deployment info
+          const { data: app, error } = await supabase
+            .from('applications')
+            .insert({
+              user_id: user.id,
+              name: `${state.businessAnalysis.businessType} Dashboard`,
+              website_url: state.websiteUrl,
+              config: {
+                integrations: state.integrations,
+                workflows: state.workflows,
+                auth: state.authConfig,
+                visualization: state.visualizationConfig
+              },
+              deployment_url: deployment.url,
+              status: 'deployed'
+            })
+            .select()
+            .single()
+
+          if (!error && app) {
+            sessionStorage.removeItem('tempDeployment')
+            sessionStorage.removeItem('onboardingState')
+            router.push(`/dashboard?saved=${app.id}`)
+            return
+          }
+        } catch (error) {
+          console.error('Failed to save temp deployment:', error)
+        }
+      }
+      
+      // Fallback to saved onboarding state
+      const savedState = sessionStorage.getItem('onboardingState')
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState)
+          
+          // Create application with saved configuration
+          const { data: app, error } = await supabase
+            .from('applications')
+            .insert({
+              user_id: user.id,
+              name: `${state.businessAnalysis.businessType} Dashboard`,
+              website_url: state.websiteUrl,
+              config: {
+                integrations: state.integrations,
+                workflows: state.workflows,
+                auth: state.authConfig,
+                visualization: state.visualizationConfig
+              },
+              status: 'deployed'
+            })
+            .select()
+            .single()
+
+          if (!error && app) {
+            sessionStorage.removeItem('onboardingState')
+            router.push(`/dashboard?saved=${app.id}`)
+            return
+          }
+        } catch (error) {
+          console.error('Failed to create application:', error)
+        }
+      }
+    }
+    
+    // Default redirect to dashboard
     router.push('/dashboard')
+  }
+
+  const handleSuccess = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await handlePostSignup(user)
+    }
   }
 
   const handleError = (error: string) => {
@@ -53,6 +137,11 @@ const SignupPage: React.FC = () => {
             🚀 OpsAI
           </h1>
           <p className="text-gray-600">Join the future of AI-powered development</p>
+          {redirect === 'onboarding-complete' && (
+            <p className="text-sm text-indigo-600 mt-2">
+              Sign up to save your application to your dashboard
+            </p>
+          )}
         </div>
         
         <AuthForm 

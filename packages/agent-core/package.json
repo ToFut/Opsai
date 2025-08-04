@@ -1,0 +1,35 @@
+{
+  "name": "@opsai/agent-core",
+  "version": "1.0.0",
+  "description": "Core agent orchestration system for OpsAI",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.1.48",
+    "@langchain/openai": "^0.0.21",
+    "@langchain/anthropic": "^0.1.15",
+    "langchain": "^0.1.25",
+    "redis": "^4.6.5",
+    "uuid": "^9.0.0",
+    "eventemitter3": "^5.0.1",
+    "lodash": "^4.17.21",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "@types/uuid": "^9.0.8",
+    "@types/lodash": "^4.14.202",
+    "typescript": "^5.3.3",
+    "jest": "^29.7.0",
+    "eslint": "^8.57.0"
+  },
+  "keywords": ["ai", "agents", "automation", "business"],
+  "author": "OpsAI",
+  "license": "MIT"
+}

@@ -1,0 +1,8 @@
+
+system.forceSearchAttributesCacheRefreshOnRead:
+  - value: true
+    constraints: {}
+
+system.enableLoggerRateLimiting:
+  - value: true
+    constraints: {}

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import OpenAI from 'openai'
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,9 +16,11 @@ export async function POST(request: NextRequest) {
 
     const { message, appId, appContext, codeContext, collaborationMode, performanceMetrics, securityScore, codeQuality } = await request.json()
 
-    // Here you would integrate with your AI service (OpenAI, Claude, etc.)
-    // For now, we'll return a mock response
-    const aiResponse = generateAIResponse(message, appContext)
+    // Get real data from integrations for AI analysis
+    const realData = await getRealDataForAnalysis(appId)
+    
+    // Use real OpenAI API for intelligent analysis
+    const aiResponse = await generateRealAIResponse(message, appContext, realData, codeContext)
     
     // Save the AI interaction to the database
     if (appId) {
@@ -37,76 +44,210 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateAIResponse(userInput: string, appContext?: string): any {
+// Get real data from all integrations for AI analysis
+async function getRealDataForAnalysis(appId: string) {
+  try {
+    // Fetch real data from Airbyte-synced tables
+    const responses = await Promise.allSettled([
+      fetch('/api/airbyte/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'customers', source: 'stripe', limit: 10 })
+      }),
+      fetch('/api/airbyte/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'products', source: 'shopify', limit: 10 })
+      }),
+      fetch('/api/airbyte/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'sessions', source: 'google_analytics', limit: 10 })
+      })
+    ])
+
+    const realData: any = {
+      stripe_customers: [],
+      shopify_products: [],
+      google_analytics: [],
+      summary: {
+        total_customers: 0,
+        total_products: 0,
+        total_sessions: 0,
+        revenue_data: null
+      }
+    }
+
+    // Process real data from responses
+    for (let i = 0; i < responses.length; i++) {
+      const result = responses[i]
+      if (result.status === 'fulfilled' && result.value.ok) {
+        const data = await result.value.json()
+        
+        switch (i) {
+          case 0: // Stripe
+            realData.stripe_customers = data.records || []
+            realData.summary.total_customers = data.total || 0
+            break
+          case 1: // Shopify
+            realData.shopify_products = data.records || []
+            realData.summary.total_products = data.total || 0
+            break
+          case 2: // Google Analytics
+            realData.google_analytics = data.records || []
+            realData.summary.total_sessions = data.total || 0
+            break
+        }
+      }
+    }
+
+    return realData
+  } catch (error) {
+    console.error('Failed to fetch real data for AI analysis:', error)
+    return { error: 'Unable to fetch real integration data' }
+  }
+}
+
+// Generate real AI response using OpenAI with actual business data
+async function generateRealAIResponse(userInput: string, appContext: string, realData: any, codeContext?: string) {
+  try {
+    const systemPrompt = `You are an AI assistant that helps improve business applications. You have access to real business data from integrated services:
+
+REAL BUSINESS DATA:
+- Stripe Customers: ${realData.summary?.total_customers || 0} customers
+- Shopify Products: ${realData.summary?.total_products || 0} products  
+- Google Analytics: ${realData.summary?.total_sessions || 0} sessions
+- Sample Customer Data: ${JSON.stringify(realData.stripe_customers?.slice(0, 2) || [])}
+- Sample Product Data: ${JSON.stringify(realData.shopify_products?.slice(0, 2) || [])}
+
+APPLICATION CONTEXT: ${appContext || 'Business application'}
+CODE CONTEXT: ${codeContext || 'No code context provided'}
+
+Provide specific, actionable recommendations based on the REAL data above. Focus on:
+1. Data-driven insights from actual customer/product/analytics data
+2. Concrete code improvements with real examples
+3. Business optimization based on actual metrics
+4. Integration enhancements using real data patterns
+
+Be specific and reference the actual data numbers in your analysis.`
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userInput }
+      ],
+      max_tokens: 1500,
+      temperature: 0.7
+    })
+
+    const aiMessage = completion.choices[0]?.message?.content || 'Unable to generate response'
+
+    // Extract actionable suggestions from AI response
+    const suggestions = extractSuggestions(aiMessage, realData)
+    const codeChanges = generateCodeChanges(userInput, realData)
+
+    return {
+      message: aiMessage,
+      suggestions,
+      codeChanges,
+      realDataInsights: {
+        customersAnalyzed: realData.summary?.total_customers || 0,
+        productsAnalyzed: realData.summary?.total_products || 0,
+        sessionsAnalyzed: realData.summary?.total_sessions || 0,
+        dataFreshness: new Date().toISOString()
+      },
+      type: 'ai_analysis'
+    }
+  } catch (error) {
+    console.error('OpenAI API Error:', error)
+    // Fallback to rule-based response if OpenAI fails
+    return generateFallbackResponse(userInput, realData)
+  }
+}
+
+// Extract actionable suggestions from AI response
+function extractSuggestions(aiMessage: string, realData: any): string[] {
+  const suggestions = []
+  
+  // Add suggestions based on real data
+  if (realData.summary?.total_customers > 0) {
+    suggestions.push(`Analyze ${realData.summary.total_customers} real customers for segmentation`)
+  }
+  
+  if (realData.summary?.total_products > 0) {
+    suggestions.push(`Optimize product catalog with ${realData.summary.total_products} products`)
+  }
+  
+  if (realData.summary?.total_sessions > 0) {
+    suggestions.push(`Improve user experience based on ${realData.summary.total_sessions} sessions`)
+  }
+  
+  // Add general suggestions from AI message
+  if (aiMessage.includes('dashboard')) {
+    suggestions.push('Create custom analytics dashboard')
+  }
+  
+  if (aiMessage.includes('automation')) {
+    suggestions.push('Implement workflow automation')
+  }
+  
+  return suggestions
+}
+
+// Generate specific code changes based on real data patterns
+function generateCodeChanges(userInput: string, realData: any): any[] {
+  const changes = []
+  
+  if (realData.stripe_customers?.length > 0) {
+    changes.push({
+      file: 'components/CustomerDashboard.tsx',
+      type: 'enhancement',
+      description: 'Add real customer data integration',
+      code: `// Real customer data from Stripe
+const { data: customers } = await stripeIntegration.getCustomers()
+console.log('Loaded ${realData.summary?.total_customers} real customers')`
+    })
+  }
+  
+  if (realData.shopify_products?.length > 0) {
+    changes.push({
+      file: 'components/ProductCatalog.tsx', 
+      type: 'enhancement',
+      description: 'Display real product inventory',
+      code: `// Real product data from Shopify
+const { data: products } = await shopifyIntegration.getProducts()
+console.log('Loaded ${realData.summary?.total_products} real products')`
+    })
+  }
+  
+  return changes
+}
+
+// Fallback response if OpenAI fails
+function generateFallbackResponse(userInput: string, realData: any): any {
   const lowerInput = userInput.toLowerCase()
   
-  // Mock AI response generation
-  let response = ''
-  let suggestions: string[] = []
-  let codeChanges: any[] = []
-
-  if (lowerInput.includes('auth') || lowerInput.includes('login')) {
-    response = "🔐 I'll help you add authentication to your app! I can implement JWT tokens, OAuth providers (Google, GitHub, etc.), or a simple email/password system. Which approach would you prefer? I can also add features like password reset, email verification, and role-based access control."
-    suggestions = ['Add JWT authentication', 'Implement OAuth providers', 'Add password reset', 'Add role-based access']
-    codeChanges = [
-      {
-        file: 'src/auth/AuthProvider.tsx',
-        content: '// Authentication provider implementation...',
-        type: 'add',
-        description: 'Add authentication provider component'
-      }
-    ]
-  } else if (lowerInput.includes('dashboard') || lowerInput.includes('ui')) {
-    response = "🎨 I can make your dashboard absolutely stunning! I'll add beautiful charts, improve the layout, add smooth animations, and make it fully responsive. Should I focus on the design, add new interactive components, or optimize the existing ones? I can also add dark mode and custom themes!"
-    suggestions = ['Add beautiful charts', 'Improve responsive design', 'Add dark mode', 'Add animations']
-    codeChanges = [
-      {
-        file: 'src/components/Dashboard.tsx',
-        content: '// Enhanced dashboard component...',
-        type: 'modify',
-        description: 'Improve dashboard design and functionality'
-      }
-    ]
-  } else if (lowerInput.includes('security')) {
-    response = "🛡️ Security is absolutely crucial! I can add input validation, rate limiting, HTTPS enforcement, CSRF protection, and more. What specific security concerns do you have? I'll make sure your app is bulletproof!"
-    suggestions = ['Add input validation', 'Implement rate limiting', 'Add CSRF protection', 'Enable HTTPS']
-    codeChanges = [
-      {
-        file: 'src/middleware/security.ts',
-        content: '// Security middleware implementation...',
-        type: 'add',
-        description: 'Add security middleware'
-      }
-    ]
-  } else if (lowerInput.includes('performance')) {
-    response = "⚡ Performance optimization can make a huge difference! I can implement caching strategies, optimize database queries, add lazy loading, minimize bundle size, and more. What's the main performance issue you're seeing? I'll make your app lightning fast!"
-    suggestions = ['Implement caching', 'Optimize database queries', 'Add lazy loading', 'Minimize bundle size']
-    codeChanges = [
-      {
-        file: 'src/utils/cache.ts',
-        content: '// Caching utility implementation...',
-        type: 'add',
-        description: 'Add caching utilities'
-      }
-    ]
-  } else if (lowerInput.includes('analyze') || lowerInput.includes('codebase')) {
-    response = "🔍 I'll perform a comprehensive analysis of your codebase! I'll check for performance bottlenecks, security vulnerabilities, code quality issues, and suggest improvements. This will give you a complete picture of your app's health and optimization opportunities."
-    suggestions = ['Run performance audit', 'Check security vulnerabilities', 'Analyze code quality', 'Generate improvement plan']
+  let response = `Based on your real business data (${realData.summary?.total_customers || 0} customers, ${realData.summary?.total_products || 0} products), here are my recommendations:\n\n`
+  
+  if (lowerInput.includes('dashboard')) {
+    response += "📊 I can create a real-time dashboard showing your actual customer and product data from Stripe and Shopify."
+  } else if (lowerInput.includes('analytics')) {
+    response += "📈 I can build analytics using your real Google Analytics data and customer information."
   } else {
-    response = "🚀 I understand you want to improve your application! I can help with code generation, security enhancements, new features, database optimization, and so much more. I'm here to make your app amazing! Could you be more specific about what you'd like to work on? I'm excited to help!"
-    suggestions = ['Add new features', 'Optimize performance', 'Enhance security', 'Improve UI/UX']
+    response += "🚀 I can help improve your app using the real data from your connected integrations."
   }
 
   return {
-    response,
-    suggestions,
-    codeChanges,
-    confidence: Math.floor(Math.random() * 20) + 80,
-    codeQuality: {
-      security: Math.floor(Math.random() * 20) + 80,
-      performance: Math.floor(Math.random() * 20) + 80,
-      maintainability: Math.floor(Math.random() * 20) + 80,
-      accessibility: Math.floor(Math.random() * 20) + 80
-    }
+    message: response,
+    suggestions: extractSuggestions(response, realData),
+    codeChanges: generateCodeChanges(userInput, realData),
+    realDataInsights: {
+      customersAnalyzed: realData.summary?.total_customers || 0,
+      productsAnalyzed: realData.summary?.total_products || 0,
+      sessionsAnalyzed: realData.summary?.total_sessions || 0,
+      dataFreshness: new Date().toISOString()
+    },
+    type: 'fallback_analysis'
   }
 } 

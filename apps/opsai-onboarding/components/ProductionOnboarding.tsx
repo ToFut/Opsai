@@ -13,6 +13,7 @@ import AIAnalysisReview from './AIAnalysisReview'
 import { ComprehensiveSuccessPage } from './ComprehensiveSuccessPage'
 import { TenantManager } from '@/lib/tenant-manager'
 import AirbyteIntegrationHub from './AirbyteIntegrationHub'
+import EnhancedOAuthIntegration from './EnhancedOAuthIntegration'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import yaml from 'js-yaml'
@@ -249,12 +250,20 @@ interface ProductionOnboardingProps {
   onComplete: (config: any) => void
   initialUrl?: string
   initialStep?: string
+  oauthSuccess?: boolean
+  oauthProvider?: string
+  oauthError?: boolean
+  oauthErrorMessage?: string
 }
 
 export default function ProductionOnboarding({ 
   onComplete, 
   initialUrl = '',
-  initialStep = '' 
+  initialStep = '',
+  oauthSuccess = false,
+  oauthProvider = '',
+  oauthError = false,
+  oauthErrorMessage = ''
 }: ProductionOnboardingProps) {
   // Determine initial stage based on step parameter
   const getInitialStage = (): 1 | 2 | 3 | 4 | 5 | 6 | 7 => {
@@ -290,7 +299,7 @@ export default function ProductionOnboarding({
   })
   
   const [showAIReview, setShowAIReview] = useState(false)
-  const [mockMode, setMockMode] = useState(false)
+  const [mockMode, setMockMode] = useState(false) // Deprecated - always use real data
   
   // Auto-progress from stage 6 (deployment) to stage 7 (success) after 3 seconds
   const handleStageProgression = useCallback(() => {
@@ -395,11 +404,8 @@ export default function ProductionOnboarding({
     try {
       let analysis
       
-      if (mockMode) {
-        // Generate mock analysis data
-        analysis = generateMockWebsiteAnalysis(state.websiteUrl)
-      } else {
-        // Call the enhanced analyzer API
+      // Always use real data - no mock mode
+      // Call the enhanced analyzer API
         const response = await fetch('/api/analyze-website', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -413,7 +419,6 @@ export default function ProductionOnboarding({
         if (!response.ok) throw new Error('Analysis failed')
         
         analysis = await response.json()
-      }
       
       // Create tenant record
       const tenantId = await TenantManager.createTenant({
@@ -605,11 +610,49 @@ export default function ProductionOnboarding({
     const left = window.screenX + (window.outerWidth - width) / 2
     const top = window.screenY + (window.outerHeight - height) / 2
     
-    const authWindow = window.open(
-      `/api/oauth/${provider}/connect?session_id=${state.analysisId}`,
-      `${provider}_oauth`,
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
-    )
+    try {
+      // Use real OAuth endpoint with Terraform credentials
+      const authResponse = await fetch('/api/oauth/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: provider,
+          tenantId: state.analysisId || 'default'
+        })
+      })
+      
+      if (!authResponse.ok) {
+        throw new Error(`OAuth initialization failed for ${provider}`)
+      }
+      
+      const { authUrl, state: oauthState } = await authResponse.json()
+      console.log(`🚀 Opening real ${provider} OAuth:`, authUrl)
+      
+      // Store state for verification
+      localStorage.setItem(`oauth_state_${provider}`, oauthState)
+      
+      const authWindow = window.open(
+        authUrl,
+        `${provider}_oauth`,
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+      )
+      
+      if (!authWindow) {
+        throw new Error('Failed to open OAuth popup window')
+      }
+    } catch (error) {
+      console.error(`❌ Failed to initialize OAuth for ${provider}:`, error)
+      setState(prev => ({
+        ...prev,
+        requiredIntegrations: prev.requiredIntegrations.map(int => 
+          int.provider === provider 
+            ? { ...int, status: 'error' }
+            : int
+        )
+      }))
+      alert(`Failed to connect to ${provider}. Please try again.`)
+      return
+    }
     
     // Listen for OAuth callback via postMessage
     const handleMessage = (event: MessageEvent) => {
@@ -1932,25 +1975,26 @@ export default function ProductionOnboarding({
   )
   }
 
-  // Stage 3: Airbyte Integration Hub
+  // Stage 3: Enhanced OAuth Integration
   const renderStage3 = () => {
-    // Handle integration completion
+    // Handle integration completion from enhanced component
     const handleIntegrationsComplete = (connections: any[]) => {
       // Update state with connected integrations
       setState(prev => ({
         ...prev,
         requiredIntegrations: connections.map(conn => ({
-          provider: conn.sourceType,
-          displayName: conn.name,
+          provider: conn.provider,
+          displayName: conn.provider.charAt(0).toUpperCase() + conn.provider.slice(1),
           category: 'data-source',
           priority: 'critical' as const,
-          businessValue: `Sync data from ${conn.name}`,
+          businessValue: `Sync data from ${conn.provider}`,
           scopes: [],
           status: 'connected' as const,
           accountInfo: {
-            name: conn.name,
-            sourceId: conn.sourceId
-          }
+            name: `${conn.provider} Account`,
+            sourceId: `${conn.provider}_${Date.now()}`
+          },
+          credentials: conn.credentials
         }))
       }))
       
@@ -1958,130 +2002,16 @@ export default function ProductionOnboarding({
       setTimeout(() => analyzeDataArchitecture(), 1000)
     }
 
-    // Mock mode integration connection
-    const handleMockConnect = (provider: string) => {
-      setState(prev => ({
-        ...prev,
-        requiredIntegrations: prev.requiredIntegrations.map(int => 
-          int.provider === provider 
-            ? { 
-                ...int, 
-                status: 'connected' as const,
-                accountInfo: {
-                  name: `Mock ${int.displayName} Account`,
-                  id: `mock_${provider}_${Date.now()}`
-                },
-                credentials: {
-                  id: `cred_${provider}_${Date.now()}`,
-                  metadata: { demo: true }
-                }
-              }
-            : int
-        )
-      }))
-      
-      // Check if all critical integrations are connected
-      setTimeout(() => checkIfReadyForDataArchitecture(), 500)
-    }
-
-    // If mock mode is enabled, show mock integration interface
-    if (mockMode) {
-      return (
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full mb-4">
-              <Zap className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Connect Your Systems (Demo Mode)
-            </h2>
-            <p className="text-lg text-gray-600">
-              Connect to your data sources to enable real-time synchronization
-            </p>
-            <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-              <span>🎯</span>
-              Demo Mode - Mock connections for testing
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {state.requiredIntegrations.map((integration) => (
-              <div key={integration.provider} className="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-100 hover:border-purple-200 transition-colors">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center text-2xl">
-                    {getIntegrationIcon(integration.provider)}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {integration.displayName}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    {integration.businessValue || `Connect your ${integration.displayName} data`}
-                  </p>
-                  
-                  {integration.status === 'connected' ? (
-                    <div className="flex items-center justify-center gap-2 text-green-600 font-medium">
-                      <CheckCircle className="w-5 h-5" />
-                      Connected (Demo)
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleMockConnect(integration.provider)}
-                      className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-colors"
-                    >
-                      Connect Demo Account
-                    </button>
-                  )}
-                  
-                  <div className="mt-3">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                      integration.priority === 'critical' 
-                        ? 'bg-red-100 text-red-800' 
-                        : integration.priority === 'important'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {integration.priority}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {state.requiredIntegrations.filter(int => int.status === 'connected').length > 0 && (
-            <div className="mt-8 text-center">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p className="text-green-800 font-medium">
-                  ✅ {state.requiredIntegrations.filter(int => int.status === 'connected').length} integration(s) connected in demo mode
-                </p>
-              </div>
-              <button
-                onClick={() => analyzeDataArchitecture()}
-                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 flex items-center gap-2 mx-auto"
-              >
-                Continue with Demo Data
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-        </div>
-      )
-    }
-
-    // Regular Airbyte Integration Hub for real mode
+    // Use Enhanced OAuth Integration for both mock and real mode
     return (
-      <div className="max-w-6xl mx-auto">
-        <AirbyteIntegrationHub
-          tenantId={state.tenantId || `tenant_${state.analysisId}`}
-          businessProfile={{
-            industry: state.aiInsights?.businessIntelligence.industryCategory || 'general',
-            businessType: state.aiInsights?.businessIntelligence.businessModel || 'b2b',
-            size: 'medium',
-            description: state.websiteAnalysis?.business.description
-          }}
-          onIntegrationsComplete={handleIntegrationsComplete}
-        />
-      </div>
+      <EnhancedOAuthIntegration
+        userId={state.tenantId || `tenant_${state.analysisId}`}
+        businessType={state.aiInsights?.businessIntelligence.businessModel || 'general'}
+        onProviderConnected={(provider, credentials) => {
+          console.log(`✅ ${provider} connected with credentials:`, credentials)
+        }}
+        onAllCompleted={handleIntegrationsComplete}
+      />
     )
   }
 

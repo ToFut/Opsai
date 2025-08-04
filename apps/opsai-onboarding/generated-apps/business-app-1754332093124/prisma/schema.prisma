@@ -1,0 +1,29 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Entities {
+
+  @@map("entities")
+}
+
+model Relationships {
+
+  @@map("relationships")
+}
+
+model Indexes {
+
+  @@map("indexes")
+}
+
+model Views {
+
+  @@map("views")
+}

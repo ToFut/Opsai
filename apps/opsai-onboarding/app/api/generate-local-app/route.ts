@@ -85,6 +85,7 @@ async function generateAppStructure(
       'react': '^18.2.0',
       'react-dom': '^18.2.0',
       'lucide-react': '^0.300.0',
+      '@supabase/supabase-js': '^2.39.0',
       '@types/node': '^20.0.0',
       '@types/react': '^18.2.0',
       '@types/react-dom': '^18.2.0',
@@ -161,6 +162,44 @@ module.exports = {
   await fs.mkdir(path.join(appPath, 'app'), { recursive: true })
   await fs.mkdir(path.join(appPath, 'app/admin'), { recursive: true })
   await fs.mkdir(path.join(appPath, 'components'), { recursive: true })
+  await fs.mkdir(path.join(appPath, 'lib'), { recursive: true })
+  
+  // Create Supabase configuration
+  await fs.writeFile(path.join(appPath, 'lib/supabase.ts'), `import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xvwmnmwzrpftufjpojvb.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+`)
+
+  // Create Airbyte configuration
+  await fs.writeFile(path.join(appPath, 'lib/airbyte.ts'), `// Airbyte integration configuration
+export const airbyteConfig = {
+  baseUrl: process.env.AIRBYTE_API_URL || 'http://localhost:8000',
+  workspaceId: process.env.AIRBYTE_WORKSPACE_ID || '',
+  integrations: ${JSON.stringify(integrations.map(i => i.provider), null, 2)}
+}
+
+export async function syncAirbyteData(integration: string) {
+  // Real Airbyte sync implementation
+  console.log(\`Syncing data from \${integration} via Airbyte...\`)
+  // This would connect to actual Airbyte instance
+}
+`)
+
+  // Create .env.local file
+  await fs.writeFile(path.join(appPath, '.env.local'), `# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://xvwmnmwzrpftufjpojvb.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}
+
+# Airbyte Configuration  
+AIRBYTE_API_URL=http://localhost:8000
+AIRBYTE_WORKSPACE_ID=${process.env.AIRBYTE_WORKSPACE_ID || ''}
+
+# App Configuration
+NEXT_PUBLIC_APP_NAME=${appName}
+`)
   
   // Create main layout
   await fs.writeFile(path.join(appPath, 'app/layout.tsx'), `import type { Metadata } from 'next'

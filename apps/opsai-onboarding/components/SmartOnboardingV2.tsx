@@ -276,7 +276,7 @@ workflows:
                 <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
                   <p className="text-sm text-green-800">
                     <strong>Quick setup:</strong> All integrations use secure OAuth. 
-                    No passwords needed!
+                    No passwords needed! Real data sync via Airbyte.
                   </p>
                 </div>
 

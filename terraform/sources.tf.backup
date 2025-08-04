@@ -1,0 +1,242 @@
+# GitHub Source
+resource "airbyte_source_github" "github_source" {
+  count = var.oauth_providers.github.enabled ? 1 : 0
+
+  definition_id = "ef69ef6e-aa7f-4af1-a01d-ef775033524e" # GitHub source definition ID
+  name          = "${var.project_name}-github-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    credentials = {
+      personal_access_token = var.oauth_providers.github.client_secret
+    }
+    repositories = ["*"] # Or specify specific repositories
+    start_date   = "2023-01-01T00:00:00Z"
+  }
+}
+
+# Google Workspace Source
+resource "airbyte_source_google_workspace_admin_reports" "google_workspace_source" {
+  count = var.oauth_providers.google.enabled ? 1 : 0
+
+  definition_id = "cc6d0d3d-1e2e-4e6a-8b0a-3b1e6b7c8d9e" # Google Workspace source definition ID
+  name          = "${var.project_name}-google-workspace-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    credentials_json = jsonencode({
+      type                        = "service_account"
+      project_id                  = "your-project-id"
+      private_key_id              = "your-private-key-id"
+      private_key                 = "your-private-key"
+      client_email                = "your-service-account-email"
+      client_id                   = var.oauth_providers.google.client_id
+      auth_uri                    = "https://accounts.google.com/o/oauth2/auth"
+      token_uri                   = "https://oauth2.googleapis.com/token"
+      auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
+    })
+    email = "admin@yourdomain.com"
+  }
+}
+
+# Salesforce Source
+resource "airbyte_source_salesforce" "salesforce_source" {
+  count = var.oauth_providers.salesforce.enabled ? 1 : 0
+
+  definition_id = "b117307c-14b6-41aa-9422-947e34922962" # Salesforce source definition ID
+  name          = "${var.project_name}-salesforce-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    client_id     = var.oauth_providers.salesforce.client_id
+    client_secret = var.oauth_providers.salesforce.client_secret
+    refresh_token = "your-salesforce-refresh-token"
+    is_sandbox    = false
+    start_date    = "2023-01-01T00:00:00Z"
+  }
+}
+
+# Shopify Source
+resource "airbyte_source_shopify" "shopify_source" {
+  count = var.oauth_providers.shopify.enabled ? 1 : 0
+
+  definition_id = "9da77001-af33-4bcd-be46-6252bf9342b9" # Shopify source definition ID
+  name          = "${var.project_name}-shopify-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    shop         = "your-shop-name"
+    access_token = var.oauth_providers.shopify.client_secret
+    start_date   = "2023-01-01"
+  }
+}
+
+# QuickBooks Source
+resource "airbyte_source_quickbooks" "quickbooks_source" {
+  count = var.oauth_providers.quickbooks.enabled ? 1 : 0
+
+  definition_id = "6fd2e9bc-6d3c-4d9a-9c5d-1e2f3a4b5c6d" # QuickBooks source definition ID
+  name          = "${var.project_name}-quickbooks-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    credentials = {
+      auth_type         = "OAuth2.0"
+      client_id         = var.oauth_providers.quickbooks.client_id
+      client_secret     = var.oauth_providers.quickbooks.client_secret
+      refresh_token     = "your-quickbooks-refresh-token"
+      access_token      = "your-quickbooks-access-token"
+      token_expiry_date = "2024-12-31T23:59:59.000Z"
+      realm_id          = "your-quickbooks-realm-id"
+    }
+    sandbox    = false
+    start_date = "2023-01-01"
+  }
+}
+
+# HubSpot Source
+resource "airbyte_source_hubspot" "hubspot_source" {
+  count = var.oauth_providers.hubspot.enabled ? 1 : 0
+
+  definition_id = "36c891d9-4bd9-43ac-bad2-10e12756272c" # HubSpot source definition ID
+  name          = "${var.project_name}-hubspot-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    credentials = {
+      credentials_title = "OAuth Credentials"
+      client_id         = var.oauth_providers.hubspot.client_id
+      client_secret     = var.oauth_providers.hubspot.client_secret
+      refresh_token     = "your-hubspot-refresh-token"
+    }
+    start_date = "2023-01-01T00:00:00Z"
+  }
+}
+
+# Stripe Source
+resource "airbyte_source_stripe" "stripe_source" {
+  count = var.oauth_providers.stripe.enabled ? 1 : 0
+
+  definition_id = "e094cb9a-26de-4645-8761-65c0c425d1de" # Stripe source definition ID
+  name          = "${var.project_name}-stripe-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    client_secret = var.oauth_providers.stripe.client_secret
+    account_id    = "your-stripe-account-id"
+    start_date    = "2023-01-01T00:00:00Z"
+  }
+}
+
+# Square Source  
+resource "airbyte_source_square" "square_source" {
+  count = var.oauth_providers.square.enabled ? 1 : 0
+
+  definition_id = "9bb7e7e2-1e1e-4e6a-8b0a-3b1e6b7c8d9e" # Square source definition ID
+  name          = "${var.project_name}-square-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    credentials = {
+      auth_type     = "OAuth"
+      client_id     = var.oauth_providers.square.client_id
+      client_secret = var.oauth_providers.square.client_secret
+      refresh_token = "your-square-refresh-token"
+    }
+    is_sandbox = false
+    start_date = "2023-01-01"
+  }
+}
+
+# Xero Source
+resource "airbyte_source_xero" "xero_source" {
+  count = var.oauth_providers.xero.enabled ? 1 : 0
+
+  definition_id = "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p" # Xero source definition ID
+  name          = "${var.project_name}-xero-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    authentication = {
+      auth_type         = "OAuth"
+      client_id         = var.oauth_providers.xero.client_id
+      client_secret     = var.oauth_providers.xero.client_secret
+      refresh_token     = "your-xero-refresh-token"
+      access_token      = "your-xero-access-token"
+      token_expiry_date = "2024-12-31T23:59:59.000Z"
+    }
+    tenant_id  = "your-xero-tenant-id"
+    start_date = "2023-01-01"
+  }
+}
+
+# Slack Source
+resource "airbyte_source_slack" "slack_source" {
+  count = var.oauth_providers.slack.enabled ? 1 : 0
+
+  definition_id = "c2281cee-86f9-4a86-bb48-d23286b4c7bd" # Slack source definition ID
+  name          = "${var.project_name}-slack-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    credentials = {
+      option_title = "API Token Credentials"
+      api_token    = var.oauth_providers.slack.client_secret
+    }
+    start_date      = "2023-01-01T00:00:00Z"
+    lookback_window = 1
+    join_channels   = true
+  }
+}
+
+# Mailchimp Source
+resource "airbyte_source_mailchimp" "mailchimp_source" {
+  count = var.oauth_providers.mailchimp.enabled ? 1 : 0
+
+  definition_id = "b03a9f3e-22a5-11eb-adc1-0242ac120002" # Mailchimp source definition ID
+  name          = "${var.project_name}-mailchimp-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    credentials = {
+      auth_type     = "oauth2.0"
+      client_id     = var.oauth_providers.mailchimp.client_id
+      client_secret = var.oauth_providers.mailchimp.client_secret
+      access_token  = "your-mailchimp-access-token"
+    }
+  }
+}
+
+# Zendesk Support Source
+resource "airbyte_source_zendesk_support" "zendesk_source" {
+  count = var.oauth_providers.zendesk.enabled ? 1 : 0
+
+  definition_id = "79c1aa37-dae3-42ae-b333-d1c105477715" # Zendesk Support source definition ID
+  name          = "${var.project_name}-zendesk-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    subdomain = "your-zendesk-subdomain"
+    credentials = {
+      credentials   = "oauth2.0"
+      client_id     = var.oauth_providers.zendesk.client_id
+      client_secret = var.oauth_providers.zendesk.client_secret
+      access_token  = "your-zendesk-access-token"
+    }
+    start_date = "2023-01-01T00:00:00Z"
+  }
+}
+
+# Calendly Source
+resource "airbyte_source_calendly" "calendly_source" {
+  count = var.oauth_providers.calendly.enabled ? 1 : 0
+
+  definition_id = "7e1b2c3d-4e5f-6g7h-8i9j-0k1l2m3n4o5p" # Calendly source definition ID
+  name          = "${var.project_name}-calendly-${var.environment}"
+  workspace_id  = var.airbyte_workspace_id
+
+  configuration = {
+    api_key    = var.oauth_providers.calendly.client_secret
+    start_date = "2023-01-01T00:00:00Z"
+  }
+}

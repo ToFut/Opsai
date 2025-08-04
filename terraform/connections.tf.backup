@@ -1,0 +1,556 @@
+# GitHub to PostgreSQL Connection
+resource "airbyte_connection" "github_to_postgres" {
+  count = var.oauth_providers.github.enabled ? 1 : 0
+
+  name           = "${var.project_name}-github-postgres-${var.environment}"
+  source_id      = airbyte_source_github.github_source[0].id
+  destination_id = airbyte_destination_postgres.postgres_destination.id
+
+  configurations = {
+    streams = [
+      {
+        name                  = "repositories"
+        sync_mode             = "full_refresh_overwrite"
+        cursor_field          = []
+        destination_sync_mode = "overwrite"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "issues"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "pull_requests"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "commits"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["commit", "author", "date"]
+        destination_sync_mode = "append"
+        primary_key           = [["sha"]]
+        selected              = true
+      }
+    ]
+  }
+
+  schedule = {
+    schedule_type   = "cron"
+    cron_expression = "0 2 * * *" # Daily at 2 AM
+  }
+
+  geography = "auto"
+
+  data_residency = "auto"
+}
+
+# Salesforce to PostgreSQL Connection
+resource "airbyte_connection" "salesforce_to_postgres" {
+  count = var.oauth_providers.salesforce.enabled ? 1 : 0
+
+  name           = "${var.project_name}-salesforce-postgres-${var.environment}"
+  source_id      = airbyte_source_salesforce.salesforce_source[0].id
+  destination_id = airbyte_destination_postgres.postgres_destination.id
+
+  configurations = {
+    streams = [
+      {
+        name                  = "Account"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["SystemModstamp"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      },
+      {
+        name                  = "Contact"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["SystemModstamp"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      },
+      {
+        name                  = "Opportunity"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["SystemModstamp"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      },
+      {
+        name                  = "Lead"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["SystemModstamp"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      }
+    ]
+  }
+
+  schedule = {
+    schedule_type   = "cron"
+    cron_expression = "0 */6 * * *" # Every 6 hours
+  }
+
+  geography = "auto"
+
+  data_residency = "auto"
+}
+
+# Shopify to PostgreSQL Connection
+resource "airbyte_connection" "shopify_to_postgres" {
+  count = var.oauth_providers.shopify.enabled ? 1 : 0
+
+  name           = "${var.project_name}-shopify-postgres-${var.environment}"
+  source_id      = airbyte_source_shopify.shopify_source[0].id
+  destination_id = airbyte_destination_postgres.postgres_destination.id
+
+  configurations = {
+    streams = [
+      {
+        name                  = "orders"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "products"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "customers"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "transactions"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["created_at"]
+        destination_sync_mode = "append"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+  }
+
+  schedule = {
+    schedule_type   = "cron"
+    cron_expression = "0 */4 * * *" # Every 4 hours
+  }
+
+  geography = "auto"
+
+  data_residency = "auto"
+}
+
+# HubSpot to PostgreSQL Connection
+resource "airbyte_connection" "hubspot_to_postgres" {
+  count = var.oauth_providers.hubspot.enabled ? 1 : 0
+
+  name           = "${var.project_name}-hubspot-postgres-${var.environment}"
+  source_id      = airbyte_source_hubspot.hubspot_source[0].id
+  destination_id = airbyte_destination_postgres.postgres_destination.id
+
+  configurations = {
+    streams = [
+      {
+        name                  = "contacts"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["updatedAt"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "companies"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["updatedAt"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "deals"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["updatedAt"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "email_events"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["created"]
+        destination_sync_mode = "append"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+  }
+
+  schedule = {
+    schedule_type   = "cron"
+    cron_expression = "0 */3 * * *" # Every 3 hours
+  }
+
+  geography = "auto"
+
+  data_residency = "auto"
+}
+
+# Stripe to PostgreSQL Connection
+resource "airbyte_connection" "stripe_to_postgres" {
+  count = var.oauth_providers.stripe.enabled ? 1 : 0
+
+  name           = "${var.project_name}-stripe-postgres-${var.environment}"
+  source_id      = airbyte_source_stripe.stripe_source[0].id
+  destination_id = airbyte_destination_postgres.postgres_destination.id
+
+  configurations = {
+    streams = [
+      {
+        name                  = "charges"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["created"]
+        destination_sync_mode = "append"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "customers"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["created"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "invoices"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["created"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "subscriptions"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["created"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+  }
+
+  schedule = {
+    schedule_type   = "cron"
+    cron_expression = "0 */2 * * *" # Every 2 hours
+  }
+
+  geography = "auto"
+
+  data_residency = "auto"
+}
+
+# QuickBooks to PostgreSQL Connection
+resource "airbyte_connection" "quickbooks_to_postgres" {
+  count = var.oauth_providers.quickbooks.enabled ? 1 : 0
+
+  name           = "${var.project_name}-quickbooks-postgres-${var.environment}"
+  source_id      = airbyte_source_quickbooks.quickbooks_source[0].id
+  destination_id = airbyte_destination_postgres.postgres_destination.id
+
+  configurations = {
+    streams = [
+      {
+        name                  = "customers"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["MetaData", "LastUpdatedTime"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      },
+      {
+        name                  = "invoices"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["MetaData", "LastUpdatedTime"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      },
+      {
+        name                  = "items"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["MetaData", "LastUpdatedTime"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      },
+      {
+        name                  = "payments"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["MetaData", "LastUpdatedTime"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      }
+    ]
+  }
+
+  schedule = {
+    schedule_type   = "cron"
+    cron_expression = "0 4 * * *" # Daily at 4 AM
+  }
+
+  geography = "auto"
+
+  data_residency = "auto"
+}
+
+# All Sources to BigQuery (Analytics Pipeline)
+resource "airbyte_connection" "all_to_bigquery" {
+  for_each = {
+    for key, value in var.oauth_providers : key => value
+    if value.enabled
+  }
+
+  name           = "${var.project_name}-${each.key}-bigquery-${var.environment}"
+  source_id      = local.source_ids[each.key]
+  destination_id = airbyte_destination_bigquery.bigquery_destination.id
+
+  configurations = {
+    streams = local.bigquery_streams[each.key]
+  }
+
+  schedule = {
+    schedule_type   = "cron"
+    cron_expression = "0 1 * * *" # Daily at 1 AM for analytics
+  }
+
+  geography      = "auto"
+  data_residency = "auto"
+}
+
+# Development/Testing Connections to Local JSON
+resource "airbyte_connection" "dev_to_local_json" {
+  for_each = {
+    for key, value in var.oauth_providers : key => value
+    if var.environment == "dev" && value.enabled
+  }
+
+  name           = "${var.project_name}-${each.key}-local-json-${var.environment}"
+  source_id      = local.source_ids[each.key]
+  destination_id = airbyte_destination_local_json.local_json_destination[0].id
+
+  configurations = {
+    streams = [{
+      name                  = "sample_stream"
+      sync_mode             = "full_refresh_overwrite"
+      cursor_field          = []
+      destination_sync_mode = "overwrite"
+      primary_key           = [["id"]]
+      selected              = true
+    }]
+  }
+
+  schedule = {
+    schedule_type = "manual"
+  }
+
+  geography      = "auto"
+  data_residency = "auto"
+}
+
+# Local variables for source IDs mapping
+locals {
+  source_ids = {
+    github     = var.oauth_providers.github.enabled ? airbyte_source_github.github_source[0].id : null
+    salesforce = var.oauth_providers.salesforce.enabled ? airbyte_source_salesforce.salesforce_source[0].id : null
+    shopify    = var.oauth_providers.shopify.enabled ? airbyte_source_shopify.shopify_source[0].id : null
+    hubspot    = var.oauth_providers.hubspot.enabled ? airbyte_source_hubspot.hubspot_source[0].id : null
+    stripe     = var.oauth_providers.stripe.enabled ? airbyte_source_stripe.stripe_source[0].id : null
+    quickbooks = var.oauth_providers.quickbooks.enabled ? airbyte_source_quickbooks.quickbooks_source[0].id : null
+    square     = var.oauth_providers.square.enabled ? airbyte_source_square.square_source[0].id : null
+    xero       = var.oauth_providers.xero.enabled ? airbyte_source_xero.xero_source[0].id : null
+    slack      = var.oauth_providers.slack.enabled ? airbyte_source_slack.slack_source[0].id : null
+    mailchimp  = var.oauth_providers.mailchimp.enabled ? airbyte_source_mailchimp.mailchimp_source[0].id : null
+    zendesk    = var.oauth_providers.zendesk.enabled ? airbyte_source_zendesk_support.zendesk_source[0].id : null
+    calendly   = var.oauth_providers.calendly.enabled ? airbyte_source_calendly.calendly_source[0].id : null
+    google     = var.oauth_providers.google.enabled ? airbyte_source_google_workspace_admin_reports.google_workspace_source[0].id : null
+  }
+
+  # BigQuery stream configurations for each source
+  bigquery_streams = {
+    github = [
+      {
+        name                  = "repositories"
+        sync_mode             = "full_refresh_overwrite"
+        cursor_field          = []
+        destination_sync_mode = "overwrite"
+        primary_key           = [["id"]]
+        selected              = true
+      },
+      {
+        name                  = "issues"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    salesforce = [
+      {
+        name                  = "Account"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["SystemModstamp"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      }
+    ]
+
+    shopify = [
+      {
+        name                  = "orders"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    hubspot = [
+      {
+        name                  = "contacts"
+        sync_mode             = "incremental_deduped_history"
+        cursor_field          = ["updatedAt"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    stripe = [
+      {
+        name                  = "charges"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["created"]
+        destination_sync_mode = "append"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    quickbooks = [
+      {
+        name                  = "customers"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["MetaData", "LastUpdatedTime"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["Id"]]
+        selected              = true
+      }
+    ]
+
+    square = [
+      {
+        name                  = "orders"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    xero = [
+      {
+        name                  = "contacts"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["UpdatedDateUTC"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["ContactID"]]
+        selected              = true
+      }
+    ]
+
+    slack = [
+      {
+        name                  = "channels"
+        sync_mode             = "full_refresh_overwrite"
+        cursor_field          = []
+        destination_sync_mode = "overwrite"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    mailchimp = [
+      {
+        name                  = "lists"
+        sync_mode             = "full_refresh_overwrite"
+        cursor_field          = []
+        destination_sync_mode = "overwrite"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    zendesk = [
+      {
+        name                  = "tickets"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["updated_at"]
+        destination_sync_mode = "append_dedup"
+        primary_key           = [["id"]]
+        selected              = true
+      }
+    ]
+
+    calendly = [
+      {
+        name                  = "event_types"
+        sync_mode             = "full_refresh_overwrite"
+        cursor_field          = []
+        destination_sync_mode = "overwrite"
+        primary_key           = [["uri"]]
+        selected              = true
+      }
+    ]
+
+    google = [
+      {
+        name                  = "admin_reports"
+        sync_mode             = "incremental_append"
+        cursor_field          = ["id", "time"]
+        destination_sync_mode = "append"
+        primary_key           = [["id", "time"]]
+        selected              = true
+      }
+    ]
+  }
+}
