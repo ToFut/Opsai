@@ -1,31 +1,5 @@
-// Type definitions imported locally to avoid missing dependencies  
-interface DiscoveredSchema {
-  tables: any[];
-  relationships: any[];
-}
-
-interface BusinessEntity {
-  name: string;
-  type: string;
-}
-
-interface WorkflowStep {
-  name: string;
-  type: string;
-  entity?: string;
-  nextSteps: string[];
-}
-
-interface BusinessWorkflow {
-  name: string;
-  steps: WorkflowStep[];
-}
-
-interface PrismaSchemaModel {
-  name: string;
-  fields: any[];
-  relations: any[];
-}
+import { DiscoveredSchema, BusinessEntity, BusinessWorkflow } from '@opsai/integration';
+import { PrismaSchemaModel } from '@opsai/database/src/analyzers/schema-analyzer';
 
 export interface BusinessFlowAnalysis {
   identifiedPatterns: BusinessPattern[];

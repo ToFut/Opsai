@@ -37,4 +37,5 @@ __exportStar(require("./types"), exports);
 // Re-export shared discovery types from services
 var data_discovery_service_1 = require("./services/data-discovery-service");
 Object.defineProperty(exports, "DataDiscoveryService", { enumerable: true, get: function () { return data_discovery_service_1.DataDiscoveryService; } });
+// Don't re-export conflicting types - use them from @opsai/shared directly 
 //# sourceMappingURL=index.js.map

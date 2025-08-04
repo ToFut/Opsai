@@ -169,5 +169,5 @@ export interface AirbyteConfig {
         maxDelay: number;
     };
 }
-export { DiscoveredDataSource, DiscoveredSchema, DiscoveredTable, DiscoveredColumn, TableIndex, TableConstraint, SchemaRelationship, BusinessEntity } from '@opsai/shared';
+export type { DiscoveredDataSource, DiscoveredSchema, DiscoveredTable, DiscoveredColumn, TableIndex, TableConstraint, SchemaRelationship, BusinessEntity, SystemWorkflow as BusinessWorkflow, WorkflowStep } from '@opsai/shared';
 //# sourceMappingURL=index.d.ts.map

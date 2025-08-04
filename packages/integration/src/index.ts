@@ -23,4 +23,6 @@ export * from './credentials/credential-manager';
 export * from './types';
 
 // Re-export shared discovery types from services
-export { DataDiscoveryService } from './services/data-discovery-service'; 
+export { DataDiscoveryService } from './services/data-discovery-service';
+
+// Don't re-export conflicting types - use them from @opsai/shared directly 

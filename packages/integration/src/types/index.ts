@@ -191,8 +191,8 @@ export interface AirbyteConfig {
   };
 }
 
-// Re-export discovery types from shared
-export { 
+// Re-export selected types from shared without conflicts
+export type { 
   DiscoveredDataSource,
   DiscoveredSchema,
   DiscoveredTable,
@@ -200,5 +200,7 @@ export {
   TableIndex,
   TableConstraint,
   SchemaRelationship,
-  BusinessEntity
+  BusinessEntity,
+  SystemWorkflow as BusinessWorkflow,
+  WorkflowStep
 } from '@opsai/shared'; 

@@ -139,11 +139,11 @@ export class AirbyteAutoConnector {
     if (spec.rateLimit) {
       requester.request_options_provider = {
         ...requester.request_options_provider,
-        request_rate_limiter: {
-          type: 'FixedWindowRateLimiter',
-          max_requests: spec.rateLimit.requestsPerMinute || 60,
-          time_window: 60
-        }
+        // request_rate_limiter: {
+        //   type: 'FixedWindowRateLimiter',
+        //   max_requests: spec.rateLimit.requestsPerMinute || 60,
+        //   time_window: 60
+        // }
       }
     }
 
@@ -614,7 +614,7 @@ export class AirbyteAutoConnector {
           // Only include GET endpoints for data retrieval
           if (method.toUpperCase() === 'GET') {
             endpoints.push({
-              name: operation.operationId || `${method}_${path.replace(/[^a-zA-Z0-9]/g, '_')}`,
+              name: (operation as any).operationId || `${method}_${path.replace(/[^a-zA-Z0-9]/g, '_')}`,
               path: path,
               method: method.toUpperCase() as any,
               paginated: this.checkIfPaginated(operation),

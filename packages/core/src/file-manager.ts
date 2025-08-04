@@ -3,11 +3,6 @@ import { YamlConfig } from '@opsai/shared'
 import * as Tesseract from 'tesseract.js'
 import * as pdfjsLib from 'pdfjs-dist'
 
-// Mock document parser interface until we create it
-interface DocumentParser {
-  parseDocument(filePath: string): Promise<any>;
-}
-
 export interface FileUpload {
   id: string
   tenantId: string
