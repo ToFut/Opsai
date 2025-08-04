@@ -17,6 +17,16 @@ export const tempStorage = {
     console.log(`💾 Saved integration to: ${file}`)
   },
 
+  // Get integration data
+  async getIntegration(tenantId: string, provider: string) {
+    const file = path.join(STORAGE_DIR, `integration_${tenantId}_${provider}.json`)
+    if (fs.existsSync(file)) {
+      const content = fs.readFileSync(file, 'utf-8')
+      return JSON.parse(content)
+    }
+    return null
+  },
+
   // Save sample data
   async saveSampleData(data: any) {
     const file = path.join(STORAGE_DIR, `sample_${data.tenant_id}_${data.provider}.json`)

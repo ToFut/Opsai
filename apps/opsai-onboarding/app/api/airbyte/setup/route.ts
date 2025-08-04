@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { airbyteTerraformSDK } from '@/lib/airbyte-terraform-sdk'
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
@@ -15,19 +15,34 @@ export async function POST(request: NextRequest) {
     
     // Retrieve access token from Supabase if not provided
     let accessToken = null
-    if (!accessToken) {
-      const { data: integration } = await supabase
+    try {
+      const { data: integration, error } = await supabase
         .from('tenant_integrations')
         .select('access_token')
         .eq('tenant_id', tenantId)
         .eq('provider', provider)
         .single()
       
-      if (!integration) {
-        throw new Error(`No integration found for ${provider}`)
+      if (error || !integration) {
+        console.log(`⚠️ No integration found for ${provider}, checking temp storage...`)
+        
+        // Fallback to temp storage
+        const { tempStorage } = await import('@/lib/temp-storage')
+        const tempIntegration = await tempStorage.getIntegration(tenantId, provider)
+        
+        if (tempIntegration) {
+          accessToken = tempIntegration.access_token
+          console.log(`✅ Found ${provider} token in temp storage`)
+        } else {
+          throw new Error(`No integration found for ${provider} in Supabase or temp storage`)
+        }
+      } else {
+        accessToken = integration.access_token
+        console.log(`✅ Found ${provider} token in Supabase`)
       }
-      
-      accessToken = integration.access_token
+    } catch (error) {
+      console.error(`❌ Failed to retrieve token for ${provider}:`, error)
+      throw error
     }
     
     // For now, return success without creating new Airbyte resources
@@ -116,11 +131,11 @@ export async function POST(request: NextRequest) {
         workspaceId: process.env.AIRBYTE_WORKSPACE_ID,
         definitionId: '25c5221d-dce2-4163-ade9-739ef790f503', // Postgres destination
         configuration: {
-          host: 'aws-0-us-west-1.pooler.supabase.com',
+          host: 'aws-0-us-east-1.pooler.supabase.com',
           port: 5432,
           database: 'postgres',
-          username: 'postgres.dqmufpexuuvlulpilirt',
-          password: process.env.SUPABASE_DB_PASSWORD,
+          username: 'postgres.wrkzrmvwxxtsdpyhrxhz',
+          password: 'OpsAi-postgresql-2024',
           schema: 'public'  // Required field!
         }
       })
@@ -329,11 +344,11 @@ async function createAirbyteConnection(tenantId: string, provider: string, sourc
         workspaceId: process.env.AIRBYTE_WORKSPACE_ID!,
         definitionId: '25c5221d-dce2-4163-ade9-739ef790f503', // Postgres destination
         configuration: {
-          host: 'aws-0-us-west-1.pooler.supabase.com',
+          host: 'aws-0-us-east-1.pooler.supabase.com',
           port: 5432,
           database: 'postgres',
-          username: 'postgres.dqmufpexuuvlulpilirt',
-          password: process.env.SUPABASE_DB_PASSWORD || 'UbGy4kW9RFJ2LFDV',
+          username: 'postgres.wrkzrmvwxxtsdpyhrxhz',
+          password: 'OpsAi-postgresql-2024',
           schema: 'public'  // Required field!
         }
       });
