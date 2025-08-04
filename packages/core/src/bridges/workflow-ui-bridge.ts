@@ -381,6 +381,9 @@ export class WorkflowUIBridge extends EventEmitter {
     }
 
     const binding = connection.bindings[bindingIndex];
+    if (!binding) {
+      return;
+    }
     await this.teardownBinding(connectionId, binding);
 
     connection.bindings.splice(bindingIndex, 1);
@@ -638,8 +641,8 @@ export class WorkflowUIBridge extends EventEmitter {
     const mappings = [{
       workflowPath: binding.source.type === 'workflow' ? binding.source.path : binding.target.path,
       componentPath: binding.source.type === 'component' ? binding.source.path : binding.target.path,
-      transform: binding.transform || undefined,
-      reverseTransform: binding.options.bidirectional && binding.transform ? binding.transform : undefined
+      ...(binding.transform && { transform: binding.transform }),
+      ...(binding.options.bidirectional && binding.transform && { reverseTransform: binding.transform })
     }];
 
     const syncBindingId = await this.stateSynchronizer.createBinding(
@@ -914,8 +917,8 @@ export class WorkflowUIBridge extends EventEmitter {
 
   private async triggerComponentAction(
     componentId: string,
-    actionName: string,
-    data: any
+    _actionName: string,
+    _data: any
   ): Promise<void> {
     // This would trigger actual component actions
     const component = this.componentRegistry?.get(componentId);

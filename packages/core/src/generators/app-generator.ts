@@ -57,11 +57,16 @@ export class AppGenerator {
 
       this.logger.info(`Application generation completed: ${outputDir}`)
       
-      return {
+      const result: { success: boolean; outputDir: string; appUrl?: string } = {
         success: true,
-        outputDir,
-        appUrl: options.startApp ? `http://localhost:${options.port || 3000}` : undefined
+        outputDir
       }
+      
+      if (options.startApp) {
+        result.appUrl = `http://localhost:${options.port || 3000}`
+      }
+      
+      return result
     } catch (error) {
       this.logger.error('Application generation failed', error)
       throw new Error(`Application generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)

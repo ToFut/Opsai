@@ -771,7 +771,9 @@ export class DynamicYAMLGenerator {
         targetMemory: 80
       },
       networking: {
-        domain: this.config.customizations?.deployment?.domain,
+        ...(this.config.customizations?.deployment?.domain && { 
+          domain: this.config.customizations.deployment.domain 
+        }),
         ssl: this.config.customizations?.deployment?.ssl ?? true,
         cdn: true,
         loadBalancer: env === 'production'
@@ -884,7 +886,7 @@ export class DynamicYAMLGenerator {
       })),
       security: endpoint.security.map(sec => ({
         type: sec.type,
-        scopes: sec.scopes
+        ...(sec.scopes && { scopes: sec.scopes })
       })),
       businessFlow: endpoint.businessFlow
     };
@@ -901,12 +903,12 @@ export class DynamicYAMLGenerator {
       triggers: flow.triggers.map(trigger => ({
         type: trigger.type,
         condition: trigger.condition,
-        schedule: trigger.type === 'scheduled' ? trigger.condition : undefined
+        ...(trigger.type === 'scheduled' && { schedule: trigger.condition })
       })),
       steps: flow.steps.map(step => ({
         name: step.name,
         type: step.type,
-        activity: step.type === 'system_process' ? step.operation : undefined,
+        ...(step.type === 'system_process' && step.operation && { activity: step.operation }),
         parameters: step.inputs.reduce((acc, input) => {
           acc[input.name] = input.type;
           return acc;
@@ -918,7 +920,7 @@ export class DynamicYAMLGenerator {
       errorHandling: flow.errorHandling.map(error => ({
         errorType: error.errorType,
         action: error.action,
-        retries: error.maxRetries
+        ...(error.maxRetries !== undefined && { retries: error.maxRetries })
       }))
     };
   }
@@ -941,10 +943,10 @@ export class DynamicYAMLGenerator {
     // Generate entity pages
     const entities = [...new Set(this.config.businessFlows.recommendedFlows
       .map(flow => flow.steps.find(step => step.entity)?.entity)
-      .filter(Boolean))];
+      .filter((entity): entity is string => Boolean(entity)))];
 
     for (const entity of entities) {
-      const entityLower = entity!.toLowerCase();
+      const entityLower = entity.toLowerCase();
       const entityPlural = `${entityLower}s`;
 
       pages.push(

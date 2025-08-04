@@ -424,7 +424,7 @@ export class AdvancedWorkflowGenerator {
         name: 'Data Collection',
         description: `Collect and validate ${entity.name} information`,
         workflows: [`collect_${entity.name.toLowerCase()}_data`],
-        duration: { min: 5, max: 30, unit: 'minutes' },
+        duration: { min: 5, max: 30, unit: 'minutes' as const },
         successCriteria: [
           { metric: 'data_completeness', target: '95%' },
           { metric: 'validation_success', target: '100%' }
@@ -441,7 +441,7 @@ export class AdvancedWorkflowGenerator {
         name: 'Business Validation',
         description: `Apply business rules and validation for ${entity.name}`,
         workflows: [`validate_${entity.name.toLowerCase()}_business_rules`],
-        duration: { min: 2, max: 15, unit: 'minutes' },
+        duration: { min: 2, max: 15, unit: 'minutes' as const },
         successCriteria: [
           { metric: 'business_rule_compliance', target: '100%' }
         ],
@@ -456,7 +456,7 @@ export class AdvancedWorkflowGenerator {
         name: 'Processing',
         description: `Process and store ${entity.name} data`,
         workflows: [`process_${entity.name.toLowerCase()}`],
-        duration: { min: 1, max: 10, unit: 'minutes' },
+        duration: { min: 1, max: 10, unit: 'minutes' as const },
         successCriteria: [
           { metric: 'processing_success', target: '99.9%' },
           { metric: 'data_integrity', target: '100%' }
@@ -473,7 +473,7 @@ export class AdvancedWorkflowGenerator {
         name: 'Post-Processing',
         description: `Handle post-processing activities for ${entity.name}`,
         workflows: [`post_process_${entity.name.toLowerCase()}`],
-        duration: { min: 1, max: 5, unit: 'minutes' },
+        duration: { min: 1, max: 5, unit: 'minutes' as const },
         successCriteria: [
           { metric: 'notification_delivery', target: '95%' },
           { metric: 'integration_sync', target: '90%' }
@@ -834,10 +834,45 @@ export class AdvancedWorkflowGenerator {
       }));
   }
 
-  private generateActivityValidations(model: PrismaSchemaModel): ValidationRule[] {
+  private generateActivityValidations(model: PrismaSchemaModel): Array<{field: string, rule: string, message: string}> {
     return [
       { field: 'tenantId', rule: 'not_null', message: 'Tenant ID is required' },
       { field: 'data', rule: 'schema_valid', message: `Invalid ${model.name} schema` }
+    ];
+  }
+
+  private async generateTransactionProcess(entities: any[]): Promise<any> {
+    return {
+      id: 'transaction-process',
+      name: 'Transaction Processing',
+      type: 'workflow',
+      description: 'Handle transaction workflows',
+      entities
+    };
+  }
+
+  private async generateDomainSpecificProcesses(): Promise<any[]> {
+    return [
+      {
+        id: 'domain-process',
+        name: 'Domain Specific Process',
+        type: 'workflow',
+        description: 'Handle domain-specific workflows'
+      }
+    ];
+  }
+
+  private generateStakeholdersForEntity(_entity: any): any[] {
+    return [
+      { role: 'admin', permissions: ['read', 'write'] },
+      { role: 'user', permissions: ['read'] }
+    ];
+  }
+
+  private generateBusinessRulesForEntity(_entity: any): any[] {
+    return [
+      { name: 'validation', type: 'required' },
+      { name: 'authorization', type: 'permission' }
     ];
   }
 

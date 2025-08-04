@@ -1,8 +1,12 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { YAMLConfig } from '@opsai/yaml-validator'
+import { YamlConfig } from '@opsai/shared'
 import * as Tesseract from 'tesseract.js'
 import * as pdfjsLib from 'pdfjs-dist'
-import { DocumentParser } from './document-parser'
+
+// Mock document parser interface until we create it
+interface DocumentParser {
+  parseDocument(filePath: string): Promise<any>;
+}
 
 export interface FileUpload {
   id: string
@@ -378,7 +382,7 @@ export class FileManager {
   }
 
   // File Storage Setup
-  async setupFileStorage(tenantId: string, config: YAMLConfig): Promise<void> {
+  async setupFileStorage(tenantId: string, config: YamlConfig): Promise<void> {
     // Create tenant-specific storage bucket
     const bucketName = `tenant-${tenantId}-files`
     

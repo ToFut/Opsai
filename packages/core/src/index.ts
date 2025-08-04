@@ -17,7 +17,7 @@ export { Logger } from './utils/logger'
 
 // Context
 export { discoveryContext, DiscoveryContextManager } from './context/discovery-context'
-export type { DiscoveryContext, DiscoveryPhase, DiscoveredEntity } from './context/discovery-context'
+export type { DiscoveryContext, DiscoveryPhase } from './context/discovery-context'
 
 // State Management
 export { createStateSynchronizer, StateSynchronizer } from './sync/state-synchronizer'
@@ -33,8 +33,7 @@ export type { RealtimeStateConfig, StateChannel, StateUpdate, StateSubscription 
 
 // Transformation
 export { createDataTransformationPipeline, DataTransformationPipeline } from './transformers/data-transformation-pipeline'
-export type { TransformationConfig, TransformationResult } from './transformers/data-transformation-pipeline'
+export type { TransformationResult } from './transformers/data-transformation-pipeline'
 
 // Orchestration
-export { createDiscoveryOrchestrator, DiscoveryOrchestrator } from './orchestrators/discovery-orchestrator'
-export type { OrchestratorConfig, DiscoveryFlowResult } from './orchestrators/discovery-orchestrator' 
+export { createDiscoveryOrchestrator, DiscoveryOrchestrator } from './orchestrators/discovery-orchestrator' 

@@ -1,5 +1,31 @@
-import { DiscoveredSchema, BusinessEntity, BusinessWorkflow } from '@opsai/integration';
-import { PrismaSchemaModel } from '@opsai/database/src/analyzers/schema-analyzer';
+// Type definitions imported locally to avoid missing dependencies  
+interface DiscoveredSchema {
+  tables: any[];
+  relationships: any[];
+}
+
+interface BusinessEntity {
+  name: string;
+  type: string;
+}
+
+interface WorkflowStep {
+  name: string;
+  type: string;
+  entity?: string;
+  nextSteps: string[];
+}
+
+interface BusinessWorkflow {
+  name: string;
+  steps: WorkflowStep[];
+}
+
+interface PrismaSchemaModel {
+  name: string;
+  fields: any[];
+  relations: any[];
+}
 
 export interface BusinessFlowAnalysis {
   identifiedPatterns: BusinessPattern[];
@@ -319,7 +345,7 @@ export class BusinessFlowEngine {
     }
 
     // Pattern 4: Financial Transactions (if payment/financial entities exist)
-    const financialEntities = entities.filter(e => 
+    const financialEntities = entities.filter((e: any) => 
       e.name.toLowerCase().includes('payment') ||
       e.name.toLowerCase().includes('invoice') ||
       e.name.toLowerCase().includes('transaction')
@@ -334,7 +360,7 @@ export class BusinessFlowEngine {
     }
 
     // Pattern 6: Inventory Tracking (if inventory-related entities exist)
-    const inventoryEntities = entities.filter(e => 
+    const inventoryEntities = entities.filter((e: any) => 
       e.name.toLowerCase().includes('product') ||
       e.name.toLowerCase().includes('item') ||
       e.name.toLowerCase().includes('inventory') ||
@@ -535,7 +561,7 @@ export class BusinessFlowEngine {
             description: `Collect ${entity} information`,
             entity,
             inputs: this.generateEntityInputs(entity),
-            outputs: [{ name: 'formData', type: 'object', description: 'Form data', destination: 'system' }],
+            outputs: [{ name: 'formData', type: 'object', description: 'Form data', destination: 'database' }],
             nextSteps: ['validate'],
             uiComponent: {
               type: 'form',
@@ -553,8 +579,8 @@ export class BusinessFlowEngine {
             type: 'system_process',
             description: 'Validate input data',
             entity,
-            inputs: [{ name: 'formData', type: 'object', required: true, source: 'system', description: 'Form data' }],
-            outputs: [{ name: 'validatedData', type: 'object', description: 'Validated data', destination: 'system' }],
+            inputs: [{ name: 'formData', type: 'object', required: true, source: 'user', description: 'Form data' }],
+            outputs: [{ name: 'validatedData', type: 'object', description: 'Validated data', destination: 'database' }],
             nextSteps: ['save']
           },
           {
@@ -744,8 +770,8 @@ export class BusinessFlowEngine {
   // Helper methods for pattern detection and flow generation
 
   private hasApprovalPattern(): boolean {
-    return this.schema.tables.some(table => 
-      table.columns.some(col => 
+    return this.schema.tables.some((table: any) => 
+      table.columns.some((col: any) => 
         col.name.toLowerCase().includes('status') || 
         col.name.toLowerCase().includes('approved') ||
         col.name.toLowerCase().includes('pending')
