@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { sourceType, credentials } = await request.json()
     
     // Get fresh Airbyte token
-    const tokenManager = new AirbyteTokenManager()
+    const tokenManager = AirbyteTokenManager.getInstance()
     const token = await tokenManager.getValidToken()
     
     // Map source types to Airbyte source definition IDs

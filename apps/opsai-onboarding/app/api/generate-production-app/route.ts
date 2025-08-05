@@ -245,22 +245,65 @@ async function generateAppLogic(body: GenerationRequest, context: { isDemoMode: 
 async function provisionSupabaseProject(config: GenerationRequest) {
   console.log('🏗️ Provisioning Supabase project...')
   
-  // In production, this would use Supabase Management API
-  // For now, simulate project creation
-  const projectId = `proj_${config.tenantId}_${Date.now()}`
-  const project = {
-    id: projectId,
-    name: config.appName,
-    url: `https://${projectId}.supabase.co`,
-    anonKey: `eyJ${Buffer.from(JSON.stringify({ role: 'anon', iss: 'supabase' })).toString('base64')}`,
-    serviceKey: `eyJ${Buffer.from(JSON.stringify({ role: 'service_role', iss: 'supabase' })).toString('base64')}`,
-    databaseUrl: `postgresql://postgres:password@db.${projectId}.supabase.co:5432/postgres`
+  // Check if we have Supabase Management API configured
+  const { supabaseManagement } = await import('@/lib/supabase-management')
+  
+  if (!supabaseManagement) {
+    console.warn('⚠️ Supabase Management API not configured, using mock project')
+    // Fallback to mock for development
+    const projectId = `proj_${config.tenantId}_${Date.now()}`
+    const project = {
+      id: projectId,
+      name: config.appName,
+      url: `https://${projectId}.supabase.co`,
+      anonKey: `eyJ${Buffer.from(JSON.stringify({ role: 'anon', iss: 'supabase' })).toString('base64')}`,
+      serviceKey: `eyJ${Buffer.from(JSON.stringify({ role: 'service_role', iss: 'supabase' })).toString('base64')}`,
+      databaseUrl: `postgresql://postgres:password@db.${projectId}.supabase.co:5432/postgres`
+    }
+    return project
   }
   
-  // Store project info - simplified for demo (normally would save to database)
-  console.log(`📝 Supabase project created: ${project.id}`)
-  
-  return project
+  try {
+    // Create real Supabase project
+    const organizationId = process.env.SUPABASE_ORGANIZATION_ID
+    if (!organizationId) {
+      throw new Error('SUPABASE_ORGANIZATION_ID not configured')
+    }
+    
+    const project = await supabaseManagement.createProject({
+      name: config.appName,
+      organizationId,
+      region: 'us-east-1',
+      plan: 'free',
+      databasePassword: generateSecurePassword()
+    })
+    
+    console.log(`✅ Real Supabase project created: ${project.id}`)
+    console.log(`🔗 Project URL: ${project.url}`)
+    
+    // Run initial schema migrations
+    const schema = await fs.readFile(
+      path.join(process.cwd(), 'supabase/migrations/001_initial_schema.sql'),
+      'utf-8'
+    )
+    
+    await supabaseManagement.runMigrations(project.id, schema)
+    console.log('✅ Database schema applied')
+    
+    return project
+  } catch (error) {
+    console.error('Failed to create Supabase project:', error)
+    throw new Error(`Supabase project creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+function generateSecurePassword(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+  let password = ''
+  for (let i = 0; i < 32; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return password
 }
 
 // Generate complete application code

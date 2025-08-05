@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
     // Step 1: Get fresh token
     let token: string
     try {
-      const tokenManager = new AirbyteTokenManager()
+      const tokenManager = AirbyteTokenManager.getInstance()
       token = await tokenManager.getValidToken()
     } catch (tokenError) {
       return NextResponse.json({

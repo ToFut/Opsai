@@ -164,6 +164,10 @@ Respond with a JSON object containing these patterns.
   `
 
   try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!
+    })
+    
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -209,6 +213,10 @@ Respond with a structured JSON object.
   `
 
   try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!
+    })
+    
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [

@@ -121,6 +121,10 @@ export async function POST(request: NextRequest) {
 }
 
 async function storeApiKeyCredentials(tenantId: string, provider: string, credentials: any) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   await supabase
     .from('tenant_integrations')
     .upsert({
@@ -182,6 +186,10 @@ async function setupAirbyteWithApiKey(tenantId: string, provider: string, creden
 }
 
 async function storeDatabaseCredentials(tenantId: string, provider: string, credentials: any) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   await supabase
     .from('tenant_integrations')
     .upsert({
@@ -256,6 +264,10 @@ async function testDatabaseConnection(provider: string, credentials: any): Promi
 async function generateWebhookUrl(tenantId: string, provider: string): Promise<string> {
   const webhookId = `${tenantId}_${provider}_${Date.now()}`
   
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   await supabase
     .from('tenant_webhooks')
     .insert({
@@ -288,6 +300,10 @@ async function setupPlatformIntegration(tenantId: string, provider: string) {
     }
   }
 
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   await supabase
     .from('tenant_integrations')
     .upsert({
@@ -300,6 +316,10 @@ async function setupPlatformIntegration(tenantId: string, provider: string) {
 }
 
 async function storeServiceAccount(tenantId: string, provider: string, credentials: any) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   await supabase
     .from('tenant_integrations')
     .upsert({
@@ -328,6 +348,10 @@ async function setupAirbyteWithServiceAccount(tenantId: string, provider: string
 }
 
 async function storeAWSCredentials(tenantId: string, provider: string, credentials: any) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   await supabase
     .from('tenant_integrations')
     .upsert({

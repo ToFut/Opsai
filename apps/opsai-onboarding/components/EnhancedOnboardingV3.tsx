@@ -149,21 +149,32 @@ export default function EnhancedOnboardingV3({
     setState(prev => ({ ...prev, isAnalyzing: true }))
     
     try {
-      // Simulate AI analysis
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      // Call real AI analysis API
+      const response = await fetch('/api/ai-analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ websiteUrl: state.websiteUrl })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze website')
+      }
+
+      const aiAnalysis = await response.json()
       
+      // Transform AI analysis to our state format
       const mockAnalysis = {
-        businessType: 'E-commerce',
-        monthlyRevenue: 125000,
-        employeeCount: 12,
-        techStack: ['node', 'react', 'postgres'],
-        detectedSystems: [
-          { name: 'Shopify', type: 'E-commerce', confidence: 95 },
-          { name: 'Stripe', type: 'Payment', confidence: 90 },
-          { name: 'Mailchimp', type: 'Email Marketing', confidence: 85 },
-          { name: 'Google Analytics', type: 'Analytics', confidence: 88 },
-          { name: 'Slack', type: 'Communication', confidence: 75 }
-        ]
+        businessType: aiAnalysis.businessIntelligence?.industryCategory || 'Business',
+        monthlyRevenue: 125000, // This would need separate analysis
+        employeeCount: 12, // This would need separate analysis
+        techStack: ['node', 'react', 'postgres'], // Could be detected from technical requirements
+        detectedSystems: aiAnalysis.technicalRequirements?.integrationOpportunities?.map((opp: any) => ({
+          name: opp.service,
+          type: opp.category,
+          confidence: opp.priority === 'critical' ? 95 : opp.priority === 'important' ? 85 : 75
+        })) || []
       }
 
       // Create comprehensive integration list with REAL services from Terraform
@@ -326,47 +337,53 @@ export default function EnhancedOnboardingV3({
         index === self.findIndex(i => i.id === integration.id)
       )
 
-      // Generate AI workflows
-      const aiWorkflows: Workflow[] = [
+      // Generate AI workflows from analysis
+      const aiWorkflows: Workflow[] = aiAnalysis.technicalRequirements?.workflowRequirements?.map((wf: any, index: number) => ({
+        id: `auto-${index + 1}`,
+        name: wf.name,
+        description: wf.description,
+        enabled: wf.businessImpact === 'high',
+        editable: true,
+        triggers: [wf.trigger],
+        actions: wf.steps?.map((step: any) => step.type) || [],
+        category: 'ai_generated' as const
+      })) || [
+        // Fallback workflows if AI doesn't provide any
         {
           id: 'auto-1',
-          name: 'Order Fulfillment Automation',
-          description: 'Order placed → Update inventory → Send shipping notice → Update analytics',
+          name: 'Customer Onboarding',
+          description: 'New signup → Send welcome email → Create dashboard → Track activation',
           enabled: true,
           editable: true,
-          triggers: ['shopify.order.created'],
-          actions: ['inventory.update', 'email.send', 'slack.notify', 'analytics.track'],
-          category: 'ai_generated'
+          triggers: ['user.created'],
+          actions: ['email.welcome', 'dashboard.create', 'analytics.track'],
+          category: 'ai_generated' as const
         },
         {
           id: 'auto-2',
-          name: 'Customer Retention Flow',
-          description: 'Purchase → Wait 7 days → Send review request → Track engagement',
+          name: 'Daily Reports',
+          description: 'Every morning → Collect metrics → Generate report → Send to team',
           enabled: true,
           editable: true,
-          triggers: ['shopify.order.fulfilled'],
-          actions: ['wait.7days', 'email.review', 'analytics.track'],
-          category: 'ai_generated'
-        },
-        {
-          id: 'auto-3',
-          name: 'Low Stock Alert',
-          description: 'Inventory < 10 units → Alert team → Create reorder suggestion',
-          enabled: true,
-          editable: true,
-          triggers: ['inventory.low'],
-          actions: ['slack.alert', 'email.send', 'quickbooks.purchase_order'],
-          category: 'ai_generated'
+          triggers: ['schedule.daily'],
+          actions: ['data.collect', 'report.generate', 'email.send'],
+          category: 'ai_generated' as const
         }
       ]
 
-      // Generate dashboard widgets
-      const widgets: DashboardWidget[] = [
-        { id: 'revenue', name: 'Revenue Overview', description: 'Real-time revenue tracking', enabled: true, category: 'financial' },
-        { id: 'orders', name: 'Order Pipeline', description: 'Order status and fulfillment', enabled: true, category: 'operations' },
-        { id: 'inventory', name: 'Inventory Levels', description: 'Stock levels and alerts', enabled: true, category: 'operations' },
-        { id: 'customers', name: 'Customer Analytics', description: 'Customer behavior and segments', enabled: true, category: 'analytics' },
-        { id: 'marketing', name: 'Marketing Performance', description: 'Campaign ROI and metrics', enabled: true, category: 'marketing' }
+      // Generate dashboard widgets from AI analysis
+      const widgets: DashboardWidget[] = aiAnalysis.uiuxRecommendations?.dashboardNeeds?.keyMetrics?.map((metric: string, index: number) => ({
+        id: `widget-${index + 1}`,
+        name: metric,
+        description: `Track and visualize ${metric.toLowerCase()}`,
+        enabled: true,
+        category: 'analytics'
+      })) || [
+        // Fallback widgets based on business type
+        { id: 'overview', name: 'Business Overview', description: 'Key metrics at a glance', enabled: true, category: 'dashboard' },
+        { id: 'revenue', name: 'Revenue Tracking', description: 'Financial performance metrics', enabled: true, category: 'financial' },
+        { id: 'users', name: 'User Analytics', description: 'User activity and engagement', enabled: true, category: 'analytics' },
+        { id: 'performance', name: 'Performance Metrics', description: 'System health and speed', enabled: true, category: 'technical' }
       ]
 
       setState(prev => ({
@@ -735,49 +752,96 @@ export default function EnhancedOnboardingV3({
       const yamlConfig = generateYamlConfigFromState(state)
       const appName = `${state.businessAnalysis.businessType.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`
 
-      // Call the local generate API
-      const response = await fetch('/api/generate', {
+      // First, generate the application files
+      const generateResponse = await fetch('/api/generate-production-app', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Demo-Mode': 'true' // Use demo mode to skip auth
         },
         body: JSON.stringify({
-          yamlConfig,
-          appName
+          tenantId: state.tenantId || 'demo',
+          analysisId: 'onboarding',
+          appName,
+          businessProfile: state.businessAnalysis,
+          dataArchitecture: {
+            models: [], // Could be populated from AI analysis
+            relationships: []
+          },
+          integrations: state.integrations
+            .filter(i => i.connectionStatus === 'connected')
+            .map(i => ({
+              provider: i.id,
+              credentialId: 'demo',
+              config: {}
+            })),
+          deploymentConfig: {
+            platform: 'vercel',
+            environment: 'production'
+          }
         })
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to generate application')
+      if (!generateResponse.ok) {
+        const error = await generateResponse.json()
+        throw new Error(error.error || 'Failed to generate application')
       }
 
-      const result = await response.json()
+      const generateResult = await generateResponse.json()
+      console.log('✅ Application generated:', generateResult)
+
+      // Then deploy to Vercel if configured
+      let deploymentUrl = `http://localhost:3000` // Fallback for local dev
       
-      if (!result.success) {
-        throw new Error(result.error || 'Generation failed')
+      if (process.env.NEXT_PUBLIC_VERCEL_TOKEN) {
+        const deployResponse = await fetch('/api/deploy-to-vercel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            appPath: generateResult.applicationPath,
+            appName,
+            environmentVariables: {
+              NEXT_PUBLIC_SUPABASE_URL: generateResult.supabaseProject.url,
+              NEXT_PUBLIC_SUPABASE_ANON_KEY: generateResult.supabaseProject.anonKey,
+              // Add other env vars as needed
+            }
+          })
+        })
+
+        if (deployResponse.ok) {
+          const deployResult = await deployResponse.json()
+          deploymentUrl = deployResult.projectUrl
+          console.log('✅ Deployed to Vercel:', deploymentUrl)
+        } else {
+          console.warn('⚠️ Vercel deployment failed, using local preview')
+        }
       }
 
       // Store deployment info for potential later saving
       sessionStorage.setItem('tempDeployment', JSON.stringify({
-        ...result,
+        ...generateResult,
+        deploymentUrl,
         onboardingState: state
       }))
 
-      // Redirect to generated app in new tab
-      window.open(result.appUrl, '_blank')
+      // Open deployed app in new tab
+      window.open(deploymentUrl, '_blank')
       
       // Show success state
       setState(prev => ({ 
         ...prev, 
         isDeploying: false,
         deploymentResult: {
-          ...result,
-          url: result.appUrl // Map appUrl to url for the UI
+          ...generateResult,
+          url: deploymentUrl
         }
       }))
     } catch (error) {
-      console.error('Application generation failed:', error)
+      console.error('Application deployment failed:', error)
       setState(prev => ({ ...prev, isDeploying: false }))
+      alert(`Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

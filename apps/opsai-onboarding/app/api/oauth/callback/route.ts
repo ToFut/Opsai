@@ -313,6 +313,11 @@ async function exchangeCodeForTokens(provider: string, code: string) {
 async function fetchInitialData(tenantId: string, provider: string, accessToken: string) {
   console.log(`📊 Fetching sample data for ${provider}...`)
   
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  
   try {
     // Import the sample data fetcher
     const sampleDataResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/providers/sample-data`, {
