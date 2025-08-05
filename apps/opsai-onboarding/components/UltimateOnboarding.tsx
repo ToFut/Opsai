@@ -490,57 +490,48 @@ export default function UltimateOnboarding({
     setState(prev => ({ ...prev, isGenerating: true, error: null }))
 
     try {
-      // Generate application code
-      const generateResponse = await fetch('/api/generate-production-app', {
+      // Generate YAML config from current state
+      const yamlConfig = generateYamlConfigFromState(state)
+      const appName = `${state.businessAnalysis?.businessType || 'business'}-app-${Date.now()}`
+
+      // Generate application locally
+      const generateResponse = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tenantId: state.tenantId,
-          businessAnalysis: state.businessAnalysis,
-          aiInsights: state.aiInsights,
-          integrations: Array.from(state.connectedIntegrations.entries()),
-          workflows: state.workflows.filter(w => w.enabled),
-          authConfig: state.authConfig,
-          dashboardConfig: state.dashboardConfig
+          yamlConfig,
+          appName
         })
       })
 
-      if (!generateResponse.ok) throw new Error('Code generation failed')
+      if (!generateResponse.ok) {
+        const errorData = await generateResponse.json()
+        throw new Error(errorData.error || 'Code generation failed')
+      }
       
-      const { repositoryUrl, deploymentId } = await generateResponse.json()
+      const result = await generateResponse.json()
 
-      setState(prev => ({ ...prev, isGenerating: false, isDeploying: true }))
+      if (!result.success) {
+        throw new Error(result.error || 'Generation failed')
+      }
 
-      // Deploy to production
-      const deployResponse = await fetch('/api/deploy-production', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          repositoryUrl,
-          deploymentId,
-          platform: state.deploymentConfig.platform,
-          environment: state.deploymentConfig.environment
-        })
-      })
+      setState(prev => ({ ...prev, isGenerating: false }))
 
-      if (!deployResponse.ok) throw new Error('Deployment failed')
-      
-      const deploymentResult = await deployResponse.json()
-
-      setState(prev => ({ ...prev, isDeploying: false }))
-
-      // Call completion handler
+      // Call completion handler with local app URL
       if (onComplete) {
         onComplete({
-          ...deploymentResult,
+          url: result.appUrl,
+          appName: result.appName,
+          port: result.port,
           tenantId: state.tenantId,
           integrations: Array.from(state.connectedIntegrations.keys()),
-          workflows: state.workflows.filter(w => w.enabled)
+          workflows: state.workflows.filter(w => w.enabled),
+          type: 'local'
         })
       }
 
     } catch (error) {
-      console.error('Generation/deployment failed:', error)
+      console.error('Generation failed:', error)
       setState(prev => ({ 
         ...prev, 
         isGenerating: false, 
@@ -548,6 +539,123 @@ export default function UltimateOnboarding({
         error: 'Failed to generate application. Please try again.'
       }))
     }
+  }
+
+  const generateYamlConfigFromState = (state: UltimateOnboardingState) => {
+    const businessType = state.businessAnalysis?.businessType || 'Business App'
+    const connectedIntegrations = Array.from(state.connectedIntegrations.keys())
+    
+    return `vertical:
+  name: "${businessType}"
+  description: "A custom ${businessType.toLowerCase()} application"
+  industry: "saas"
+  version: "1.0.0"
+
+business:
+  name: "${businessType}"
+  type: "saas"
+  website: "${state.websiteUrl}"
+  contact:
+    email: "admin@${businessType.toLowerCase().replace(/\s+/g, '')}.com"
+  settings:
+    timezone: "UTC"
+    currency: "USD"
+    language: "en"
+
+database:
+  provider: "postgresql"
+  models:
+    - name: "user"
+      displayName: "Users"
+      description: "Application users"
+      fields:
+        - name: "id"
+          type: "string"
+          required: true
+          unique: true
+        - name: "email"
+          type: "string"
+          required: true
+          unique: true
+        - name: "name"
+          type: "string"
+          required: true
+        - name: "role"
+          type: "string"
+          required: true
+          validation:
+            enum: ["admin", "user", "viewer"]
+        - name: "createdAt"
+          type: "date"
+          required: true
+
+apis:
+  integrations:
+${connectedIntegrations.map(integration => `    - name: "${integration.toLowerCase()}"
+      type: "oauth"
+      enabled: true
+      provider: "${integration.toLowerCase()}"`).join('\n')}
+
+workflows:
+${state.workflows.filter(w => w.enabled).map(workflow => `  - name: "${workflow.name?.toLowerCase().replace(/\s+/g, '-') || 'workflow'}"
+    description: "${workflow.description || 'Custom workflow'}"
+    trigger:
+      type: "event"
+      config:
+        event: "${workflow.triggers?.[0] || 'user.created'}"
+    steps:
+      - name: "execute-workflow"
+        type: "api-call"
+        config:
+          integration: "workflow-service"
+          endpoint: "execute"`).join('\n')}
+
+authentication:
+  providers: ${JSON.stringify(state.authConfig?.methods?.filter((m: any) => m.enabled)?.map((m: any) => m.type) || ['email'])}
+  roles:
+    - name: "admin"
+      description: "Administrator"
+      permissions: ["*"]
+    - name: "user"
+      description: "Regular user"
+      permissions: ["read:own", "write:own"]
+
+ui:
+  theme:
+    primary: "${state.dashboardConfig?.theme?.primaryColor || '#3b82f6'}"
+    secondary: "#64748b"
+  pages:
+    - name: "dashboard"
+      path: "/"
+      layout: "dashboard"
+      components:
+        - type: "stats"
+          config:
+            title: "Overview"
+        - type: "chart"
+          config:
+            title: "Analytics"
+    - name: "users"
+      path: "/users"
+      layout: "list"
+      components:
+        - type: "table"
+          config:
+            entity: "user"
+            columns: ["name", "email", "role", "createdAt"]
+            actions: ["create", "edit", "delete"]
+
+features:
+  authentication: true
+  multiTenancy: true
+  notifications: true
+  analytics: true
+  fileUpload: true
+
+deployment:
+  platform: "local"
+  environment: "development"
+  autoDeploy: true`
   }
 
   const getNextStep = (mode: string, currentStep: number): number => {

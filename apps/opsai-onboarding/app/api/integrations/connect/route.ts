@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 // Integration configurations with auth methods
 const integrationConfigs = {
   // OAuth-based (user logs in)
@@ -48,6 +43,11 @@ const integrationConfigs = {
 }
 
 export async function POST(request: NextRequest) {
+  // Initialize Supabase client inside the function to avoid build-time errors
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   try {
     const { provider, tenantId, credentials, authType } = await request.json()
 
@@ -400,6 +400,11 @@ async function encryptCredentials(credentials: any): Promise<string> {
 
 // Export integration configs for UI
 export async function GET() {
+  // Initialize Supabase client inside the function to avoid build-time errors
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   return NextResponse.json({
     integrations: Object.entries(integrationConfigs).map(([key, config]) => ({
       id: key,

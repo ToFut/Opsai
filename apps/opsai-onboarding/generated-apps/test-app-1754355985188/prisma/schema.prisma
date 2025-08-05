@@ -1,0 +1,60 @@
+// This is your Prisma schema file
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Tenant {
+  id String @id @default(cuid())
+  name String
+  slug String @unique
+  status String @default("active")
+  settings String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  users User[]
+  
+}
+
+model User {
+  id String @id @default(cuid()) 
+  email String @unique
+  firstName String
+  lastName String
+  role String @default("user")
+  status String @default("active")
+  tenantId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLoginAt DateTime?
+  
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+}
+
+// Generate models based on YAML configuration with tenant isolation
+model user {
+  id String @unique @id @default(cuid())
+  tenantId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  email String @unique
+  name String
+  role String
+  
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+}
+

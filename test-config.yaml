@@ -1,0 +1,55 @@
+vertical:
+  name: "Test App"
+  description: "A test application"
+  industry: "saas"
+  version: "1.0.0"
+
+business:
+  name: "Test Business"
+  type: "saas"
+  website: "test.com"
+  contact:
+    email: "admin@test.com"
+  settings:
+    timezone: "UTC"
+    currency: "USD"
+    language: "en"
+
+database:
+  provider: "postgresql"
+  models:
+    - name: "user"
+      displayName: "Users"
+      description: "Application users"
+      fields:
+        - name: "id"
+          type: "string"
+          required: true
+          unique: true
+        - name: "email"
+          type: "string"
+          required: true
+          unique: true
+        - name: "name"
+          type: "string"
+          required: true
+        - name: "role"
+          type: "string"
+          required: true
+          validation:
+            enum: ["admin", "user", "viewer"]
+        - name: "createdAt"
+          type: "date"
+          required: true
+
+features:
+  authentication: true
+  multiTenancy: true
+  notifications: true
+  analytics: true
+  fileUpload: true
+
+deployment:
+  platform: "local"
+  environment: "development"
+  autoDeploy: true

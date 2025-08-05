@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // Popular API connectors with their configurations
 const API_CONNECTOR_TEMPLATES = {
@@ -160,6 +156,11 @@ const API_CONNECTOR_TEMPLATES = {
 }
 
 export async function POST(request: NextRequest) {
+  // Initialize Supabase client inside the function to avoid build-time errors
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   try {
     const body = await request.json()
     const { 
@@ -336,6 +337,11 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to list available connector templates
 export async function GET(request: NextRequest) {
+  // Initialize Supabase client inside the function to avoid build-time errors
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   const connectors = Object.entries(API_CONNECTOR_TEMPLATES).map(([key, template]) => ({
     sourceType: key,
     name: template.name,

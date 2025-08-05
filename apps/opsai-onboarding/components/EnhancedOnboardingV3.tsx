@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Globe, Brain, CheckCircle, AlertCircle, Plus, FileText, 
   Sparkles, Shield, Palette, Rocket, ArrowLeft, ArrowRight,
-  Link2, Workflow, Lock, BarChart3, Settings, Eye, Edit2
+  Link2, Workflow, Lock, BarChart3, Settings, Eye, Edit2,
+  Zap, TrendingUp, Users, Clock, Star, ChevronRight, ExternalLink
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import GoogleAnalyticsPropertySelector from './GoogleAnalyticsPropertySelector'
@@ -77,15 +78,16 @@ interface OnboardingState {
   isDeploying: boolean
   isSaving: boolean
   deploymentResult: any
+  tenantId?: string
 }
 
 const STEPS = [
-  { id: 'analysis', label: 'AI Analysis', icon: Brain },
-  { id: 'integrations', label: 'Connect Services', icon: Link2 },
-  { id: 'workflows', label: 'Workflows', icon: Workflow },
-  { id: 'auth', label: 'Authentication', icon: Lock },
-  { id: 'visualization', label: 'Dashboard', icon: BarChart3 },
-  { id: 'review', label: 'Launch', icon: Rocket }
+  { id: 'analysis', label: 'AI Analysis', icon: Brain, description: 'Analyze your business' },
+  { id: 'integrations', label: 'Connect Services', icon: Link2, description: 'Link your tools' },
+  { id: 'workflows', label: 'Workflows', icon: Workflow, description: 'Automate processes' },
+  { id: 'auth', label: 'Authentication', icon: Lock, description: 'Secure access' },
+  { id: 'visualization', label: 'Dashboard', icon: BarChart3, description: 'Customize view' },
+  { id: 'review', label: 'Launch', icon: Rocket, description: 'Go live' }
 ]
 
 export default function EnhancedOnboardingV3({ 
@@ -729,49 +731,171 @@ export default function EnhancedOnboardingV3({
     setState(prev => ({ ...prev, isDeploying: true }))
 
     try {
-      // Create temporary deployment without authentication
-      const response = await fetch('/api/deploy-temp', {
+      // Generate YAML config from current state
+      const yamlConfig = generateYamlConfigFromState(state)
+      const appName = `${state.businessAnalysis.businessType.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`
+
+      // Call the local generate API
+      const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          config: {
-            businessAnalysis: state.businessAnalysis,
-            integrations: state.integrations,
-            workflows: state.workflows,
-            auth: state.authConfig,
-            visualization: state.visualizationConfig
-          },
-          websiteUrl: state.websiteUrl
+          yamlConfig,
+          appName
         })
       })
 
       if (!response.ok) {
-        throw new Error('Failed to deploy temporary application')
+        throw new Error('Failed to generate application')
       }
 
       const result = await response.json()
       
+      if (!result.success) {
+        throw new Error(result.error || 'Generation failed')
+      }
+
       // Store deployment info for potential later saving
       sessionStorage.setItem('tempDeployment', JSON.stringify({
         ...result,
         onboardingState: state
       }))
 
-      // Redirect to deployed app in new tab
-      window.open(result.url, '_blank')
+      // Redirect to generated app in new tab
+      window.open(result.appUrl, '_blank')
       
       // Show success state
       setState(prev => ({ 
         ...prev, 
         isDeploying: false,
-        deploymentResult: result
+        deploymentResult: {
+          ...result,
+          url: result.appUrl // Map appUrl to url for the UI
+        }
       }))
     } catch (error) {
-      console.error('Temporary deployment failed:', error)
+      console.error('Application generation failed:', error)
       setState(prev => ({ ...prev, isDeploying: false }))
     }
+  }
+
+  const generateYamlConfigFromState = (state: OnboardingState) => {
+    const businessType = state.businessAnalysis.businessType || 'Business App'
+    const connectedIntegrations = state.integrations.filter(i => i.connectionStatus === 'connected')
+    
+    return `vertical:
+  name: "${businessType}"
+  description: "A custom ${businessType.toLowerCase()} application"
+  industry: "saas"
+  version: "1.0.0"
+
+business:
+  name: "${businessType}"
+  type: "saas"
+  website: "${state.websiteUrl}"
+  contact:
+    email: "admin@${businessType.toLowerCase().replace(/\s+/g, '')}.com"
+  settings:
+    timezone: "UTC"
+    currency: "USD"
+    language: "en"
+
+database:
+  provider: "postgresql"
+  models:
+    - name: "user"
+      displayName: "Users"
+      description: "Application users"
+      fields:
+        - name: "id"
+          type: "string"
+          required: true
+          unique: true
+        - name: "email"
+          type: "string"
+          required: true
+          unique: true
+        - name: "name"
+          type: "string"
+          required: true
+        - name: "role"
+          type: "string"
+          required: true
+          validation:
+            enum: ["admin", "user", "viewer"]
+        - name: "createdAt"
+          type: "date"
+          required: true
+
+apis:
+  integrations:
+${connectedIntegrations.map(integration => `    - name: "${integration.name.toLowerCase()}"
+      type: "oauth"
+      enabled: true
+      provider: "${integration.name.toLowerCase()}"`).join('\n')}
+
+workflows:
+${state.workflows.filter(w => w.enabled).map(workflow => `  - name: "${workflow.name.toLowerCase().replace(/\s+/g, '-')}"
+    description: "${workflow.description}"
+    trigger:
+      type: "event"
+      config:
+        event: "${workflow.triggers[0] || 'user.created'}"
+    steps:
+      - name: "execute-workflow"
+        type: "api-call"
+        config:
+          integration: "workflow-service"
+          endpoint: "execute"`).join('\n')}
+
+authentication:
+  providers: ${JSON.stringify(state.authConfig.methods.filter(m => m.enabled).map(m => m.type))}
+  roles:
+    - name: "admin"
+      description: "Administrator"
+      permissions: ["*"]
+    - name: "user"
+      description: "Regular user"
+      permissions: ["read:own", "write:own"]
+
+ui:
+  theme:
+    primary: "${state.visualizationConfig.primaryColor || '#3b82f6'}"
+    secondary: "#64748b"
+  pages:
+    - name: "dashboard"
+      path: "/"
+      layout: "dashboard"
+      components:
+        - type: "stats"
+          config:
+            title: "Overview"
+        - type: "chart"
+          config:
+            title: "Analytics"
+    - name: "users"
+      path: "/users"
+      layout: "list"
+      components:
+        - type: "table"
+          config:
+            entity: "user"
+            columns: ["name", "email", "role", "createdAt"]
+            actions: ["create", "edit", "delete"]
+
+features:
+  authentication: true
+  multiTenancy: true
+  notifications: true
+  analytics: true
+  fileUpload: true
+
+deployment:
+  platform: "vercel"
+  environment: "production"
+  autoDeploy: true`
   }
 
   const saveToProfile = async () => {
@@ -836,9 +960,29 @@ export default function EnhancedOnboardingV3({
       // After integrations, organize the database
       const connectedProviders = state.integrations.filter(i => i.connectionStatus === 'connected')
       if (connectedProviders.length > 0) {
-        console.log('🗗 Skipping database organization (API not implemented yet)...')
-        // Temporarily skip organize-database API call since it doesn't exist
-        console.log('✅ Proceeding without database organization')
+        console.log('🗄️ Organizing database with connected providers...')
+        try {
+          const response = await fetch('/api/organize-database', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              tenantId: state.tenantId || 'default',
+              userId: state.tenantId || 'default'
+            })
+          })
+
+          if (response.ok) {
+            const result = await response.json()
+            console.log('✅ Database organized successfully:', result)
+          } else {
+            console.log('⚠️ Database organization failed, continuing anyway')
+          }
+        } catch (error) {
+          console.error('Error organizing database:', error)
+          console.log('⚠️ Database organization failed, continuing anyway')
+        }
       }
     }
     
@@ -874,100 +1018,159 @@ export default function EnhancedOnboardingV3({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Progress Header */}
-      <div className="bg-white border-b sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Create Your Application</h1>
-            <div className="text-sm text-gray-600">
-              {state.businessAnalysis && (
-                <span>Building for: <strong>{state.businessAnalysis.businessType}</strong></span>
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-100/50">
+      {/* Enhanced Progress Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <Rocket className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  Create Your Application
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  {state.businessAnalysis ? `Building for: ${state.businessAnalysis.businessType}` : 'AI-powered app generation'}
+                </p>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 text-sm text-gray-500">
+              <Clock className="w-4 h-4" />
+              <span>~5 minutes to complete</span>
             </div>
           </div>
           
-          {/* Step Progress */}
-          <div className="flex items-center justify-between">
-            {STEPS.map((step, index) => {
-              const Icon = step.icon
-              const isActive = index === state.currentStep
-              const isCompleted = index < state.currentStep
-              
-              return (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className={`flex items-center ${index < STEPS.length - 1 ? 'flex-1' : ''}`}>
-                    <div className={`
-                      w-10 h-10 rounded-full flex items-center justify-center transition-colors
-                      ${isActive ? 'bg-blue-600 text-white' : ''}
-                      ${isCompleted ? 'bg-green-600 text-white' : ''}
-                      ${!isActive && !isCompleted ? 'bg-gray-200 text-gray-400' : ''}
-                    `}>
-                      {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+          {/* Enhanced Step Progress */}
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              {STEPS.map((step, index) => {
+                const Icon = step.icon
+                const isActive = index === state.currentStep
+                const isCompleted = index < state.currentStep
+                const isUpcoming = index > state.currentStep
+                
+                return (
+                  <div key={step.id} className="flex items-center flex-1 relative">
+                    <div className={`flex items-center ${index < STEPS.length - 1 ? 'flex-1' : ''}`}>
+                      <motion.div 
+                        className={`
+                          relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300
+                          ${isActive ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25 scale-110' : ''}
+                          ${isCompleted ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/25' : ''}
+                          ${isUpcoming ? 'bg-gray-100 text-gray-400 border-2 border-gray-200' : ''}
+                        `}
+                        whileHover={isUpcoming ? { scale: 1.05 } : {}}
+                      >
+                        {isCompleted ? (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          >
+                            <CheckCircle className="w-6 h-6" />
+                          </motion.div>
+                        ) : (
+                          <Icon className="w-6 h-6" />
+                        )}
+                        
+                        {/* Step number badge */}
+                        <div className={`
+                          absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center
+                          ${isActive ? 'bg-white text-blue-600' : ''}
+                          ${isCompleted ? 'bg-white text-green-600' : ''}
+                          ${isUpcoming ? 'bg-gray-200 text-gray-500' : ''}
+                        `}>
+                          {index + 1}
+                        </div>
+                      </motion.div>
+                      
+                      <div className="ml-4">
+                        <p className={`text-sm font-semibold transition-colors ${
+                          isActive ? 'text-gray-900' : isCompleted ? 'text-green-700' : 'text-gray-500'
+                        }`}>
+                          {step.label}
+                        </p>
+                        <p className={`text-xs transition-colors ${
+                          isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-400'
+                        }`}>
+                          {step.description}
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <p className={`text-sm font-medium ${isActive ? 'text-gray-900' : 'text-gray-500'}`}>
-                        {step.label}
-                      </p>
-                    </div>
+                    
+                    {index < STEPS.length - 1 && (
+                      <div className="flex-1 mx-6 relative">
+                        <div className={`h-0.5 transition-all duration-500 ${
+                          isCompleted ? 'bg-gradient-to-r from-green-500 to-green-400' : 'bg-gray-200'
+                        }`} />
+                        {isCompleted && (
+                          <motion.div
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-green-400 origin-left"
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {index < STEPS.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-4 transition-colors ${
-                      isCompleted ? 'bg-green-600' : 'bg-gray-200'
-                    }`} />
-                  )}
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Step Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Enhanced Step Content */}
+      <div className="max-w-5xl mx-auto px-6 py-12">
         <AnimatePresence mode="wait">
           <motion.div
             key={state.currentStep}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           >
             {renderStepContent()}
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <button
+        {/* Enhanced Navigation Buttons */}
+        <div className="flex justify-between mt-12">
+          <motion.button
             onClick={() => setState(prev => ({ ...prev, currentStep: Math.max(0, prev.currentStep - 1) }))}
             disabled={state.currentStep === 0 || state.isDeploying}
-            className={`flex items-center px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`flex items-center px-8 py-4 rounded-xl font-semibold transition-all duration-200 ${
               state.currentStep === 0 || state.isDeploying
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                : 'bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md border border-gray-200 hover:border-gray-300'
             }`}
+            whileHover={state.currentStep > 0 && !state.isDeploying ? { x: -3 } : {}}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-5 h-5 mr-2" />
             Previous
-          </button>
+          </motion.button>
 
           {state.currentStep < STEPS.length - 1 ? (
-            <button
+            <motion.button
               onClick={handleNextStep}
               disabled={!canProceed() || state.isDeploying}
-              className={`flex items-center px-6 py-3 rounded-lg font-medium transition-colors ${
+              className={`flex items-center px-8 py-4 rounded-xl font-semibold transition-all duration-200 ${
                 canProceed() && !state.isDeploying
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
+              whileHover={canProceed() && !state.isDeploying ? { x: 3, scale: 1.02 } : {}}
             >
               Next
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </button>
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </motion.button>
           ) : (
-            <div className="text-sm text-gray-500">
-              Choose an option above to continue
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Star className="w-4 h-4 text-yellow-500" />
+              <span>Choose an option above to continue</span>
             </div>
           )}
         </div>
@@ -990,184 +1193,132 @@ export default function EnhancedOnboardingV3({
 // Step Components
 function AnalysisStep({ state, onAnalyze, onUpdateUrl }: any) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8">
-      <div className="text-center max-w-2xl mx-auto">
-        <Brain className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-        <h2 className="text-3xl font-bold mb-4">Let's analyze your business</h2>
-        <p className="text-lg text-gray-600 mb-8">
-          Our AI will scan your website to understand your business model, 
-          detect your existing systems, and create a custom integration plan.
-        </p>
-
-        <div className="mb-8">
-          <label className="block text-left text-sm font-medium text-gray-700 mb-2">
-            Your Website URL
-          </label>
-          <div className="flex items-center bg-gray-50 rounded-lg p-2">
-            <Globe className="w-5 h-5 text-gray-400 ml-3 mr-3" />
-            <input
-              type="url"
-              value={state.websiteUrl}
-              onChange={(e) => onUpdateUrl(e.target.value)}
-              placeholder="https://yourcompany.com"
-              className="flex-1 bg-transparent text-lg outline-none py-2"
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={onAnalyze}
-          disabled={!state.websiteUrl || state.isAnalyzing}
-          className={`px-8 py-4 rounded-lg font-semibold text-lg transition-colors ${
-            state.websiteUrl && !state.isAnalyzing
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          {state.isAnalyzing ? (
-            <>
-              <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3" />
-              AI is analyzing your business...
-            </>
-          ) : (
-            <>
-              <Brain className="inline w-5 h-5 mr-2" />
-              Start AI Analysis
-            </>
-          )}
-        </button>
-
-        {state.isAnalyzing && (
-          <div className="mt-8 space-y-3">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex items-center text-green-600"
-            >
-              <CheckCircle className="w-5 h-5 mr-2" />
-              Detected e-commerce platform
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1 }}
-              className="flex items-center text-green-600"
-            >
-              <CheckCircle className="w-5 h-5 mr-2" />
-              Found payment processor
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.5 }}
-              className="flex items-center text-green-600"
-            >
-              <CheckCircle className="w-5 h-5 mr-2" />
-              Discovered 5 integration opportunities
-            </motion.div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function IntegrationsStep({ state, onConnect }: any) {
-  const detectedConnections = state.integrations.filter((i: Integration) => i.status === 'detected')
-  const suggestedConnections = state.integrations.filter((i: Integration) => i.status === 'suggested')
-  const optionalConnections = state.integrations.filter((i: Integration) => i.status === 'optional')
-  
-  // Group integrations by type for better organization
-  const groupByType = (integrations: Integration[]) => {
-    return integrations.reduce((groups: any, integration) => {
-      const type = integration.type || 'Other'
-      if (!groups[type]) groups[type] = []
-      groups[type].push(integration)
-      return groups
-    }, {})
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold mb-2">Connect Your Real Services</h2>
-        <p className="text-gray-600 mb-6">
-          Connect your actual business services using OAuth. All connections are secure and use your real credentials.
-        </p>
-
-
-        {/* Detected Integrations */}
-        {detectedConnections.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <Eye className="w-5 h-5 text-blue-500 mr-2" />
-              Detected on Your Website
-            </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {detectedConnections.map((integration: Integration) => (
-                <IntegrationCard 
-                  key={integration.id} 
-                  integration={integration} 
-                  onConnect={() => onConnect(integration.id)} 
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Suggested Integrations */}
-        {suggestedConnections.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <Sparkles className="w-5 h-5 text-purple-500 mr-2" />
-              Recommended for Your Business
-            </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {suggestedConnections.map((integration: Integration) => (
-                <IntegrationCard 
-                  key={integration.id} 
-                  integration={integration} 
-                  onConnect={() => onConnect(integration.id)} 
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Optional Integrations */}
-        {optionalConnections.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <Plus className="w-5 h-5 text-gray-500 mr-2" />
-              Additional Integrations
-            </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-              {optionalConnections.map((integration: Integration) => (
-                <IntegrationCard 
-                  key={integration.id} 
-                  integration={integration} 
-                  onConnect={() => onConnect(integration.id)} 
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Status Summary */}
-      {state.integrations.some(i => i.connectionStatus === 'connected') && (
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 p-12">
+      <div className="text-center max-w-3xl mx-auto">
+        {/* Enhanced Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-green-50 border border-green-200 rounded-lg p-4"
+          transition={{ duration: 0.6 }}
+          className="mb-8"
         >
-          <div className="flex items-center text-green-800">
-            <CheckCircle className="w-5 h-5 mr-2" />
-            Great! You've connected some services. You can proceed or connect more integrations.
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/25">
+            <Brain className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            Let's analyze your business
+          </h2>
+          <p className="text-xl text-gray-600 leading-relaxed">
+            Our AI will scan your website to understand your business model, 
+            detect your existing systems, and create a custom integration plan.
+          </p>
+        </motion.div>
+
+        {/* Enhanced URL Input */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-10"
+        >
+          <label className="block text-left text-sm font-semibold text-gray-700 mb-3">
+            Your Website URL
+          </label>
+          <div className="relative group">
+            <div className="flex items-center bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border-2 border-gray-200 group-focus-within:border-blue-500 group-focus-within:shadow-lg group-focus-within:shadow-blue-500/25 transition-all duration-300">
+              <Globe className="w-6 h-6 text-gray-400 ml-2 mr-4" />
+              <input
+                type="url"
+                value={state.websiteUrl}
+                onChange={(e) => onUpdateUrl(e.target.value)}
+                placeholder="https://yourcompany.com"
+                className="flex-1 bg-transparent text-lg outline-none py-2 font-medium"
+              />
+            </div>
           </div>
         </motion.div>
-      )}
+
+        {/* Enhanced Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <button
+            onClick={onAnalyze}
+            disabled={!state.websiteUrl || state.isAnalyzing}
+            className={`px-12 py-5 rounded-xl font-bold text-lg transition-all duration-300 ${
+              state.websiteUrl && !state.isAnalyzing
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {state.isAnalyzing ? (
+              <div className="flex items-center">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-3 border-white border-t-transparent mr-3" />
+                <span>AI is analyzing your business...</span>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <Brain className="w-6 h-6 mr-3" />
+                <span>Start AI Analysis</span>
+              </div>
+            )}
+          </button>
+        </motion.div>
+
+        {/* Enhanced Analysis Progress */}
+        {state.isAnalyzing && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mt-12 space-y-4"
+          >
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+                <Zap className="w-5 h-5 mr-2" />
+                Analysis Progress
+              </h3>
+              <div className="space-y-3">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex items-center text-green-700"
+                >
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="font-medium">Detected e-commerce platform</span>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="flex items-center text-green-700"
+                >
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="font-medium">Found payment processor</span>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1.6 }}
+                  className="flex items-center text-green-700"
+                >
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="font-medium">Discovered 5 integration opportunities</span>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }
@@ -1175,74 +1326,536 @@ function IntegrationsStep({ state, onConnect }: any) {
 function IntegrationCard({ integration, onConnect }: { integration: Integration, onConnect: () => void }) {
   const getStatusColor = () => {
     switch (integration.connectionStatus) {
-      case 'connected': return 'bg-green-50 border-green-200'
-      case 'connecting': return 'bg-blue-50 border-blue-200'
-      case 'error': return 'bg-red-50 border-red-200'
-      default: return 'bg-white border-gray-200'
+      case 'connected': return 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+      case 'connecting': return 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+      case 'error': return 'bg-red-50 border-red-200 hover:bg-red-100'
+      default: return 'bg-white border-gray-200 hover:bg-gray-50'
     }
   }
 
   const getStatusBadge = () => {
     switch (integration.status) {
-      case 'detected': return <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">Detected</span>
-      case 'suggested': return <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">Recommended</span>
-      case 'optional': return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Optional</span>
+      case 'detected': return (
+        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+          Detected
+        </span>
+      )
+      case 'suggested': return (
+        <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+          Recommended
+        </span>
+      )
+      case 'optional': return (
+        <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+          Optional
+        </span>
+      )
       default: return null
     }
   }
 
+  const getIntegrationIcon = () => {
+    const iconMap: Record<string, string> = {
+      'google-analytics': '📊',
+      'stripe': '💳',
+      'shopify': '🛍️',
+      'github': '👨‍💻',
+      'google': '📊',
+      'calendly': '📅',
+      'quickbooks': '💰',
+      'mailchimp': '✉️',
+      'slack': '💬',
+      'hubspot': '🎯',
+      'salesforce': '☁️'
+    }
+    return iconMap[integration.id] || integration.logo || '🔗'
+  }
+
   return (
-    <div className={`border rounded-lg p-6 transition-colors ${getStatusColor()}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center text-2xl">
-            {integration.logo || <Link2 className="w-6 h-6 text-gray-600" />}
+    <motion.tr 
+      className={`border-b transition-all duration-200 ${getStatusColor()}`}
+      whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+    >
+      {/* Icon & Name */}
+      <td className="px-6 py-6 whitespace-nowrap">
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-xl mr-4">
+            {getIntegrationIcon()}
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-lg">{integration.name}</h4>
-              {getStatusBadge()}
-            </div>
-            <p className="text-sm text-gray-600">{integration.value}</p>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-xs text-gray-500">{integration.type}</span>
-              {integration.estimatedTime && (
-                <>
-                  <span className="text-xs text-gray-400">•</span>
-                  <span className="text-xs text-gray-500">⏱️ {integration.estimatedTime}</span>
-                </>
-              )}
-              {integration.confidence && (
-                <>
-                  <span className="text-xs text-gray-400">•</span>
-                  <span className="text-xs text-green-600">{integration.confidence}% match</span>
-                </>
-              )}
-            </div>
+          <div>
+            <div className="text-sm font-semibold text-gray-900">{integration.name}</div>
+            <div className="text-sm text-gray-500">{integration.type}</div>
           </div>
         </div>
+      </td>
 
-        <div className="flex items-center gap-3">
-          {integration.connectionStatus === 'connected' ? (
-            <div className="flex items-center text-green-600">
-              <CheckCircle className="w-5 h-5 mr-2" />
-              Connected
-            </div>
-          ) : integration.connectionStatus === 'connecting' ? (
-            <div className="flex items-center text-blue-600">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent mr-2" />
-              Connecting...
-            </div>
-          ) : (
-            <button
-              onClick={onConnect}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Connect ({integration.estimatedTime})
-            </button>
+      {/* Description */}
+      <td className="px-6 py-6">
+        <div className="text-sm text-gray-900 max-w-xs leading-relaxed">
+          {integration.value}
+        </div>
+      </td>
+
+      {/* Status Badge */}
+      <td className="px-6 py-6 whitespace-nowrap">
+        {getStatusBadge()}
+      </td>
+
+      {/* Metadata */}
+      <td className="px-6 py-6 whitespace-nowrap">
+        <div className="flex items-center space-x-3">
+          {integration.estimatedTime && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+              <Clock className="w-3 h-3 mr-1" />
+              {integration.estimatedTime}
+            </span>
+          )}
+          {integration.confidence && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800">
+              {integration.confidence}%
+            </span>
           )}
         </div>
-      </div>
+      </td>
+
+      {/* Connection Status */}
+      <td className="px-6 py-6 whitespace-nowrap">
+        {integration.connectionStatus === 'connected' ? (
+          <div className="flex items-center text-emerald-600">
+            <CheckCircle className="w-4 h-4 mr-2" />
+            <span className="text-sm font-semibold">Connected</span>
+          </div>
+        ) : integration.connectionStatus === 'connecting' ? (
+          <div className="flex items-center text-blue-600">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent mr-2" />
+            <span className="text-sm font-semibold">Connecting...</span>
+          </div>
+        ) : (
+          <div className="flex items-center text-gray-500">
+            <div className="w-4 h-4 mr-2 border-2 border-gray-300 rounded-full" />
+            <span className="text-sm font-semibold">Not Connected</span>
+          </div>
+        )}
+      </td>
+
+      {/* Action Button */}
+      <td className="px-6 py-6 whitespace-nowrap text-right">
+        {integration.connectionStatus === 'connected' ? (
+          <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Connected
+          </span>
+        ) : integration.connectionStatus === 'connecting' ? (
+          <span className="inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+            <div className="animate-spin rounded-full h-3 w-3 border-2 border-blue-800 border-t-transparent mr-1" />
+            Connecting...
+          </span>
+        ) : (
+          <button
+            onClick={onConnect}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 hover:shadow-lg"
+          >
+            <Link2 className="w-3 h-3 mr-1" />
+            Connect
+          </button>
+        )}
+      </td>
+    </motion.tr>
+  )
+}
+
+function IntegrationsStep({ state, onConnect }: any) {
+  const detectedConnections = state.integrations.filter((i: Integration) => i.status === 'detected')
+  const suggestedConnections = state.integrations.filter((i: Integration) => i.status === 'suggested')
+  const optionalConnections = state.integrations.filter((i: Integration) => i.status === 'optional')
+  const connectedCount = state.integrations.filter((i: Integration) => i.connectionStatus === 'connected').length
+  const totalCount = state.integrations.length
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-12">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="text-center"
+      >
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 200 }}
+          className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-600 rounded-3xl mb-8 shadow-2xl shadow-blue-500/30"
+        >
+          <Link2 className="w-10 h-10 text-white" />
+        </motion.div>
+        
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-blue-700 to-purple-700 bg-clip-text text-transparent"
+        >
+          Connect Your Ecosystem
+        </motion.h2>
+        
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="text-xl text-gray-600 leading-relaxed max-w-4xl mx-auto"
+        >
+          We've analyzed your business and identified the perfect integrations to create a unified, powerful dashboard. 
+          Each connection is secured with enterprise-grade OAuth 2.0 protocols.
+        </motion.p>
+      </motion.div>
+
+      {/* Connection Stats Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.8 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-8"
+      >
+        <motion.div
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ type: "spring", stiffness: 300 }}
+          className="group relative bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-3xl p-8 border-2 border-green-200 shadow-lg hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1, type: "spring", stiffness: 200 }}
+                className="text-4xl font-bold text-green-600"
+              >
+                {detectedConnections.length}
+              </motion.span>
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/25">
+                <CheckCircle className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-green-800 mb-2">Detected</h3>
+            <p className="text-green-700 text-sm leading-relaxed">Found on your website automatically</p>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ type: "spring", stiffness: 300 }}
+          className="group relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl p-8 border-2 border-blue-200 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1.2, type: "spring", stiffness: 200 }}
+                className="text-4xl font-bold text-blue-600"
+              >
+                {suggestedConnections.length}
+              </motion.span>
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-blue-800 mb-2">Recommended</h3>
+            <p className="text-blue-700 text-sm leading-relaxed">AI-powered suggestions for your workflow</p>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ type: "spring", stiffness: 300 }}
+          className="group relative bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 rounded-3xl p-8 border-2 border-purple-200 shadow-lg hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 1.4, type: "spring", stiffness: 200 }}
+                className="text-4xl font-bold text-purple-600"
+              >
+                {optionalConnections.length}
+              </motion.span>
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+                <Plus className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-purple-800 mb-2">Advanced</h3>
+            <p className="text-purple-700 text-sm leading-relaxed">Optional features for power users</p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Detected Connections */}
+      {detectedConnections.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1 }}
+        >
+          <div className="mb-8">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 1.2 }}
+              className="flex items-center mb-8"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl flex items-center justify-center mr-6 shadow-xl shadow-green-500/25">
+                <CheckCircle className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">Detected Services</h3>
+                <p className="text-gray-600 text-lg">We found these services on your website</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.4 }}
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-green-200">
+                <h4 className="text-lg font-semibold text-green-800">Automatically Detected</h4>
+                <p className="text-green-700 text-sm">These integrations were found on your website</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Service</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/3">Description</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">Type</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Details</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {detectedConnections.map((integration: Integration, index: number) => (
+                      <IntegrationCard 
+                        key={integration.id}
+                        integration={integration} 
+                        onConnect={() => onConnect(integration.id)} 
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Suggested Connections */}
+      {suggestedConnections.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.6 }}
+        >
+          <div className="mb-8">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 1.8 }}
+              className="flex items-center mb-8"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mr-6 shadow-xl shadow-blue-500/25">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">AI Recommendations</h3>
+                <p className="text-gray-600 text-lg">Smart suggestions to enhance your workflow</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 2 }}
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-blue-200">
+                <h4 className="text-lg font-semibold text-blue-800">Intelligent Suggestions</h4>
+                <p className="text-blue-700 text-sm">Based on your business analysis and best practices</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Service</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/3">Description</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">Type</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Details</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {suggestedConnections.map((integration: Integration, index: number) => (
+                      <IntegrationCard 
+                        key={integration.id}
+                        integration={integration} 
+                        onConnect={() => onConnect(integration.id)} 
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Optional Connections */}
+      {optionalConnections.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 2.2 }}
+        >
+          <div className="mb-8">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 2.4 }}
+              className="flex items-center mb-8"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl flex items-center justify-center mr-6 shadow-xl shadow-purple-500/25">
+                <Plus className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-2">Advanced Features</h3>
+                <p className="text-gray-600 text-lg">Optional integrations for power users</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 2.6 }}
+              className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-8 py-6 border-b border-purple-200">
+                <h4 className="text-lg font-semibold text-purple-800">Power User Features</h4>
+                <p className="text-purple-700 text-sm">Advanced integrations for enhanced functionality</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Service</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/3">Description</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/12">Type</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Details</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {optionalConnections.map((integration: Integration, index: number) => (
+                      <IntegrationCard 
+                        key={integration.id}
+                        integration={integration} 
+                        onConnect={() => onConnect(integration.id)} 
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Connection Progress */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 2.8 }}
+        className="bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 rounded-3xl p-10 border-2 border-gray-200 shadow-xl"
+      >
+        <div className="text-center">
+          <motion.h4
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 3 }}
+            className="text-2xl font-bold text-gray-900 mb-3"
+          >
+            Connection Progress
+          </motion.h4>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 3.2 }}
+            className="text-gray-600 mb-8 text-lg"
+          >
+            Track your integration setup progress
+          </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 3.4 }}
+            className="flex items-center justify-center space-x-8 mb-8"
+          >
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3 shadow-lg">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-sm font-semibold text-green-700">Connected</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center mr-3 shadow-lg">
+                <Link2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-sm font-semibold text-blue-700">In Progress</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3 shadow-lg">
+                <Clock className="w-5 h-5 text-gray-600" />
+              </div>
+              <span className="text-sm font-semibold text-gray-600">Pending</span>
+            </div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 3.6 }}
+            className="w-full bg-gray-200 rounded-full h-4 shadow-inner"
+          >
+            <motion.div
+              className="bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 h-4 rounded-full shadow-lg"
+              initial={{ width: 0 }}
+              animate={{ width: `${totalCount > 0 ? (connectedCount / totalCount) * 100 : 0}%` }}
+              transition={{ duration: 1.5, delay: 3.8, ease: "easeOut" }}
+            />
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 4 }}
+            className="text-sm text-gray-600 mt-4 font-medium"
+          >
+            {connectedCount} of {totalCount} integrations connected
+            {totalCount > 0 && (
+              <span className="text-blue-600 ml-2">
+                ({Math.round((connectedCount / totalCount) * 100)}% complete)
+              </span>
+            )}
+          </motion.p>
+        </div>
+      </motion.div>
     </div>
   )
 }
@@ -1462,7 +2075,7 @@ function AuthenticationStep({ state, setState }: any) {
             <label key={feature} className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
               <input
                 type="checkbox"
-                checked={enabled}
+                checked={enabled as boolean}
                 onChange={(e) => updateAuthFeature(feature, e.target.checked)}
               />
               <span className="text-sm">{feature.replace(/([A-Z])/g, ' $1').trim()}</span>
@@ -1576,181 +2189,431 @@ function ReviewStep({ state, onLaunch, onSave, user }: any) {
   const enabledWorkflows = state.workflows.filter((w: Workflow) => w.enabled)
   const enabledAuthMethods = state.authConfig.methods.filter((m: AuthMethod) => m.enabled)
   const enabledWidgets = state.visualizationConfig.dashboardWidgets.filter((w: DashboardWidget) => w.enabled)
+  
+  const [showCodeGeneration, setShowCodeGeneration] = useState(false)
+  const [generationStep, setGenerationStep] = useState(0)
+  const [codeLines, setCodeLines] = useState<string[]>([])
+  const [currentCodeLine, setCurrentCodeLine] = useState(0)
+  const [typingText, setTypingText] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
+  const [showTerminal, setShowTerminal] = useState(false)
+  const [isGenerationComplete, setIsGenerationComplete] = useState(false)
+  
+  const generationSteps = [
+    { title: "Analyzing requirements", description: "Processing your configuration", icon: Brain, color: "blue" },
+    { title: "Generating database schema", description: "Creating Prisma models", icon: FileText, color: "purple" },
+    { title: "Building API routes", description: "Setting up REST endpoints", icon: Link2, color: "green" },
+    { title: "Creating UI components", description: "Generating React components", icon: Palette, color: "pink" },
+    { title: "Configuring authentication", description: "Setting up auth system", icon: Lock, color: "orange" },
+    { title: "Deploying application", description: "Launching your app", icon: Rocket, color: "indigo" }
+  ]
+  
+  const codeToWrite = [
+    "const app = new AppGenerator(config);",
+    "await app.generateDatabase();",
+    "await app.generateAPI();",
+    "await app.generateUI();",
+    "await app.deploy();",
+    "✓ App generated successfully!"
+  ]
+  
+  const detailedSteps = [
+    "📁 Creating output directory...",
+    "✓ Output directory created",
+    "🏗️ Starting app generation...",
+    "🚀 Generating custom application based on YAML configuration...",
+    "📊 Config summary: {",
+    "  appName: 'e-commerce-app',",
+    "  verticalName: 'E-commerce',",
+    "  businessName: 'E-commerce',",
+    "  modelCount: 1,",
+    "  workflowCount: 3,",
+    "  integrationCount: 2",
+    "}",
+    "📁 Creating directories...",
+    "✓ Directories created",
+    "🔧 Generating Prisma schema...",
+    "📊 Custom Prisma schema generated",
+    "✓ Prisma schema generated",
+    "🎨 Generating app layout...",
+    "🎨 Custom app layout generated",
+    "✓ App layout generated",
+    "📄 Generating main page...",
+    "📄 Custom main page generated",
+    "✓ Main page generated",
+    "🧩 Generating dashboard components...",
+    "🧩 Custom dashboard components generated",
+    "✓ Dashboard components generated",
+    "🔌 Generating API routes...",
+    "🔌 Custom API routes generated",
+    "✓ API routes generated",
+    "📊 Generating data pages...",
+    "📄 Custom data pages generated",
+    "✓ Data pages generated",
+    "🛠️ Generating utility files...",
+    "🎨 Custom utility files generated",
+    "✓ Utility files generated",
+    "🔐 Generating authentication system...",
+    "🔐 Authentication system generated",
+    "✓ Authentication system generated",
+    "🔗 Generating integration configurations...",
+    "🔌 Integration configurations generated",
+    "✓ Integration configurations generated",
+    "📦 Generating package.json...",
+    "📦 Custom package.json generated",
+    "✓ Package.json generated",
+    "🎨 Generating Tailwind config...",
+    "🎨 Tailwind config generated",
+    "🎨 PostCSS config generated",
+    "✓ Tailwind and PostCSS configs generated",
+    "📝 Generating TypeScript config...",
+    "📑 TypeScript config generated",
+    "✓ TypeScript config generated",
+    "🔧 Generating environment config...",
+    "🌍 Environment configuration generated",
+    "✓ Environment config generated",
+    "🚀 Generating deployment config...",
+    "🚀 Deployment configuration generated",
+    "✓ Deployment config generated",
+    "📚 Generating README...",
+    "📖 Custom README generated",
+    "✓ README generated",
+    "✓ Custom application generation completed!",
+    "✓ App generation completed",
+    "🚀 Auto-starting app on port 6047...",
+    "📦 Installing dependencies...",
+    "✓ Dependencies installed",
+    "🌐 App is now running at http://localhost:6047",
+    "✓ App generated successfully!"
+  ]
+  
+  const typeText = async (text: string, speed: number = 50) => {
+    setIsTyping(true)
+    setTypingText("")
+    for (let i = 0; i < text.length; i++) {
+      setTypingText(text.slice(0, i + 1))
+      await new Promise(resolve => setTimeout(resolve, speed))
+    }
+    setIsTyping(false)
+  }
+  
+  const handleLaunch = async () => {
+    // Prevent multiple launches
+    if (showTerminal) return
+    
+    setShowTerminal(true)
+    setGenerationStep(0)
+    setCodeLines([])
+    setCurrentCodeLine(0)
+    setTypingText("")
+    setIsGenerationComplete(false)
+    
+    try {
+      // Start with the main code
+      for (let i = 0; i < codeToWrite.length; i++) {
+        await typeText(codeToWrite[i], 30) // Type each line
+        setCodeLines(prev => {
+          // Check if line already exists to prevent duplicates
+          if (prev.includes(codeToWrite[i])) return prev
+          return [...prev, codeToWrite[i]]
+        })
+        setCurrentCodeLine(i + 1)
+        await new Promise(resolve => setTimeout(resolve, 200)) // Pause between lines
+      }
+      
+      // Add detailed generation steps
+      for (let i = 0; i < detailedSteps.length; i++) {
+        await typeText(detailedSteps[i], 20) // Faster typing for detailed steps
+        setCodeLines(prev => {
+          // Check if line already exists to prevent duplicates
+          if (prev.includes(detailedSteps[i])) return prev
+          return [...prev, detailedSteps[i]]
+        })
+        setCurrentCodeLine(codeToWrite.length + i + 1)
+        await new Promise(resolve => setTimeout(resolve, 100)) // Shorter pause between detailed steps
+      }
+      
+      // Simulate generation steps
+      for (let i = 0; i < generationSteps.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 600))
+        setGenerationStep(i + 1)
+      }
+      
+      // Final completion
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Mark generation as complete
+      setIsGenerationComplete(true)
+      
+      // Call the actual launch function
+      await onLaunch()
+      
+      // Reset terminal state after successful launch
+      setTimeout(() => {
+        setShowTerminal(false)
+      }, 2000) // Give user time to see the completion message
+      
+    } catch (error) {
+      console.error('Launch error:', error)
+      // Reset state on error
+      setShowTerminal(false)
+      setGenerationStep(0)
+      setCodeLines([])
+      setCurrentCodeLine(0)
+      setTypingText("")
+      setIsGenerationComplete(false)
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold mb-2">Ready to Launch!</h2>
-        <p className="text-gray-600 mb-6">
-          Review your configuration and launch your application.
-        </p>
+    <div className="space-y-8">
+  
 
-        {/* Configuration Summary */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <div>
-            <h3 className="font-semibold mb-3">Integrations</h3>
-            <div className="space-y-2">
-              {enabledIntegrations.map((int: Integration) => (
-                <div key={int.id} className="flex items-center text-sm">
-                  <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
-                  {int.name}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-3">Workflows</h3>
-            <div className="space-y-2">
-              {enabledWorkflows.slice(0, 5).map((wf: Workflow) => (
-                <div key={wf.id} className="flex items-center text-sm">
-                  <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
-                  {wf.name}
-                </div>
-              ))}
-              {enabledWorkflows.length > 5 && (
-                <p className="text-sm text-gray-500">+{enabledWorkflows.length - 5} more</p>
-              )}
-            </div>
-          </div>
+    {/* Enhanced Launch Options */}
+    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-200 p-8 shadow-xl">
+      <div className="flex items-center mb-6">
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-blue-500/25">
+          <Rocket className="w-6 h-6 text-white" />
         </div>
-
-        {/* Impact Metrics */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold mb-4">Expected Impact</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">$15K</div>
-              <div className="text-sm text-gray-600">Annual Savings</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">20hrs</div>
-              <div className="text-sm text-gray-600">Weekly Time Saved</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">2min</div>
-              <div className="text-sm text-gray-600">To Go Live</div>
-            </div>
-          </div>
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900">Ready to Launch!</h3>
+          <p className="text-lg text-gray-700 leading-relaxed">
+            Your application is configured and ready. Choose how you want to proceed:
+          </p>
         </div>
-      </div>
-
-      {/* Launch Options */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200 p-6">
-        <h3 className="font-semibold text-blue-800 mb-4 flex items-center">
-          <Rocket className="w-5 h-5 mr-2" />
-          Ready to Launch!
-        </h3>
-        <p className="text-blue-700 mb-6">
-          Your application is configured and ready. Choose how you want to proceed:
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Launch App Option */}
-          <div className="bg-white rounded-lg border-2 border-blue-200 p-6">
-            <div className="flex items-center mb-3">
-              <Eye className="w-6 h-6 text-blue-600 mr-2" />
-              <h4 className="font-semibold text-lg">Launch App</h4>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Test your app immediately with a temporary deployment. No registration required.
-            </p>
-            <ul className="text-sm text-gray-500 mb-4 space-y-1">
-              <li>• Instant preview deployment</li>
-              <li>• No account needed</li>
-              <li>• Test all features</li>
-              <li>• Temporary URL (24 hours)</li>
-            </ul>
-            <button
-              onClick={onLaunch}
-              disabled={state.isDeploying}
-              className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
-                !state.isDeploying
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {state.isDeploying ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                  Launching...
-                </>
-              ) : (
-                <>
-                  <Rocket className="w-4 h-4 mr-2" />
-                  Launch App Now
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Save to Profile Option */}
-          <div className="bg-white rounded-lg border-2 border-purple-200 p-6">
-            <div className="flex items-center mb-3">
-              <Settings className="w-6 h-6 text-purple-600 mr-2" />
-              <h4 className="font-semibold text-lg">Save to Dashboard</h4>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Save your app to your dashboard for ongoing management and updates.
-            </p>
-            <ul className="text-sm text-gray-500 mb-4 space-y-1">
-              <li>• Permanent deployment</li>
-              <li>• Custom domain support</li>
-              <li>• Ongoing updates</li>
-              <li>• Analytics & monitoring</li>
-            </ul>
-            <button
-              onClick={onSave}
-              disabled={state.isSaving}
-              className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
-                !state.isSaving
-                  ? 'bg-purple-600 text-white hover:bg-purple-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {state.isSaving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Settings className="w-4 h-4 mr-2" />
-                  {user ? 'Save to Dashboard' : 'Sign Up & Save'}
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-        
-        {state.deploymentResult && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center text-green-800 mb-2">
-              <CheckCircle className="w-5 h-5 mr-2" />
-              <span className="font-semibold">App Launched Successfully!</span>
-            </div>
-            <p className="text-green-700 mb-3">
-              Your app is now live and ready to test. You can save it to your dashboard anytime.
-            </p>
-            <div className="flex items-center gap-4">
-              <a
-                href={state.deploymentResult.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-green-700 hover:text-green-900"
-              >
-                <Eye className="w-4 h-4 mr-1" />
-                View App
-              </a>
-              <span className="text-green-600">•</span>
-              <span className="text-sm text-green-600">
-                Available for 24 hours
-              </span>
-            </div>
-          </div>
-        )}
       </div>
       
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Generate & Launch App */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-200/50"
+        >
+          <div className="flex items-center mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-blue-500/25">
+              <Eye className="w-6 h-6 text-white" />
+            </div>
+            <h4 className="text-xl font-bold text-gray-900">Generate & Launch App</h4>
+          </div>
+          <p className="text-gray-600 mb-4">
+            Test your app immediately with a temporary deployment. No registration required.
+          </p>
+          <ul className="space-y-2 mb-6">
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              Instant preview deployment
+            </li>
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              No account needed
+            </li>
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              Test all features
+            </li>
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              Temporary URL (24 hours)
+            </li>
+          </ul>
+          <motion.button
+            onClick={handleLaunch}
+            disabled={showTerminal}
+            className={`w-full px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
+              showTerminal
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105'
+            }`}
+            whileHover={!showTerminal ? { scale: 1.02 } : {}}
+            whileTap={!showTerminal ? { scale: 0.98 } : {}}
+          >
+            {showTerminal ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent mr-3" />
+                <span>Generating...</span>
+              </div>
+            ) : (
+              <>
+                <Rocket className="w-5 h-5 mr-3" />
+                Generate & Launch App
+              </>
+            )}
+          </motion.button>
+        </motion.div>
+
+        {/* Save to Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-purple-200/50"
+        >
+          <div className="flex items-center mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-purple-500/25">
+              <Settings className="w-6 h-6 text-white" />
+            </div>
+            <h4 className="text-xl font-bold text-gray-900">Save to Dashboard</h4>
+          </div>
+          <p className="text-gray-600 mb-4">
+            Save your configuration and deploy when you're ready. Requires account.
+          </p>
+          <ul className="space-y-2 mb-6">
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              Save configuration
+            </li>
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              Deploy when ready
+            </li>
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              Full account access
+            </li>
+            <li className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              Manage multiple apps
+            </li>
+          </ul>
+          <motion.button
+            onClick={onSave}
+            disabled={state.isSaving}
+            className={`w-full px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
+              state.isSaving
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-105'
+            }`}
+            whileHover={!state.isSaving ? { scale: 1.02 } : {}}
+            whileTap={!state.isSaving ? { scale: 0.98 } : {}}
+          >
+            {state.isSaving ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent mr-3" />
+                <span>Saving...</span>
+              </div>
+            ) : (
+              <>
+                <Settings className="w-5 h-5 mr-3" />
+                Save to Dashboard
+              </>
+            )}
+          </motion.button>
+        </motion.div>
+      </div>
     </div>
-  )
+
+    {/* Success Message */}
+    {state.deploymentResult && (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-lg"
+      >
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <p className="font-bold text-lg">App Launched Successfully!</p>
+            <p className="text-green-700">
+              Your application is now running at: <a href={state.deploymentResult.url} target="_blank" rel="noopener noreferrer" className="underline font-medium">{state.deploymentResult.url}</a>
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    )}
+
+    {/* Launch Section */}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.6 }}
+      className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-purple-200/50 mt-6"
+    >
+      <div className="flex items-center mb-4">
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-lg shadow-blue-500/25">
+          <Rocket className="w-6 h-6 text-white" />
+        </div>
+        <h4 className="text-xl font-bold text-gray-900">Launch!</h4>
+      </div>
+      <p className="text-gray-600 mb-6">
+        Review your configuration and generate your application locally.
+      </p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Connected Integrations */}
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200/50">
+          <h5 className="font-semibold text-gray-900 mb-3">Connected Integrations</h5>
+          <div className="space-y-2">
+            {state.integrations.filter(i => i.connectionStatus === 'connected').map(integration => (
+              <div key={integration.id} className="flex items-center text-sm text-gray-600">
+                <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                {integration.name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Active Workflows */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200/50">
+          <h5 className="font-semibold text-gray-900 mb-3">Active Workflows</h5>
+          <div className="space-y-2">
+            {state.workflows.filter(w => w.enabled).map(workflow => (
+              <div key={workflow.id} className="flex items-center text-sm text-gray-600">
+                <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                {workflow.name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Expected Impact */}
+        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-lg p-4 border border-orange-200/50">
+          <h5 className="font-semibold text-gray-900 mb-3">Expected Impact</h5>
+          <div className="space-y-3">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">$15K</div>
+              <div className="text-xs text-gray-500">Annual Savings</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">20hrs</div>
+              <div className="text-xs text-gray-500">Weekly Time Saved</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">2min</div>
+              <div className="text-xs text-gray-500">To Go Live</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <motion.button
+        onClick={onLaunch}
+        disabled={state.isDeploying}
+        className={`w-full px-6 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
+          state.isDeploying
+            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105'
+        }`}
+        whileHover={!state.isDeploying ? { scale: 1.02 } : {}}
+        whileTap={!state.isDeploying ? { scale: 0.98 } : {}}
+      >
+        {state.isDeploying ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent mr-3" />
+            <span>Launching...</span>
+          </div>
+        ) : (
+          <>
+            <Rocket className="w-5 h-5 mr-3" />
+            Launch!
+          </>
+        )}
+      </motion.button>
+    </motion.div>
+
+  </div>
+)
 }

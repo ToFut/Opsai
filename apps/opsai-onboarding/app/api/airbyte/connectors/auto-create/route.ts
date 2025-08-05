@@ -153,6 +153,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Initialize Supabase client inside the function to avoid build-time errors
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     // Fetch custom connectors from database
     const { data: connectors, error } = await supabase
       .from('custom_connectors')
@@ -191,6 +197,12 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Initialize Supabase client inside the function to avoid build-time errors
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Delete from database
     const { error } = await supabase

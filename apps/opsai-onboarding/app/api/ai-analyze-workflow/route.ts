@@ -75,6 +75,17 @@ export async function POST(request: NextRequest) {
 async function fetchUserData(userId: string) {
   const cleanUserId = userId.replace(/-/g, '_')
   
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+  
   try {
     // Fetch data from analytics views
     const [customers, revenue, development, website, metrics] = await Promise.all([
@@ -284,6 +295,17 @@ async function calculateMetrics(userData: any) {
 }
 
 async function storeAnalysisResults(userId: string, analysis: any) {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+  
   try {
     const { error } = await supabaseAdmin
       .from('user_ai_analysis')

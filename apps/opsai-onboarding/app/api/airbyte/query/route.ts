@@ -93,6 +93,11 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to list available tables
 export async function GET() {
+  // Initialize Supabase client inside the function to avoid build-time errors
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
   try {
     // Get all tables from Supabase that match Airbyte patterns
     const { data: tables, error } = await supabase

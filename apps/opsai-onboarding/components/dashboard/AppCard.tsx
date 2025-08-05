@@ -28,6 +28,13 @@ interface AppCardProps {
     status: 'running' | 'stopped' | 'error'
     version: string
     features: string[]
+    metadata?: {
+      url?: string
+      version?: string
+      output_dir?: string
+      port?: number
+      features?: string[]
+    }
     performanceMetrics?: {
       lighthouseScore: number
     }
@@ -176,9 +183,9 @@ const AppCard: React.FC<AppCardProps> = ({ app, onEdit, onDelete, onImprove }) =
       <div className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {app.url && (
+            {(app.url || app.metadata?.url) && (
               <a
-                href={app.url}
+                href={app.url || app.metadata?.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
