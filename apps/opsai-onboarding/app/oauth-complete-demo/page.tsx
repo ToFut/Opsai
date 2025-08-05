@@ -112,7 +112,7 @@ export default function OAuthCompleteDemoPage() {
 
         {/* Error Alert */}
         {error && (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="error" className="mb-6">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}

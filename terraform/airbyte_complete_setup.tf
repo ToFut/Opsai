@@ -13,7 +13,7 @@ resource "airbyte_connection" "stripe_to_supabase_fixed" {
   destination_id = airbyte_destination_postgres.supabase_destination.destination_id
   
   # User-specific namespace for data isolation
-  namespace_definition = "custom"
+  namespace_definition = "custom_format"
   namespace_format     = "user_${var.user_id}"
   
   # Prefix tables for better organization
@@ -36,7 +36,7 @@ resource "airbyte_connection" "github_to_supabase_fixed" {
   source_id      = airbyte_source_github.github_source[0].source_id
   destination_id = airbyte_destination_postgres.supabase_destination.destination_id
   
-  namespace_definition = "custom"
+  namespace_definition = "custom_format"
   namespace_format     = "user_${var.user_id}"
   prefix              = "github_"
   
@@ -56,7 +56,7 @@ resource "airbyte_connection" "shopify_to_supabase_fixed" {
   source_id      = airbyte_source_shopify.shopify_source[0].source_id
   destination_id = airbyte_destination_postgres.supabase_destination.destination_id
   
-  namespace_definition = "custom"
+  namespace_definition = "custom_format"
   namespace_format     = "user_${var.user_id}"
   prefix              = "shopify_"
   
@@ -76,7 +76,7 @@ resource "airbyte_connection" "google_to_supabase_fixed" {
   source_id      = airbyte_source_google_analytics_data_api.google_analytics_source[0].source_id
   destination_id = airbyte_destination_postgres.supabase_destination.destination_id
   
-  namespace_definition = "custom"  
+  namespace_definition = "custom_format"  
   namespace_format     = "user_${var.user_id}"
   prefix              = "ga_"
   

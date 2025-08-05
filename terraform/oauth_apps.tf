@@ -34,6 +34,7 @@ output "github_oauth_config" {
     authorization_callback_urls = local.redirect_uris
   }
   description = "GitHub OAuth App configuration - apply manually at https://github.com/settings/developers"
+  sensitive = true
 }
 
 # Google OAuth 2.0 Client (can be managed via google provider)
@@ -59,6 +60,7 @@ output "google_oauth_config" {
     ]
   }
   description = "Google OAuth configuration - apply at https://console.cloud.google.com"
+  sensitive = true
 }
 
 # Stripe OAuth Settings
@@ -69,6 +71,7 @@ output "stripe_oauth_config" {
     platform_name = "OpsAI Platform"
   }
   description = "Stripe Connect configuration - apply at https://dashboard.stripe.com/settings/connect"
+  sensitive = true
 }
 
 # Shopify App Configuration
@@ -86,6 +89,7 @@ output "shopify_oauth_config" {
     ]
   }
   description = "Shopify App configuration - apply at https://partners.shopify.com"
+  sensitive = true
 }
 
 # Calendly OAuth Configuration
@@ -96,6 +100,7 @@ output "calendly_oauth_config" {
     scopes = ["default"]
   }
   description = "Calendly OAuth configuration - apply in Calendly developer portal"
+  sensitive = true
 }
 
 # Resource to validate OAuth configurations

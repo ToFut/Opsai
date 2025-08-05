@@ -319,7 +319,7 @@ export default function NaturalLanguageInterface() {
                   Online
                 </Badge>
               ) : (
-                <Badge variant="destructive">
+                <Badge variant="error">
                   <AlertCircle className="w-3 h-3 mr-1" />
                   Offline
                 </Badge>

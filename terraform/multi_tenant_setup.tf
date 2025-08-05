@@ -18,7 +18,7 @@ resource "airbyte_connection" "stripe_to_supabase_per_user" {
   destination_id = airbyte_destination_postgres.supabase_destination.destination_id
   
   # IMPORTANT: Each user gets their own schema
-  namespace_definition = "custom"
+  namespace_definition = "custom_format"
   namespace_format     = "user_${var.user_id}"
   
   schedule = {

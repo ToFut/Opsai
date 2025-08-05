@@ -165,7 +165,7 @@ async function generateCustomAppStructure({
     
     // Generate database schema based on business type
     console.log('🗄️ Generating database schema...')
-    const dbSchema = generateDatabaseSchema(businessProfile)
+    const dbSchema = generateDatabaseSchema(businessProfile, integrations)
     await fs.mkdir(path.join(appPath, 'prisma'), { recursive: true })
     await fs.writeFile(path.join(appPath, 'prisma/schema.prisma'), dbSchema)
     console.log('✅ Database schema created')
@@ -210,7 +210,7 @@ async function generateCustomAppStructure({
   }
 }
 
-function generateDatabaseSchema(businessProfile: BusinessProfile): string {
+function generateDatabaseSchema(businessProfile: BusinessProfile, integrations: string[]): string {
   const { businessType, industry } = businessProfile
   
   let schema = `generator client {

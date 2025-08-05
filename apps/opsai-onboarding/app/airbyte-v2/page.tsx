@@ -342,7 +342,7 @@ export default function AirbyteV2Page() {
                   {result.success ? 'Success' : 'Error'}
                 </h3>
                 {result.error && (
-                  <Alert variant="destructive" className="mb-4">
+                  <Alert variant="error" className="mb-4">
                     <AlertDescription>{result.error}</AlertDescription>
                   </Alert>
                 )}

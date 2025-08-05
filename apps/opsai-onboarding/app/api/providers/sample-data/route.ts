@@ -134,8 +134,8 @@ async function fetchGitHubSampleData(accessToken: string) {
         }
       },
       metrics: {
-        totalStars: reposData.data.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0),
-        totalForks: reposData.data.reduce((sum, repo) => sum + (repo.forks_count || 0), 0),
+        totalStars: reposData.data.reduce((sum: number, repo: any) => sum + (repo.stargazers_count || 0), 0),
+        totalForks: reposData.data.reduce((sum: number, repo: any) => sum + (repo.forks_count || 0), 0),
         openIssues: issuesData.data.filter(i => i.state === 'open').length
       }
     }
@@ -146,12 +146,12 @@ async function fetchGitHubSampleData(accessToken: string) {
 }
 
 async function fetchStripeSampleData(accessToken: string) {
-  const stripe = new Stripe(accessToken, { apiVersion: '2023-10-16' })
+  const stripe = new Stripe(accessToken, { apiVersion: '2025-07-30.basil' })
   
   try {
     // Fetch sample Stripe data
     const [account, customers, charges, subscriptions] = await Promise.all([
-      stripe.account.retrieve(),
+      stripe.accounts.retrieve(),
       stripe.customers.list({ limit: 10 }),
       stripe.charges.list({ limit: 10 }),
       stripe.subscriptions.list({ limit: 10 })
