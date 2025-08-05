@@ -5,7 +5,7 @@ import { airbyteClient, AIRBYTE_SOURCE_DEFINITIONS, getProviderOAuthConfig } fro
 export async function GET(request: NextRequest) {
   // Initialize Supabase client inside the function to avoid build-time errors
   const supabase = createClient(
-    process.env.SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
   const searchParams = request.nextUrl.searchParams
@@ -356,15 +356,14 @@ async function fetchInitialData(tenantId: string, provider: string, accessToken:
       }
       
       // Setup Airbyte connection asynchronously (don't block OAuth completion)
-      // Skip Airbyte setup for now since it's causing 500 errors
-      console.log(`⚠️ Skipping Airbyte setup for ${provider} to avoid blocking OAuth completion`)
-      // setupAirbyteConnection(tenantId, provider, accessToken)
-      //   .then(() => {
-      //     console.log(`✅ Airbyte connection setup successful for ${provider}`)
-      //   })
-      //   .catch((err) => {
-      //     console.log(`⚠️ Airbyte setup failed for ${provider}, but sample data was collected:`, err)
-      //   })
+      console.log(`🚀 Setting up Airbyte connection for ${provider}...`)
+      setupAirbyteConnection(tenantId, provider, accessToken)
+        .then(() => {
+          console.log(`✅ Airbyte connection setup successful for ${provider}`)
+        })
+        .catch((err) => {
+          console.log(`⚠️ Airbyte setup failed for ${provider}, but sample data was collected:`, err)
+        })
     }
   } catch (error) {
     console.error(`Failed to fetch sample data for ${provider}:`, error)

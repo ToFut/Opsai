@@ -45,7 +45,7 @@ const integrationConfigs = {
 export async function POST(request: NextRequest) {
   // Initialize Supabase client inside the function to avoid build-time errors
   const supabase = createClient(
-    process.env.SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
   try {
@@ -282,7 +282,7 @@ async function setupPlatformIntegration(tenantId: string, provider: string) {
       namespace: process.env.TEMPORAL_NAMESPACE
     },
     supabase: {
-      url: process.env.SUPABASE_URL,
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       anonKey: process.env.SUPABASE_ANON_KEY,
       serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY
     }
@@ -402,7 +402,7 @@ async function encryptCredentials(credentials: any): Promise<string> {
 export async function GET() {
   // Initialize Supabase client inside the function to avoid build-time errors
   const supabase = createClient(
-    process.env.SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
   return NextResponse.json({

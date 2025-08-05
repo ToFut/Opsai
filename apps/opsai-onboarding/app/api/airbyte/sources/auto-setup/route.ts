@@ -158,7 +158,7 @@ const API_CONNECTOR_TEMPLATES = {
 export async function POST(request: NextRequest) {
   // Initialize Supabase client inside the function to avoid build-time errors
   const supabase = createClient(
-    process.env.SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
   try {
@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   // Initialize Supabase client inside the function to avoid build-time errors
   const supabase = createClient(
-    process.env.SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
   const connectors = Object.entries(API_CONNECTOR_TEMPLATES).map(([key, template]) => ({

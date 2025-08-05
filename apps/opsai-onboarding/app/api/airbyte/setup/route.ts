@@ -45,9 +45,24 @@ export async function POST(request: NextRequest) {
       throw error
     }
     
-    // For now, return success without creating new Airbyte resources
-    // since sources already exist in the workspace
-    console.log(`✅ Using existing Airbyte source for ${provider}`)
+    // Check if we already have a connection for this tenant/provider
+    const { data: existingConnection } = await supabase
+      .from('tenant_airbyte_connections')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('provider', provider)
+      .single()
+    
+    if (existingConnection && existingConnection.connection_id) {
+      console.log(`✅ Found existing Airbyte connection for ${provider}`);
+      return NextResponse.json({
+        success: true,
+        sourceId: existingConnection.source_id,
+        connectionId: existingConnection.connection_id,
+        message: `Using existing ${provider} connection`,
+        isExisting: true
+      })
+    }
     
     // Map of existing source IDs from the workspace
     const existingSources: Record<string, string> = {
@@ -61,12 +76,25 @@ export async function POST(request: NextRequest) {
     
     const sourceId = existingSources[provider]
     if (sourceId) {
-      console.log(`🔗 Creating Airbyte connection for existing ${provider} source...`)
+      console.log(`🔗 Creating NEW Airbyte connection for ${provider} source...`)
       
-      // Create or check for existing connection to Supabase
+      // Create new connection to Supabase
       const connectionResult = await createAirbyteConnection(tenantId, provider, sourceId)
       
-      // Store the integration info with connection details
+      // Store the connection info
+      await supabase
+        .from('tenant_airbyte_connections')
+        .upsert({
+          tenant_id: tenantId,
+          provider,
+          source_id: sourceId,
+          destination_id: connectionResult.destinationId,
+          connection_id: connectionResult.connectionId,
+          status: 'active',
+          created_at: new Date().toISOString()
+        })
+      
+      // Update integration status
       await supabase
         .from('tenant_integrations')
         .upsert({
@@ -81,7 +109,7 @@ export async function POST(request: NextRequest) {
         success: true,
         sourceId,
         connectionId: connectionResult.connectionId,
-        message: `Connected ${provider} source to Supabase destination - data will sync automatically`,
+        message: `Created new ${provider} connection - data will sync every 6 hours`,
         syncSchedule: connectionResult.schedule
       })
     }
@@ -317,38 +345,52 @@ function getAirbyteSourceConfig(provider: string, accessToken: string, propertyI
 }
 
 async function createAirbyteConnection(tenantId: string, provider: string, sourceId: string) {
-  console.log(`🔗 Creating Airbyte connection: ${provider} → Supabase (with auto token refresh)`)
+  console.log(`🔗 Creating Airbyte connection: ${provider} → Supabase`)
   
   try {
     // Use the correct existing Supabase destination
-    let destinationId = '76aa05f9-5ec1-4c71-8f32-e472d441d532'; // opsai-supabase-dev (correct credentials)
-    console.log(`✅ Using existing correct Supabase destination: ${destinationId}`);
-      
-    // No need to create - using existing destination
+    const destinationId = '76aa05f9-5ec1-4c71-8f32-e472d441d532'; // opsai-supabase-dev (correct credentials)
+    console.log(`✅ Using existing Supabase destination: ${destinationId}`);
     
-    // Skip connection creation for now - connections already exist in workspace
-    console.log(`✅ Using existing connection for ${provider} source`);
-    
-    // Use dummy connection data for the response
-    const connection = {
-      connectionId: 'd1ecfa35-7c9e-4f28-94e6-fd6fc459b621', // Existing Stripe connection for reference
-      name: `${tenantId}_${provider}_connection`,
-      status: 'active'
+    // Create the actual connection using Terraform SDK
+    const connectionConfig = {
+      name: `${tenantId}_${provider}_sync`,
+      sourceId: sourceId,
+      destinationId: destinationId,
+      configurations: {
+        namespaceDefinition: 'customformat',
+        namespaceFormat: `opsai_${tenantId}_${provider}`,
+        prefix: '',
+      },
+      schedule: {
+        scheduleType: 'cron',
+        cronExpression: '0 */6 * * * ?'  // Every 6 hours
+      }
     };
+    
+    console.log(`📡 Creating connection with config:`, connectionConfig);
+    
+    const connection = await airbyteTerraformSDK.createConnection(connectionConfig);
     
     console.log(`✅ Created Airbyte connection: ${connection.connectionId}`);
     
-    // Skip sync trigger for now
-    console.log(`✅ Skipping sync trigger - connection already set up`);
+    // Trigger initial sync
+    console.log(`🔄 Triggering initial data sync...`);
+    try {
+      await airbyteTerraformSDK.triggerSync(connection.connectionId);
+      console.log(`✅ Initial sync triggered successfully`);
+    } catch (syncError) {
+      console.warn(`⚠️ Could not trigger initial sync:`, syncError);
+    }
     
     return {
       connectionId: connection.connectionId,
       destinationId: destinationId,
-      schedule: 'manual'
+      schedule: connectionConfig.schedule.cronExpression
     };
     
   } catch (error) {
-    console.error('❌ Terraform SDK connection creation failed:', error);
+    console.error('❌ Connection creation failed:', error);
     throw error;
   }
 }
