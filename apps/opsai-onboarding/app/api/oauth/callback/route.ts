@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { airbyteClient, AIRBYTE_SOURCE_DEFINITIONS, getProviderOAuthConfig } from '@/lib/airbyte-oauth-client'
+import { getAirbyteClient, AIRBYTE_SOURCE_DEFINITIONS, getProviderOAuthConfig } from '@/lib/airbyte-oauth-client'
 
 export async function GET(request: NextRequest) {
   // Initialize Supabase client inside the function to avoid build-time errors
@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
         const oauthConfig = getProviderOAuthConfig(provider)
         
         // Complete OAuth with Airbyte
+        const airbyteClient = getAirbyteClient()
         const result = await airbyteClient.completeOAuth(
           sourceDefinitionId,
           redirectUri,

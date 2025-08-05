@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { airbyteClient, AIRBYTE_SOURCE_DEFINITIONS, getProviderOAuthConfig } from '@/lib/airbyte-oauth-client'
+import { getAirbyteClient, AIRBYTE_SOURCE_DEFINITIONS, getProviderOAuthConfig } from '@/lib/airbyte-oauth-client'
 
 // GET handler for OAuth redirect flow
 export async function GET(request: NextRequest) {
@@ -60,6 +60,7 @@ async function handleOAuthInit(provider: string, tenantId: string, existingState
         oauthConfig.shop = shopDomain
       }
       
+      const airbyteClient = getAirbyteClient()
       const consentUrl = await airbyteClient.createOAuthConsentUrl(
         sourceDefinitionId,
         redirectUri,

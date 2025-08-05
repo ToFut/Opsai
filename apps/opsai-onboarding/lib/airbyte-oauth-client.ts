@@ -20,13 +20,16 @@ class AirbyteOAuthClient {
   private readonly workspaceId: string
   
   constructor() {
-    this.clientId = process.env.AIRBYTE_CLIENT_ID!
-    this.clientSecret = process.env.AIRBYTE_CLIENT_SECRET!
+    this.clientId = process.env.AIRBYTE_CLIENT_ID || ''
+    this.clientSecret = process.env.AIRBYTE_CLIENT_SECRET || ''
     this.apiUrl = process.env.AIRBYTE_API_URL || 'https://api.airbyte.com/v1'
-    this.workspaceId = process.env.AIRBYTE_WORKSPACE_ID!
+    this.workspaceId = process.env.AIRBYTE_WORKSPACE_ID || ''
     
-    if (!this.clientId || !this.clientSecret || !this.workspaceId) {
-      throw new Error('Missing Airbyte configuration. Set AIRBYTE_CLIENT_ID, AIRBYTE_CLIENT_SECRET, and AIRBYTE_WORKSPACE_ID')
+    // Only validate in runtime, not at build time
+    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'production') {
+      if (!this.clientId || !this.clientSecret || !this.workspaceId) {
+        console.warn('Missing Airbyte configuration. Set AIRBYTE_CLIENT_ID, AIRBYTE_CLIENT_SECRET, and AIRBYTE_WORKSPACE_ID')
+      }
     }
   }
   
@@ -41,6 +44,11 @@ class AirbyteOAuthClient {
    * Get a valid access token, refreshing if necessary
    */
   private async getAccessToken(): Promise<string> {
+    // Validate configuration at runtime
+    if (!this.clientId || !this.clientSecret || !this.workspaceId) {
+      throw new Error('Missing Airbyte configuration. Set AIRBYTE_CLIENT_ID, AIRBYTE_CLIENT_SECRET, and AIRBYTE_WORKSPACE_ID')
+    }
+    
     // Check if token is valid and not expired
     if (this.token && this.token.expires_at > Date.now() + 60000) { // 1 minute buffer
       return this.token.access_token
@@ -222,8 +230,8 @@ class AirbyteOAuthClient {
   }
 }
 
-// Export singleton instance
-export const airbyteClient = AirbyteOAuthClient.getInstance()
+// Export factory function to avoid build-time initialization
+export const getAirbyteClient = () => AirbyteOAuthClient.getInstance()
 
 // Provider to source definition mapping (verified Airbyte Cloud IDs)
 export const AIRBYTE_SOURCE_DEFINITIONS: Record<string, string> = {
