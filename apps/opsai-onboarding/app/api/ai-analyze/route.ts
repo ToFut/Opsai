@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-})
+import { getOpenAIClient } from '@/lib/openai-client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -175,6 +171,7 @@ Provide comprehensive, accurate analysis that will guide the creation of a truly
   try {
     console.log('🤖 Sending business analysis request to OpenAI...')
     
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // Using latest model for better analysis
       messages: [

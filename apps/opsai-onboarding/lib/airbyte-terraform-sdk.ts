@@ -196,34 +196,102 @@ class AirbyteTerraformSDK {
     configurations?: any;
     schedule?: any;
   }): Promise<any> {
-    // Use minimal working stream configuration (based on working Stripe connection)
-    let streams = [
-      {
-        name: 'default',
-        syncMode: 'full_refresh_overwrite',
-        primaryKey: [],
-        cursorField: []
-      }
-    ];
-    console.log(`📊 Using minimal stream configuration for connection`);
+    try {
+      // First, discover the schema for the source
+      console.log(`🔍 Discovering schema for source: ${config.sourceId}`);
+      const schemaResponse = await this.makeApiRequest(`/sources/${config.sourceId}/discover_schema`, {
+        method: 'POST'
+      });
 
+      if (!schemaResponse.ok) {
+        console.log(`⚠️ Schema discovery failed, using minimal config`);
+        // Fallback to minimal configuration
+        return await this.createConnectionMinimal(config);
+      }
+
+      const schema = await schemaResponse.json();
+      console.log(`✅ Schema discovered, found ${schema.streams?.length || 0} streams`);
+
+      // Use discovered streams or fallback
+      let streams = [];
+      if (schema.streams && schema.streams.length > 0) {
+        streams = schema.streams.slice(0, 3).map((stream: any) => ({
+          name: stream.name,
+          syncMode: 'full_refresh_overwrite',
+          primaryKey: [],
+          cursorField: []
+        }));
+      } else {
+        console.log(`📊 No streams found, using default stream`);
+        streams = [{
+          name: 'users',
+          syncMode: 'full_refresh_overwrite',
+          primaryKey: [],
+          cursorField: []
+        }];
+      }
+
+      const requestBody = {
+        name: config.name,
+        sourceId: config.sourceId,
+        destinationId: config.destinationId,
+        configurations: {
+          namespaceDefinition: config.configurations?.namespaceDefinition || 'destination',
+          namespaceFormat: config.configurations?.namespaceFormat || '${SOURCE_NAMESPACE}',
+          prefix: config.configurations?.prefix || 'opsai_',
+          streams: streams
+        },
+        schedule: config.schedule || {
+          scheduleType: 'manual'
+        },
+        dataResidency: 'auto'
+      };
+
+      console.log('🔧 Creating connection with discovered streams:', JSON.stringify(requestBody, null, 2));
+
+      const response = await this.makeApiRequest('/connections', {
+        method: 'POST',
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`❌ Connection creation failed: ${errorText}`);
+        
+        // Try minimal configuration as fallback
+        console.log(`🔄 Attempting fallback minimal configuration...`);
+        return await this.createConnectionMinimal(config);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('❌ Connection creation error:', error);
+      // Final fallback
+      return await this.createConnectionMinimal(config);
+    }
+  }
+
+  /**
+   * Create minimal connection as fallback
+   */
+  private async createConnectionMinimal(config: {
+    name: string;
+    sourceId: string;
+    destinationId: string;
+    configurations?: any;
+    schedule?: any;
+  }): Promise<any> {
     const requestBody = {
       name: config.name,
       sourceId: config.sourceId,
       destinationId: config.destinationId,
-      configurations: {
-        namespaceDefinition: config.configurations?.namespaceDefinition || 'destination',
-        namespaceFormat: config.configurations?.namespaceFormat || '${SOURCE_NAMESPACE}',
-        prefix: config.configurations?.prefix || 'opsai_',
-        streams: streams
-      },
       schedule: config.schedule || {
         scheduleType: 'manual'
       },
       dataResidency: 'auto'
     };
 
-    console.log('🔧 Creating connection with config:', JSON.stringify(requestBody, null, 2));
+    console.log('🔧 Creating minimal connection:', JSON.stringify(requestBody, null, 2));
 
     const response = await this.makeApiRequest('/connections', {
       method: 'POST',
@@ -232,7 +300,7 @@ class AirbyteTerraformSDK {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to create connection: ${response.status} ${errorText}`);
+      throw new Error(`Failed to create minimal connection: ${response.status} ${errorText}`);
     }
 
     return response.json();

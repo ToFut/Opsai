@@ -1055,6 +1055,7 @@ async function generateAPIEndpoints(appPath: string, dataArchitecture: any, inte
   }
   
   // Generate sync endpoint
+  await fs.mkdir(path.join(appPath, 'app/api/sync'), { recursive: true })
   await fs.writeFile(
     path.join(appPath, 'app/api/sync/route.ts'),
     `import { NextRequest, NextResponse } from 'next/server'
