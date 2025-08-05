@@ -259,7 +259,7 @@ export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
                 <p className="text-sm text-gray-600 mt-1">{opportunity.description}</p>
               </div>
               <Badge 
-                variant={opportunity.impact === 'high' ? 'destructive' : 'secondary'}
+                variant={opportunity.impact === 'high' ? 'error' : 'secondary'}
                 className="text-xs"
               >
                 {opportunity.impact} impact

@@ -304,7 +304,7 @@ export default function AgentInterface() {
                           </div>
                           <Badge
                             variant={task.status === 'completed' ? 'default' : 
-                                    task.status === 'error' ? 'destructive' : 'secondary'}
+                                    task.status === 'error' ? 'error' : 'secondary'}
                           >
                             {task.status}
                           </Badge>

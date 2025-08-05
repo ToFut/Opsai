@@ -59,7 +59,8 @@ export default function CodeEditor({ appId, initialFiles = [], onSave, onDeploy 
   useEffect(() => {
     const loadMonaco = async () => {
       if (typeof window !== 'undefined') {
-        const monaco = await import('monaco-editor')
+        const monaco = await import('monaco-editor').catch(() => null)
+        if (!monaco) return
         
         // Configure Monaco themes
         monaco.editor.defineTheme('opsai-dark', {
@@ -275,13 +276,13 @@ root.render(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: aiPrompt,
-          context: {
+          context: JSON.stringify({
             appId,
             currentFiles: files,
             activeFile: activeFile?.path
-          },
+          }),
           operation: 'create'
-        } as AIGenerationRequest)
+        })
       })
       
       const result = await response.json()
