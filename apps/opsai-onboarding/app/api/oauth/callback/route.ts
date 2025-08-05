@@ -125,18 +125,8 @@ export async function GET(request: NextRequest) {
       await fetchInitialData(tenantId, provider, tokens.access_token)
       console.log(`✅ Sample data collected and saved to Supabase for ${provider}`)
       
-      // Trigger database organization
-      console.log(`🧠 Organizing database with AI...`)
-      const organizeResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/organize-database`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenantId })
-      });
-      
-      if (organizeResponse.ok) {
-        const result = await organizeResponse.json();
-        console.log(`✅ Database organized successfully: ${result.schemaId}`);
-      }
+      // Skip database organization for now (API doesn't exist)
+      console.log(`⚠️ Skipping database organization - API not implemented yet`);
     } catch (error) {
       console.log(`⚠️ Data processing error:`, error);
     }

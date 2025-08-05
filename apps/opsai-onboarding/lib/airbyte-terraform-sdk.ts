@@ -196,14 +196,26 @@ class AirbyteTerraformSDK {
     configurations?: any;
     schedule?: any;
   }): Promise<any> {
+    // Use minimal working stream configuration (based on working Stripe connection)
+    let streams = [
+      {
+        name: 'default',
+        syncMode: 'full_refresh_overwrite',
+        primaryKey: [],
+        cursorField: []
+      }
+    ];
+    console.log(`📊 Using minimal stream configuration for connection`);
+
     const requestBody = {
       name: config.name,
       sourceId: config.sourceId,
       destinationId: config.destinationId,
-      configurations: config.configurations || {
-        namespaceDefinition: 'destination',
-        namespaceFormat: '${SOURCE_NAMESPACE}',
-        prefix: 'opsai_'
+      configurations: {
+        namespaceDefinition: config.configurations?.namespaceDefinition || 'destination',
+        namespaceFormat: config.configurations?.namespaceFormat || '${SOURCE_NAMESPACE}',
+        prefix: config.configurations?.prefix || 'opsai_',
+        streams: streams
       },
       schedule: config.schedule || {
         scheduleType: 'manual'

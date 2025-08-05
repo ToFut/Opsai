@@ -3,117 +3,145 @@ import { createClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY!
 })
 
 export async function POST(request: NextRequest) {
   try {
-    const { tenantId } = await request.json()
+    const { tenantId, userId } = await request.json()
+    const finalTenantId = tenantId || userId || 'default'
     
-    console.log(`🗄️ Organizing database for tenant: ${tenantId}`)
+    console.log(`🗄️ Organizing database for tenant: ${finalTenantId}`)
     
-    // Step 1: Fetch all sample data for the tenant
-    console.log(`📊 Step 1: Fetching sample data for tenant ${tenantId}...`)
-    let sampleDataRecords
-    try {
-      const { data, error } = await supabase
-        .from('tenant_sample_data')
-        .select('*')
-        .eq('tenant_id', tenantId)
-      
-      if (!error && data?.length) {
-        sampleDataRecords = data
-      } else {
-        throw new Error('Supabase tables not ready')
-      }
-    } catch (error) {
-      console.log('⚠️  Using temp storage to fetch sample data')
-      const { tempStorage } = await import('@/lib/temp-storage')
-      sampleDataRecords = await tempStorage.getSampleDataForTenant(tenantId)
+    // Step 1: Get connected integrations
+    const { data: integrations, error: intError } = await supabase
+      .from('tenant_integrations')
+      .select('*')
+      .eq('tenant_id', finalTenantId)
+      .eq('status', 'connected')
+    
+    if (intError) {
+      throw new Error(`Failed to fetch integrations: ${intError.message}`)
+    }
+    
+    if (!integrations?.length) {
+      return NextResponse.json({ 
+        error: 'No connected integrations found',
+        tenantId: finalTenantId 
+      }, { status: 404 })
+    }
+    
+    // Step 2: Get sample data  
+    const { data: sampleDataRecords, error: sampleError } = await supabase
+      .from('tenant_sample_data')
+      .select('*')
+      .eq('tenant_id', finalTenantId)
+    
+    if (sampleError) {
+      throw new Error(`Failed to fetch sample data: ${sampleError.message}`)
     }
     
     if (!sampleDataRecords?.length) {
-      return NextResponse.json({ error: 'No sample data found' }, { status: 404 })
+      return NextResponse.json({ 
+        error: 'No sample data found for connected integrations',
+        integrations: integrations.map(i => i.provider)
+      }, { status: 404 })
     }
     
-    // Step 2: Analyze all data together to understand relationships
-    console.log(`🧠 Step 2: Analyzing data for ${sampleDataRecords.length} providers...`)
-    const combinedAnalysis = await analyzeMultiProviderData(sampleDataRecords)
-    console.log(`✅ Step 2 complete: Analysis generated`)
+    // Step 3: Create a simplified organized schema
+    console.log(`🗄️ Step 3: Creating organized schema...`)
+    const schema = await createSimplifiedSchema(sampleDataRecords, integrations)
+    console.log(`✅ Step 3 complete: Schema created`)
     
-    // Step 3: Generate optimal database schema
-    console.log(`🗄️ Step 3: Generating database schema...`)
-    const schema = await generateDatabaseSchema(combinedAnalysis, tenantId)
-    console.log(`✅ Step 3 complete: Schema generated`)
-    
-    // Step 4: Store the schema
-    let schemaRecord
-    try {
-      const { data, error } = await supabase
-        .from('tenant_data_schemas')
-        .insert({
-          tenant_id: tenantId,
-          providers: sampleDataRecords.map(r => r.provider),
-          entities: schema.entities
-        })
-        .select()
-        .single()
-      
-      if (!error) {
-        schemaRecord = data
-        console.log(`✅ Schema saved to Supabase for tenant ${tenantId}`)
-      } else {
-        throw error
-      }
-    } catch (error) {
-      console.log('⚠️  Using temp storage to save schema')
-      const { tempStorage } = await import('@/lib/temp-storage')
-      schemaRecord = await tempStorage.saveSchema({
-        tenant_id: tenantId,
-        providers: sampleDataRecords.map(r => r.provider),
+    // Step 4: Store the organized schema
+    const { data: schemaRecord, error: schemaError } = await supabase
+      .from('tenant_data_schemas')
+      .upsert({
+        tenant_id: finalTenantId,
+        providers: integrations.map(i => i.provider),
         entities: schema.entities,
-        relationships: schema.relationships,
-        indexes: schema.indexes,
-        views: schema.views
+        relationships: schema.relationships || [],
+        created_at: new Date().toISOString()
       })
+      .select()
+      .single()
+    
+    if (schemaError) {
+      throw new Error(`Failed to save schema: ${schemaError.message}`)
     }
     
-    // Step 5: Organize existing sample data into the new schema
-    await organizeSampleData(tenantId, sampleDataRecords, schema)
-    
-    // TRIGGER COMPLETE APP GENERATION AFTER DATABASE ORGANIZATION
-    console.log(`🚀 Database organized! Now triggering complete app generation for ${tenantId}...`)
-    
-    // Trigger the complete flow asynchronously with timeout
-    Promise.race([
-      triggerCompleteAppGeneration(tenantId, schemaRecord, schema),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('App generation timeout')), 60000)
-      )
-    ]).catch(err => {
-      console.error('App generation failed or timed out:', err)
-    })
+    console.log(`✅ Database organized successfully for tenant ${finalTenantId}`)
 
     return NextResponse.json({
       success: true,
       schemaId: schemaRecord.id,
-      schema,
-      message: 'Database organized successfully! App generation started...',
-      nextStep: 'App generation in progress - you will receive your deployed app URL soon!'
+      tenantId: finalTenantId,
+      providers: integrations.map(i => i.provider),
+      entities: Object.keys(schema.entities),
+      sampleDataRecords: sampleDataRecords.length,
+      message: `Database organized successfully for ${integrations.length} integrations with ${sampleDataRecords.length} data records`
     })
     
   } catch (error) {
     console.error('Database organization error:', error)
     return NextResponse.json(
-      { error: 'Failed to organize database' },
+      { 
+        error: 'Failed to organize database',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
+}
+
+async function createSimplifiedSchema(sampleDataRecords: any[], integrations: any[]) {
+  const entities: Record<string, any> = {}
+  const relationships: any[] = []
+  
+  // Create entities from sample data
+  sampleDataRecords.forEach(sample => {
+    const provider = sample.provider
+    const sampleEntities = sample.sample_data?.entities || {}
+    
+    Object.keys(sampleEntities).forEach(entityType => {
+      const entityName = `${provider}_${entityType}`
+      const sampleData = sampleEntities[entityType]
+      
+      // Extract field structure from sample data
+      let fields: string[] = []
+      if (Array.isArray(sampleData)) {
+        fields = Object.keys(sampleData[0] || {})
+      } else if (sampleData && typeof sampleData === 'object') {
+        fields = Object.keys(sampleData)
+      }
+      
+      entities[entityName] = {
+        description: `${entityType} data from ${provider}`,
+        fields: fields,
+        source: provider,
+        primaryKey: 'id',
+        recordCount: Array.isArray(sampleData) ? sampleData.length : 1
+      }
+    })
+  })
+  
+  // Add cross-provider relationships
+  const providers = integrations.map(i => i.provider)
+  if (providers.includes('github') && providers.includes('google')) {
+    relationships.push({
+      from: 'github_users',
+      to: 'google_users', 
+      type: 'potential_match',
+      description: 'GitHub and Google users may represent the same person'
+    })
+  }
+  
+  return { entities, relationships }
 }
 
 async function analyzeMultiProviderData(sampleDataRecords: any[]) {

@@ -2,24 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
 
-// Initialize clients
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
-})
-
 export async function POST(request: NextRequest) {
   try {
+    // Initialize clients inside the function to avoid build-time errors
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!
+    })
+
     const { userId } = await request.json()
 
     if (!userId) {

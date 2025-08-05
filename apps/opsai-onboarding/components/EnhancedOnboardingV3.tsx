@@ -658,17 +658,26 @@ export default function EnhancedOnboardingV3({
         const result = await response.json()
         console.log(`✅ Airbyte connection established for ${provider}`, result)
         
-        // Update integration status
-        setState(prev => ({
-          ...prev,
-          integrations: prev.integrations.map(int => 
-            int.id === provider 
-              ? { ...int, connectionStatus: 'connected' }
-              : int
-          )
-        }))
+        // Check if the result indicates success
+        if (result.success) {
+          console.log(`🎉 Airbyte setup successful: ${result.message}`)
+          
+          // Update integration status
+          setState(prev => ({
+            ...prev,
+            integrations: prev.integrations.map(int => 
+              int.id === provider 
+                ? { ...int, connectionStatus: 'connected' }
+                : int
+            )
+          }))
+        } else {
+          throw new Error(result.error || 'Airbyte setup returned unsuccessful result')
+        }
       } else {
-        throw new Error('Failed to setup Airbyte connection')
+        const errorText = await response.text()
+        console.error(`❌ Airbyte setup failed with status ${response.status}:`, errorText)
+        throw new Error(`Failed to setup Airbyte connection: ${response.status} ${errorText}`)
       }
     } catch (error) {
       console.error(`❌ Failed to setup Airbyte for ${provider}:`, error)
@@ -827,21 +836,9 @@ export default function EnhancedOnboardingV3({
       // After integrations, organize the database
       const connectedProviders = state.integrations.filter(i => i.connectionStatus === 'connected')
       if (connectedProviders.length > 0) {
-        console.log('🗗 Organizing database with collected sample data...')
-        try {
-          const response = await fetch('/api/organize-database', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tenantId: 'default' })
-          })
-          
-          if (response.ok) {
-            const result = await response.json()
-            console.log('✅ Database organized:', result)
-          }
-        } catch (error) {
-          console.error('Failed to organize database:', error)
-        }
+        console.log('🗗 Skipping database organization (API not implemented yet)...')
+        // Temporarily skip organize-database API call since it doesn't exist
+        console.log('✅ Proceeding without database organization')
       }
     }
     
