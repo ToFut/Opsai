@@ -355,12 +355,29 @@ export default function EnhancedOAuthIntegration({
   // Organize database after connections
   const organizeDatabase = async (userId: string) => {
     try {
-      // Skip organize-database API call since it doesn't exist
-      console.log('⚠️ Skipping database organization - API not implemented yet')
-      console.log('✅ Database organization skipped for user', userId)
-      return { success: true, message: 'Database organization skipped' }
+      console.log('🗄️ Organizing database for user:', userId)
+      
+      const response = await fetch('/api/organize-database', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          tenantId: userId,
+          userId: userId 
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Database organization failed: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log('✅ Database organized successfully:', result)
+      return result
     } catch (error) {
       console.error('Error organizing database:', error)
+      throw error
     }
   }
 
