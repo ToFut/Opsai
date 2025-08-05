@@ -1396,6 +1396,7 @@ import {
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<any>({})
   const [loading, setLoading] = useState(true)
+  const [products, setProducts] = useState<any[]>([])  // For product listings
 
   useEffect(() => {
     // Fetch business metrics

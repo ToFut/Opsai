@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     // After successful connection, collect sample data and organize database
     console.log(`📊 Collecting sample data from ${provider}...`)
     try {
-      await fetchInitialData(tenantId, provider, tokens.access_token)
+      await fetchInitialData(tenantId, provider, tokens.access_token, tokens)
       console.log(`✅ Sample data collected and saved to Supabase for ${provider}`)
       
       // Skip database organization for now (API doesn't exist)
@@ -312,7 +312,7 @@ async function exchangeCodeForTokens(provider: string, code: string) {
   return response.json()
 }
 
-async function fetchInitialData(tenantId: string, provider: string, accessToken: string) {
+async function fetchInitialData(tenantId: string, provider: string, accessToken: string, tokens: any) {
   console.log(`📊 Fetching sample data for ${provider}...`)
   
   const supabase = createClient(

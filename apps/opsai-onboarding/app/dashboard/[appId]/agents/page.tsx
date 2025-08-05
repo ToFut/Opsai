@@ -212,7 +212,7 @@ export default function AgentsPage({ params }: { params: { appId: string } }) {
                       </div>
                       <Badge
                         variant={update.status === 'completed' ? 'default' : 
-                                update.status === 'error' ? 'destructive' : 'secondary'}
+                                update.status === 'error' ? 'error' : 'secondary'}
                       >
                         {update.status}
                       </Badge>

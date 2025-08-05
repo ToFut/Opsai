@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       tests.push({
         name: 'GitHub Source Found',
         sourceDefinitionId: githubDef.sourceDefinitionId,
-        name: githubDef.name,
+        sourceName: githubDef.name,
         documentationUrl: githubDef.documentationUrl
       })
     }

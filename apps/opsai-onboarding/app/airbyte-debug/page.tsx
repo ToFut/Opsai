@@ -18,6 +18,7 @@ interface TestResult {
   status?: number
   error?: string
   response?: any
+  test?: string
 }
 
 interface DebugResponse {
@@ -29,6 +30,7 @@ interface DebugResponse {
     apiUrl: string
   }
   tests?: TestResult[]
+  results?: TestResult[]
   summary?: {
     total: number
     passed: number
@@ -301,7 +303,7 @@ export default function AirbyteDebugPage() {
 
             {/* Error Display */}
             {debugData.error && (
-              <Alert variant={debugData.error.includes('simplified') ? 'default' : 'destructive'}>
+              <Alert variant={debugData.error.includes('simplified') ? 'default' : 'error'}>
                 <AlertDescription>
                   {debugData.error}
                   {debugData.details && (

@@ -134,8 +134,8 @@ async function fetchGitHubSampleData(accessToken: string) {
         }
       },
       metrics: {
-        totalStars: reposData.data.reduce((sum: number, repo: any) => sum + (repo.stargazers_count || 0), 0),
-        totalForks: reposData.data.reduce((sum: number, repo: any) => sum + (repo.forks_count || 0), 0),
+        totalStars: (reposData.data as any[]).reduce((sum: number, repo: any) => sum + (repo.stargazers_count || 0), 0),
+        totalForks: (reposData.data as any[]).reduce((sum: number, repo: any) => sum + (repo.forks_count || 0), 0),
         openIssues: issuesData.data.filter(i => i.state === 'open').length
       }
     }
