@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getAirbyteClient, AIRBYTE_SOURCE_DEFINITIONS, getProviderOAuthConfig } from '@/lib/airbyte-oauth-client'
+import { airbyteOAuthBridge } from '@/lib/airbyte-oauth-bridge'
 
 export async function GET(request: NextRequest) {
   // Initialize Supabase client inside the function to avoid build-time errors
@@ -361,9 +362,9 @@ async function fetchInitialData(tenantId: string, provider: string, accessToken:
         })
       }
       
-      // Setup Airbyte connection asynchronously (don't block OAuth completion)
+      // Setup Airbyte connection with OAuth bridge asynchronously (don't block OAuth completion)
       console.log(`🚀 Setting up Airbyte connection for ${provider}...`)
-      setupAirbyteConnection(tenantId, provider, accessToken)
+      setupAirbyteConnectionBridge(tenantId, provider, tokens)
         .then(() => {
           console.log(`✅ Airbyte connection setup successful for ${provider}`)
         })
@@ -376,8 +377,38 @@ async function fetchInitialData(tenantId: string, provider: string, accessToken:
   }
 }
 
+async function setupAirbyteConnectionBridge(tenantId: string, provider: string, tokens: any) {
+  console.log(`🌉 Using Airbyte OAuth Bridge for ${provider}...`)
+  
+  try {
+    // Use the bridge to update Airbyte sources with OAuth tokens
+    const success = await airbyteOAuthBridge.onOAuthSuccess(
+      provider, 
+      tokens.access_token, 
+      tokens.refresh_token
+    )
+    
+    if (success) {
+      console.log(`✅ Airbyte OAuth Bridge setup successful for ${provider}`)
+    } else {
+      console.log(`❌ Airbyte OAuth Bridge setup failed for ${provider}`)
+      
+      // Fallback to original API method
+      console.log(`🔄 Falling back to original Airbyte setup...`)
+      await setupAirbyteConnection(tenantId, provider, tokens.access_token)
+    }
+    
+  } catch (error) {
+    console.error('Airbyte OAuth Bridge error:', error)
+    
+    // Fallback to original API method
+    console.log(`🔄 Falling back to original Airbyte setup...`)
+    await setupAirbyteConnection(tenantId, provider, tokens.access_token)
+  }
+}
+
 async function setupAirbyteConnection(tenantId: string, provider: string, accessToken: string) {
-  // Call internal API to setup Airbyte connection
+  // Call internal API to setup Airbyte connection (fallback method)
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/airbyte/setup`, {
       method: 'POST',
