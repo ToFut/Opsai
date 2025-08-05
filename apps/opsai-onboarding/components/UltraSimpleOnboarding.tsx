@@ -8,6 +8,25 @@ import {
   Database, Brain, Rocket, Link2, Play
 } from 'lucide-react'
 
+// Custom styles for modern UI
+const customStyles = `
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+  .animate-slideIn { animation: slideIn 0.5s ease-out; }
+  .animate-pulse { animation: pulse 2s ease-in-out infinite; }
+`
+
 interface RealIntegration {
   id: string
   name: string
@@ -356,13 +375,15 @@ vertical:
               key="step1"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 p-10"
             >
-              <div className="text-center mb-8">
-                <Sparkles className="w-16 h-16 text-purple-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900">What's your business called?</h2>
-                <p className="text-gray-600 mt-2">We'll create a custom app just for you</p>
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl mb-6 shadow-xl animate-pulse">
+                  <Sparkles className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">What's your business called?</h2>
+                <p className="text-lg text-gray-600 mt-3">We'll create a custom app just for you</p>
               </div>
               
               <div className="max-w-md mx-auto">
@@ -371,16 +392,17 @@ vertical:
                   placeholder="Enter your business name..."
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="w-full px-6 py-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-6 py-5 text-lg bg-gray-50 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200"
                   autoFocus
                 />
                 
                 <button
                   onClick={nextStep}
                   disabled={!businessName.trim()}
-                  className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-5 rounded-2xl font-semibold text-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
-                  Continue <ArrowRight className="w-5 h-5" />
+                  <span>Continue</span>
+                  <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
             </motion.div>
@@ -392,16 +414,18 @@ vertical:
               key="step2"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-100 p-10"
             >
-              <div className="text-center mb-8">
-                <Link2 className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900">Connect Your Real Data Sources</h2>
-                <p className="text-gray-600 mt-2">Choose which services to connect (we use your real data, not fake!)</p>
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-3xl mb-6 shadow-xl">
+                  <Link2 className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Connect Your Real Data Sources</h2>
+                <p className="text-lg text-gray-600 mt-3">Choose which services to connect (we use your real data, not fake!)</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {realIntegrations.map((integration) => {
                   const isSelected = selectedIntegrations.includes(integration.id)
                   const hasRealData = realData[integration.id]?.length > 0
@@ -410,22 +434,22 @@ vertical:
                     <div
                       key={integration.id}
                       onClick={() => connectIntegration(integration.id)}
-                      className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${
+                      className={`p-6 border-2 rounded-2xl cursor-pointer transition-all transform hover:scale-105 ${
                         isSelected 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50 shadow-lg' 
+                          : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
                       }`}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{integration.icon}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-3xl">{integration.icon}</span>
                           <div>
-                            <h3 className="font-semibold text-gray-900">{integration.name}</h3>
-                            <p className="text-sm text-gray-600">{integration.description}</p>
+                            <h3 className="font-semibold text-gray-900 text-lg">{integration.name}</h3>
+                            <p className="text-sm text-gray-600 mt-1">{integration.description}</p>
                           </div>
                         </div>
                         {isSelected && (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <CheckCircle className="w-6 h-6 text-green-500" />
                         )}
                       </div>
                       

@@ -1950,7 +1950,7 @@ export default function ProductionOnboarding({
       </div>
 
       {/* Action buttons */}
-      <div className="flex justify-center gap-4">
+      <div className="flex justify-center gap-4 mt-10">
         <button
           onClick={() => {
             setState(prev => ({ 
@@ -1959,14 +1959,14 @@ export default function ProductionOnboarding({
               currentStage: 3 
             }))
           }}
-          className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 flex items-center gap-2"
+          className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-3"
         >
-          Continue
+          <span>Continue to Integrations</span>
           <ArrowRight className="w-5 h-5" />
         </button>
         <button
           onClick={() => setShowAIReview(true)}
-          className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+          className="px-10 py-4 bg-white border-2 border-gray-300 text-gray-700 rounded-2xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
         >
           Review & Customize
         </button>

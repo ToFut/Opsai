@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { airbyteTerraformSDK } from '@/lib/airbyte-terraform-sdk'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,7 +11,7 @@ export async function GET(request: NextRequest) {
   )
   
   try {
-    const { searchParams } = new URL(request.url)
+    const searchParams = request.nextUrl.searchParams
     const tenantId = searchParams.get('tenantId') || 'default'
     
     console.log(`📊 Checking Airbyte sync status for tenant: ${tenantId}`)
