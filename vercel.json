@@ -1,9 +1,8 @@
 {
-  "name": "opsai-onboarding",
-  "version": 2,
-  "monorepo": false,
-  "installCommand": "cd apps/opsai-onboarding && npm install",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "cd apps/opsai-onboarding && npm run build",
+  "devCommand": "cd apps/opsai-onboarding && npm run dev -- --port $PORT",
+  "installCommand": "npm install && cd apps/opsai-onboarding && npm install",
   "outputDirectory": "apps/opsai-onboarding/.next",
   "framework": "nextjs",
   "functions": {
