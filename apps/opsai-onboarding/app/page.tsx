@@ -20,12 +20,24 @@ export default function HomePage() {
         const { user } = await auth.getCurrentUser()
         setUser(user)
       } catch (error) {
-        console.error('Auth check failed:', error)
+        // Silently fail auth check - user can still use the app without auth
+        console.log('Auth unavailable, continuing without authentication')
+        setUser(null)
       } finally {
         setLoading(false)
       }
     }
-    checkAuth()
+    
+    // Add a timeout to prevent hanging on auth check
+    const authTimeout = setTimeout(() => {
+      console.log('Auth check timed out, continuing without authentication')
+      setUser(null)
+      setLoading(false)
+    }, 3000)
+    
+    checkAuth().then(() => clearTimeout(authTimeout))
+    
+    return () => clearTimeout(authTimeout)
   }, [])
 
   const handleDiscoverSystems = async () => {

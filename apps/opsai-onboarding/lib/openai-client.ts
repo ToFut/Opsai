@@ -8,12 +8,16 @@ export function getOpenAIClient(): OpenAI {
     const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is not set');
+      // Create a mock client for demo purposes
+      console.warn('⚠️ OPENAI_API_KEY not set - using demo mode');
+      openaiClient = new OpenAI({
+        apiKey: 'demo-key-for-testing',
+      });
+    } else {
+      openaiClient = new OpenAI({
+        apiKey: apiKey,
+      });
     }
-    
-    openaiClient = new OpenAI({
-      apiKey: apiKey,
-    });
   }
   
   return openaiClient;

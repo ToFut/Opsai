@@ -1,20 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Application, Customization, AIInsight, PerformanceMetrics, SecurityScore, CodeQuality, UserMetadata } from '@/types'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Environment validation with production fallback
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://wrkzrmvwxxtsdpyhrxhz.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indya3pybXZ3eHh0c2RweWhyeGh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNTIxNjYsImV4cCI6MjA2OTcyODE2Nn0.OI3I3y5r9Q8xBDGqXP4K0a7J5P1d9zCh5tLqW2c7_Zs'
 
-// Environment validation happens below
+// Use the environment values or fallbacks
+const SUPABASE_URL = supabaseUrl
+const SUPABASE_ANON_KEY = supabaseAnonKey
 
-// Provide safe defaults for development
-const SUPABASE_URL = supabaseUrl || 'https://placeholder.supabase.co'
-const SUPABASE_ANON_KEY = supabaseAnonKey || 'placeholder-anon-key'
-
-// Only warn in development, don't crash the app
+// Log configuration in development only
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('⚠️ Supabase credentials missing. Some features may not work.')
-  }
+  console.log('Supabase URL:', SUPABASE_URL.substring(0, 30) + '...')
+  console.log('Supabase Key:', SUPABASE_ANON_KEY.substring(0, 30) + '...')
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -90,10 +88,18 @@ export const auth = {
 
   async getCurrentUser() {
     try {
-      const { data: { user }, error } = await supabase.auth.getUser()
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth timeout')), 5000)
+      );
+      
+      const authPromise = supabase.auth.getUser();
+      const { data: { user }, error } = await Promise.race([authPromise, timeoutPromise]);
+      
       if (error) throw error
       return { user }
     } catch (error) {
+      console.log('Auth check failed:', error instanceof Error ? error.message : 'Unknown error')
       return { user: null, error: error instanceof Error ? error.message : 'Unknown error' }
     }
   },

@@ -116,77 +116,96 @@ export default function GPTOSSOnboarding() {
   }
 
   const generateIntegrations = async () => {
-    // Simulate AI-powered integration recommendations
-    const mockIntegrations = [
-      {
-        id: 'stripe',
-        name: 'Stripe',
-        type: 'Payments',
-        confidence: 95,
-        reason: 'High payment processing needs detected',
-        aiModel: state.selectedModel
-      },
-      {
-        id: 'shopify',
-        name: 'Shopify',
-        type: 'E-commerce',
-        confidence: 88,
-        reason: 'E-commerce patterns identified',
-        aiModel: state.selectedModel
-      },
-      {
-        id: 'analytics',
-        name: 'Google Analytics',
-        type: 'Analytics',
-        confidence: 92,
-        reason: 'Data tracking requirements found',
-        aiModel: state.selectedModel
+    if (!state.businessAnalysis) {
+      setState(prev => ({ ...prev, error: 'Business analysis required first' }))
+      return
+    }
+
+    try {
+      const response = await fetch('/api/ai-generate-integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessAnalysis: state.businessAnalysis,
+          selectedModel: state.selectedModel
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setState(prev => ({ 
+          ...prev, 
+          integrations: data.integrations,
+          error: null
+        }))
+        setTimeout(nextStep, 1500)
+      } else {
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Failed to generate integrations' 
+        }))
       }
-    ]
-    
-    setState(prev => ({ ...prev, integrations: mockIntegrations }))
-    setTimeout(nextStep, 2000)
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Failed to generate integrations' 
+      }))
+    }
   }
 
   const designWorkflows = async () => {
-    setState(prev => ({ ...prev, isGenerating: true }))
-    
-    // Simulate AI workflow generation
-    const mockWorkflows = [
-      {
-        id: 'payment-processing',
-        name: 'Payment Processing Automation',
-        description: 'Automatically process payments and update orders',
-        complexity: 'medium',
-        aiModel: state.selectedModel,
-        estimatedTime: '< 5 minutes',
-        triggers: ['payment.received'],
-        actions: ['order.update', 'inventory.adjust', 'email.send']
-      },
-      {
-        id: 'user-onboarding',
-        name: 'Smart User Onboarding',
-        description: 'Personalized onboarding based on user behavior',
-        complexity: 'high',
-        aiModel: state.selectedModel,
-        estimatedTime: '< 10 minutes',
-        triggers: ['user.signup'],
-        actions: ['profile.analyze', 'content.personalize', 'sequence.start']
+    if (!state.businessAnalysis) {
+      setState(prev => ({ ...prev, error: 'Business analysis required first' }))
+      return
+    }
+
+    setState(prev => ({ ...prev, isGenerating: true, error: null }))
+
+    try {
+      const response = await fetch('/api/ai-generate-workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessAnalysis: state.businessAnalysis,
+          integrations: state.integrations,
+          selectedModel: state.selectedModel
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setState(prev => ({ 
+          ...prev, 
+          workflows: data.workflows,
+          isGenerating: false,
+          error: null
+        }))
+        setTimeout(nextStep, 1500)
+      } else {
+        setState(prev => ({ 
+          ...prev, 
+          isGenerating: false,
+          error: 'Failed to generate workflows' 
+        }))
       }
-    ]
-    
-    setTimeout(() => {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
-        workflows: mockWorkflows,
-        isGenerating: false 
+        isGenerating: false,
+        error: 'Failed to generate workflows' 
       }))
-      nextStep()
-    }, 3000)
+    }
   }
 
   const generateApplication = async () => {
-    setState(prev => ({ ...prev, isGenerating: true }))
+    if (!state.businessAnalysis) {
+      setState(prev => ({ ...prev, error: 'Business analysis required first' }))
+      return
+    }
+
+    setState(prev => ({ ...prev, isGenerating: true, error: null }))
     
     try {
       // First generate YAML
@@ -202,26 +221,40 @@ export default function GPTOSSOnboarding() {
       })
       
       const yamlData = await yamlResponse.json()
+      const yamlConfig = yamlData.yaml || 'Generated YAML config...'
       
-      setState(prev => ({ ...prev, yamlConfig: yamlData.yaml || 'Generated YAML config...' }))
+      setState(prev => ({ ...prev, yamlConfig }))
       
-      // Then generate the application
-      setTimeout(() => {
-        const mockApp = {
-          name: 'ai-powered-app',
-          url: 'http://localhost:3001',
-          components: ['Dashboard', 'API Routes', 'Database Models', 'Auth System'],
-          aiModel: state.selectedModel,
-          generationTime: state.selectedModel === 'gpt-oss-120b' ? '8.5s' : '3.2s'
-        }
-        
+      // Then generate the complete application
+      const appResponse = await fetch('/api/ai-generate-app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessAnalysis: state.businessAnalysis,
+          workflows: state.workflows,
+          integrations: state.integrations,
+          yamlConfig: yamlConfig,
+          selectedModel: state.selectedModel
+        })
+      })
+
+      const appData = await appResponse.json()
+      
+      if (appData.success) {
         setState(prev => ({
           ...prev,
-          generatedApp: mockApp,
-          isGenerating: false
+          generatedApp: appData.generatedApp,
+          isGenerating: false,
+          error: null
         }))
-        nextStep()
-      }, 5000)
+        setTimeout(nextStep, 1500)
+      } else {
+        setState(prev => ({
+          ...prev,
+          isGenerating: false,
+          error: 'Failed to generate application'
+        }))
+      }
       
     } catch (error) {
       setState(prev => ({ 
