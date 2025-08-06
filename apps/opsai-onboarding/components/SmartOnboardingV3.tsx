@@ -486,25 +486,25 @@ workflows:
       id: 1,
       title: "Enter your website",
       description: "Just your URL, nothing else needed",
-      status: currentPhase === 'input' ? 'current' : analysisComplete ? 'completed' : 'upcoming'
+      status: (currentPhase === 'input' ? 'current' : analysisComplete ? 'completed' : 'upcoming') as 'current' | 'completed' | 'upcoming'
     },
     {
       id: 2,
       title: "AI analyzes everything",
       description: "Business model, tech stack, opportunities",
-      status: currentPhase === 'analyzing' ? 'current' : analysisComplete ? 'completed' : 'upcoming'
+      status: (currentPhase === 'analyzing' ? 'current' : analysisComplete ? 'completed' : 'upcoming') as 'current' | 'completed' | 'upcoming'
     },
     {
       id: 3,
       title: "Review & customize",
       description: "Confirm what we found (30 seconds)",
-      status: currentPhase === 'review' ? 'current' : isGenerating ? 'completed' : 'upcoming'
+      status: (currentPhase === 'review' ? 'current' : isGenerating ? 'completed' : 'upcoming') as 'current' | 'completed' | 'upcoming'
     },
     {
       id: 4,
       title: "Dashboard goes live",
       description: "Access your business command center",
-      status: currentPhase === 'generating' ? 'current' : 'upcoming'
+      status: (currentPhase === 'generating' ? 'current' : 'upcoming') as 'current' | 'completed' | 'upcoming'
     }
   ]
 

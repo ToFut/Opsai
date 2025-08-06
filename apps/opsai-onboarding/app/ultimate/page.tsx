@@ -2,12 +2,12 @@
 
 
 export const dynamic = 'force-dynamic'
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import UltimateOnboarding from '@/components/UltimateOnboarding'
 import { ComprehensiveSuccessPage } from '@/components/ComprehensiveSuccessPage'
 
-export default function UltimateOnboardingPage() {
+function UltimateOnboardingContent() {
   const searchParams = useSearchParams()
   const websiteUrl = searchParams.get('url') || ''
   const [isComplete, setIsComplete] = useState(false)
@@ -35,5 +35,13 @@ export default function UltimateOnboardingPage() {
       initialUrl={websiteUrl}
       onComplete={handleComplete}
     />
+  )
+}
+
+export default function UltimateOnboardingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UltimateOnboardingContent />
+    </Suspense>
   )
 }

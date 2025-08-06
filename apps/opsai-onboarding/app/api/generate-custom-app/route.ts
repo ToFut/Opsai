@@ -1433,28 +1433,28 @@ export default function DashboardPage() {
           ${businessProfile.businessType === 'E-commerce' ? `
           <MetricCard
             title="Total Revenue"
-            value="$${metrics.revenue?.toLocaleString() || '0'}"
-            change={metrics.revenueChange || 0}
+            value="$\${metrics.revenue?.toLocaleString() || '0'}"
+            change={\${metrics.revenueChange || 0}}
             icon={<DollarSign className="w-6 h-6" />}
             color="text-green-600"
           />
           <MetricCard
             title="Active Customers"
-            value={metrics.customers?.toLocaleString() || '0'}
-            change={metrics.customerChange || 0}
+            value={\${metrics.customers?.toLocaleString() || '0'}}
+            change={\${metrics.customerChange || 0}}
             icon={<Users className="w-6 h-6" />}
             color="text-blue-600"
           />
           <MetricCard
             title="Total Orders"
-            value={metrics.orders?.toLocaleString() || '0'}
-            change={metrics.orderChange || 0}
+            value={\${metrics.orders?.toLocaleString() || '0'}}
+            change={\${metrics.orderChange || 0}}
             icon={<ShoppingCart className="w-6 h-6" />}
             color="text-purple-600"
           />
           <MetricCard
             title="Low Stock Items"
-            value={metrics.lowStock || '0'}
+            value={\${metrics.lowStock || '0'}}
             icon={<Package className="w-6 h-6" />}
             color="text-orange-600"
             showChange={false}
@@ -1463,30 +1463,30 @@ export default function DashboardPage() {
           ${businessProfile.businessType === 'SaaS' ? `
           <MetricCard
             title="MRR"
-            value="$${metrics.mrr?.toLocaleString() || '0'}"
-            change={metrics.mrrChange || 0}
+            value="$\${metrics.mrr?.toLocaleString() || '0'}"
+            change={\${metrics.mrrChange || 0}}
             icon={<DollarSign className="w-6 h-6" />}
             color="text-green-600"
           />
           <MetricCard
             title="Active Users"
-            value={metrics.activeUsers?.toLocaleString() || '0'}
-            change={metrics.userChange || 0}
+            value={\${metrics.activeUsers?.toLocaleString() || '0'}}
+            change={\${metrics.userChange || 0}}
             icon={<Users className="w-6 h-6" />}
             color="text-blue-600"
           />
           <MetricCard
             title="Churn Rate"
-            value="${metrics.churnRate || '0'}%"
-            change={metrics.churnChange || 0}
+            value="\${metrics.churnRate || '0'}%"
+            change={\${metrics.churnChange || 0}}
             icon={<TrendingDown className="w-6 h-6" />}
             color="text-red-600"
             invertChange
           />
           <MetricCard
             title="Trial Conversions"
-            value="${metrics.trialConversion || '0'}%"
-            change={metrics.conversionChange || 0}
+            value="\${metrics.trialConversion || '0'}%"
+            change={\${metrics.conversionChange || 0}}
             icon={<CheckCircle className="w-6 h-6" />}
             color="text-purple-600"
           />` : ''}
@@ -1685,7 +1685,7 @@ export function ProductManager() {
                 <TableCell>{product.sku}</TableCell>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.category?.name || '-'}</TableCell>
-                <TableCell>${product.price}</TableCell>
+                <TableCell>$\${product.price}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {product.inventory}

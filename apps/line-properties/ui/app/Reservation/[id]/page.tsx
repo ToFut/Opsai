@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft, Edit } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, PencilIcon } from '@heroicons/react/24/outline'
 
 export default function ReservationsDetailPage() {
   const params = useParams()
@@ -41,7 +41,7 @@ export default function ReservationsDetailPage() {
         <div className="flex items-center space-x-4">
           <Link href="/Reservation">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeftIcon className="w-4 h-4 mr-2" />
               Back
             </Button>
           </Link>
@@ -49,7 +49,7 @@ export default function ReservationsDetailPage() {
         </div>
         <Link href={`/Reservation/${params.id}/edit`}>
           <Button>
-            <Edit className="w-4 h-4 mr-2" />
+            <PencilIcon className="w-4 h-4 mr-2" />
             Edit
           </Button>
         </Link>

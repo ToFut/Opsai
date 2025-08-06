@@ -47,6 +47,7 @@ class AuditLogger {
   async log(event: Partial<AuditEvent>): Promise<void> {
     const auditEvent: AuditEvent = {
       timestamp: new Date().toISOString(),
+      eventType: event.eventType || AuditEventType.DATA_UPDATED,
       result: 'SUCCESS',
       ...event,
       action: event.action || 'UNKNOWN'

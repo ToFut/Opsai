@@ -610,6 +610,8 @@ export default function ProductionOnboarding({
     const left = window.screenX + (window.outerWidth - width) / 2
     const top = window.screenY + (window.outerHeight - height) / 2
     
+    let authWindow: Window | null = null
+    
     try {
       // Use real OAuth endpoint with Terraform credentials
       const authResponse = await fetch('/api/oauth/connect', {
@@ -631,7 +633,7 @@ export default function ProductionOnboarding({
       // Store state for verification
       localStorage.setItem(`oauth_state_${provider}`, oauthState)
       
-      const authWindow = window.open(
+      authWindow = window.open(
         authUrl,
         `${provider}_oauth`,
         `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
@@ -646,7 +648,7 @@ export default function ProductionOnboarding({
         ...prev,
         requiredIntegrations: prev.requiredIntegrations.map(int => 
           int.provider === provider 
-            ? { ...int, status: 'error' }
+            ? { ...int, status: 'failed' as const }
             : int
         )
       }))

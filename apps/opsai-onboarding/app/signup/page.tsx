@@ -2,12 +2,12 @@
 
 
 export const dynamic = 'force-dynamic'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { auth, supabase } from '@/lib/supabase'
 import AuthForm from '@/components/auth/AuthForm'
 
-const SignupPage: React.FC = () => {
+const SignupContent: React.FC = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect')
@@ -156,4 +156,10 @@ const SignupPage: React.FC = () => {
   )
 }
 
-export default SignupPage 
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div><p className="text-gray-600">Loading...</p></div></div>}>
+      <SignupContent />
+    </Suspense>
+  )
+} 

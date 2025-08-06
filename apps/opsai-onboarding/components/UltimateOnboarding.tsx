@@ -813,6 +813,234 @@ function canProceed(state: UltimateOnboardingState): boolean {
 }
 
 // Component implementations...
+
+// Placeholder components for Express mode
+function ExpressAnalysis({ state, onAnalyze }: any) {
+  return (
+    <div className="max-w-2xl mx-auto text-center">
+      <h2 className="text-2xl font-bold mb-4">Express Analysis</h2>
+      <p className="text-gray-600 mb-6">Quick website analysis for experienced users</p>
+      {state.isAnalyzing ? (
+        <div className="flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          Analyzing...
+        </div>
+      ) : (
+        <button
+          onClick={onAnalyze}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Start Analysis
+        </button>
+      )}
+    </div>
+  )
+}
+
+function ExpressIntegrations({ state, onConnect }: any) {
+  return (
+    <div className="max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Quick Connect</h2>
+      <div className="space-y-3">
+        {state.detectedIntegrations.slice(0, 3).map((integration: Integration) => (
+          <div key={integration.id} className="flex items-center justify-between p-4 border rounded-lg">
+            <span>{integration.name}</span>
+            <button
+              onClick={() => onConnect(integration.id)}
+              disabled={integration.connectionStatus === 'connecting'}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {integration.connectionStatus === 'connecting' ? 'Connecting...' : 'Connect'}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ExpressDeploy({ state, onDeploy }: any) {
+  return (
+    <div className="max-w-2xl mx-auto text-center">
+      <h2 className="text-2xl font-bold mb-4">Launch</h2>
+      <p className="text-gray-600 mb-6">Ready to generate your application</p>
+      <button
+        onClick={onDeploy}
+        disabled={state.isGenerating}
+        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+      >
+        {state.isGenerating ? (
+          <>
+            <Loader2 className="w-5 h-5 inline mr-2 animate-spin" />
+            Generating...
+          </>
+        ) : (
+          <>
+            <Rocket className="w-5 h-5 inline mr-2" />
+            Launch App
+          </>
+        )}
+      </button>
+    </div>
+  )
+}
+
+// Placeholder components for Guided mode
+function GuidedAnalysis({ state, onAnalyze }: any) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Business Analysis</h2>
+      <p className="text-gray-600 mb-6">Comprehensive AI-powered analysis of your website and business</p>
+      {state.isAnalyzing ? (
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Analyzing your business...</p>
+        </div>
+      ) : (
+        <button
+          onClick={onAnalyze}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Start Analysis
+        </button>
+      )}
+    </div>
+  )
+}
+
+function GuidedIntegrations({ state, onConnect }: any) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Connect Services</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {state.detectedIntegrations.map((integration: Integration) => (
+          <div key={integration.id} className="p-4 border rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">{integration.name}</h3>
+                <p className="text-sm text-gray-600">{integration.value}</p>
+              </div>
+              <button
+                onClick={() => onConnect(integration.id)}
+                disabled={integration.connectionStatus === 'connecting'}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {integration.connectionStatus === 'connecting' ? 'Connecting...' : 'Connect'}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function GuidedWorkflows({ state, setState }: any) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Smart Workflows</h2>
+      <p className="text-gray-600 mb-6">AI-generated automation workflows based on your business type</p>
+      <div className="space-y-4">
+        {state.workflows.map((workflow: any, index: number) => (
+          <div key={workflow.id || index} className="p-4 border rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">{workflow.name}</h3>
+                <p className="text-sm text-gray-600">{workflow.description}</p>
+              </div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={workflow.enabled}
+                  onChange={(e) => {
+                    const updatedWorkflows = state.workflows.map((w: any, i: number) => 
+                      i === index ? { ...w, enabled: e.target.checked } : w
+                    )
+                    setState((prev: any) => ({ ...prev, workflows: updatedWorkflows }))
+                  }}
+                  className="mr-2"
+                />
+                Enable
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function GuidedDashboard({ state, setState }: any) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Dashboard Design</h2>
+      <p className="text-gray-600 mb-6">Customize your dashboard appearance and layout</p>
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium mb-2">Primary Color</label>
+          <input
+            type="color"
+            value={state.dashboardConfig.primaryColor}
+            onChange={(e) => setState((prev: any) => ({
+              ...prev,
+              dashboardConfig: { ...prev.dashboardConfig, primaryColor: e.target.value }
+            }))}
+            className="w-20 h-10 border rounded"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Theme</label>
+          <select
+            value={state.dashboardConfig.theme}
+            onChange={(e) => setState((prev: any) => ({
+              ...prev,
+              dashboardConfig: { ...prev.dashboardConfig, theme: e.target.value }
+            }))}
+            className="border rounded px-3 py-2"
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function GuidedDeploy({ state, onDeploy }: any) {
+  return (
+    <div className="max-w-4xl mx-auto text-center">
+      <h2 className="text-2xl font-bold mb-4">Deploy</h2>
+      <p className="text-gray-600 mb-6">Ready to generate and deploy your application</p>
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg text-left">
+        <h3 className="font-semibold mb-2">Configuration Summary:</h3>
+        <ul className="text-sm text-gray-600 space-y-1">
+          <li>• Business: {state.businessAnalysis?.business?.name || 'Unknown'}</li>
+          <li>• Integrations: {Array.from(state.connectedIntegrations.keys()).length} connected</li>
+          <li>• Workflows: {state.workflows.filter((w: any) => w.enabled).length} enabled</li>
+        </ul>
+      </div>
+      <button
+        onClick={onDeploy}
+        disabled={state.isGenerating}
+        className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+      >
+        {state.isGenerating ? (
+          <>
+            <Loader2 className="w-5 h-5 inline mr-2 animate-spin" />
+            Generating Application...
+          </>
+        ) : (
+          <>
+            <Rocket className="w-5 h-5 inline mr-2" />
+            Generate & Deploy
+          </>
+        )}
+      </button>
+    </div>
+  )
+}
+
 function ModeSelection({ modes, onSelect }: any) {
   return (
     <div className="max-w-4xl mx-auto">

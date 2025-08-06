@@ -6,7 +6,7 @@ import { EntityForm } from '@/components/forms/Reservation-form'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 export default function CreateReservationsPage() {
@@ -43,7 +43,7 @@ export default function CreateReservationsPage() {
       <div className="flex items-center space-x-4">
         <Link href="/Reservation">
           <Button variant="outline" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
             Back
           </Button>
         </Link>

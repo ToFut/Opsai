@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Loader2, Check, X } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
@@ -137,5 +137,13 @@ export default function OAuthCallbackPage() {
         )}
       </Card>
     </div>
+  )
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center p-4"><Card className="max-w-md w-full p-8 text-center"><Loader2 className="w-12 h-12 animate-spin mx-auto text-blue-600" /><h1 className="text-2xl font-bold mb-2 mt-4">Loading...</h1></Card></div>}>
+      <OAuthCallbackContent />
+    </Suspense>
   )
 }

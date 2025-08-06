@@ -2,11 +2,11 @@
 
 export const dynamic = 'force-dynamic'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProductionOnboarding from '@/components/ProductionOnboarding'
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const searchParams = useSearchParams()
   const websiteUrl = searchParams.get('url') || ''
   const step = searchParams.get('step') || ''
@@ -28,5 +28,13 @@ export default function OnboardingPage() {
         // Handle completion - could redirect to dashboard or show success
       }}
     />
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div><p className="text-gray-600">Loading...</p></div></div>}>
+      <OnboardingContent />
+    </Suspense>
   )
 } 

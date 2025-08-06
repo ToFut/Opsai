@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpsAI Integration Manager Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-6xl mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-8">OpsAI Integration Manager</h1>
+        
+        <div id="status" class="mb-4 p-4 bg-blue-50 rounded-lg hidden"></div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Stripe Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <span class="text-3xl mr-3">💳</span>
+                        <h3 class="text-lg font-semibold">Stripe</h3>
+                    </div>
+                    <span id="stripe-status" class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                        Not Connected
+                    </span>
+                </div>
+                <button onclick="connectStripe()" class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Connect
+                </button>
+            </div>
+
+            <!-- QuickBooks Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <span class="text-3xl mr-3">📊</span>
+                        <h3 class="text-lg font-semibold">QuickBooks</h3>
+                    </div>
+                    <span id="quickbooks-status" class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                        Not Connected
+                    </span>
+                </div>
+                <button onclick="connectQuickBooks()" class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Connect
+                </button>
+            </div>
+
+            <!-- Shopify Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <span class="text-3xl mr-3">🛍️</span>
+                        <h3 class="text-lg font-semibold">Shopify</h3>
+                    </div>
+                    <span id="shopify-status" class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
+                        Not Connected
+                    </span>
+                </div>
+                <button onclick="connectShopify()" class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    Connect
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- API Response -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">API Response</h3>
+                <pre id="api-response" class="text-xs bg-gray-50 p-4 rounded overflow-auto max-h-64">
+No requests made yet...
+                </pre>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Connection Status</h3>
+                <div id="connection-list" class="space-y-2">
+                    <p class="text-gray-500">No connections yet...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 p-4 bg-yellow-50 rounded-lg">
+            <h3 class="font-semibold mb-2">Demo Instructions:</h3>
+            <ol class="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                <li>Click "Connect" on any provider to initiate OAuth flow</li>
+                <li>For Stripe, you'll be prompted for an API key</li>
+                <li>For QuickBooks/Shopify, you'll see the OAuth URL (in demo mode)</li>
+                <li>Check the API Response panel to see the actual API calls</li>
+                <li>View Connection Status to see stored credentials</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3005';
+        const USER_ID = 'demo-user-' + Date.now();
+
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `mb-4 p-4 rounded-lg ${
+                type === 'error' ? 'bg-red-50 text-red-800' : 'bg-blue-50 text-blue-800'
+            }`;
+            statusEl.textContent = message;
+            statusEl.classList.remove('hidden');
+            setTimeout(() => statusEl.classList.add('hidden'), 5000);
+        }
+
+        function updateResponse(data) {
+            document.getElementById('api-response').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function connectStripe() {
+            const apiKey = prompt('Enter your Stripe API key (use "sk_test_demo" for demo):');
+            if (!apiKey) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/oauth/connect-api-key`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: USER_ID,
+                        provider: 'stripe',
+                        apiKey: apiKey
+                    })
+                });
+
+                const data = await response.json();
+                updateResponse(data);
+
+                if (response.ok) {
+                    showStatus('Stripe connected successfully!');
+                    document.getElementById('stripe-status').className = 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800';
+                    document.getElementById('stripe-status').textContent = 'Connected';
+                    fetchConnectionStatus();
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                updateResponse({ error: error.message });
+            }
+        }
+
+        async function connectQuickBooks() {
+            try {
+                const response = await fetch(`${API_BASE}/api/oauth/initiate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: USER_ID,
+                        provider: 'quickbooks'
+                    })
+                });
+
+                const data = await response.json();
+                updateResponse(data);
+
+                if (response.ok) {
+                    showStatus('OAuth URL generated! In production, you would be redirected.');
+                    alert(`OAuth URL (demo):\n\n${data.authUrl}\n\nIn production, you would be redirected to this URL.`);
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                updateResponse({ error: error.message });
+            }
+        }
+
+        async function connectShopify() {
+            const shopDomain = prompt('Enter your Shopify domain (e.g., myshop.myshopify.com):');
+            if (!shopDomain) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/oauth/initiate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: USER_ID,
+                        provider: 'shopify',
+                        metadata: { shopDomain }
+                    })
+                });
+
+                const data = await response.json();
+                updateResponse(data);
+
+                if (response.ok) {
+                    showStatus('OAuth URL generated! In production, you would be redirected.');
+                    alert(`OAuth URL (demo):\n\n${data.authUrl}\n\nIn production, you would be redirected to this URL.`);
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                updateResponse({ error: error.message });
+            }
+        }
+
+        async function fetchConnectionStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/oauth/status/${USER_ID}`);
+                const data = await response.json();
+                
+                const listEl = document.getElementById('connection-list');
+                if (data.status && data.status.length > 0) {
+                    listEl.innerHTML = data.status.map(s => `
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span class="font-medium">${s.provider}</span>
+                            <span class="text-sm ${s.connected ? 'text-green-600' : 'text-gray-400'}">
+                                ${s.connected ? 'Connected' : 'Not connected'}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+            }
+        }
+
+        // Check server health on load
+        fetch(`${API_BASE}/health`)
+            .then(r => r.json())
+            .then(data => {
+                showStatus('✅ Server is running on port 3005');
+                updateResponse(data);
+            })
+            .catch(err => {
+                showStatus('❌ Server is not running. Please start it first.', 'error');
+            });
+
+        // Fetch initial status
+        fetchConnectionStatus();
+    </script>
+</body>
+</html>

@@ -2,16 +2,12 @@
 const nextConfig = {
   transpilePackages: ['lucide-react'],
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
+    // Type errors have been fixed, so we can now enforce type checking
+    ignoreBuildErrors: false,
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
+    // ESLint errors will now be caught during builds
+    ignoreDuringBuilds: false,
   },
   // Skip static generation for problematic pages
   output: 'standalone',

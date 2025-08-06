@@ -2,10 +2,10 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export default function OAuthSuccessPage() {
+function OAuthSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
@@ -147,5 +147,13 @@ export default function OAuthSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OAuthSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center"><div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center"><div className="text-6xl mb-4">⏳</div><h1 className="text-2xl font-bold mb-2">Loading...</h1></div></div>}>
+      <OAuthSuccessContent />
+    </Suspense>
   )
 }

@@ -315,7 +315,7 @@ workflows:
                     appUrl
                   })
                 }}
-                onBack={() => setCurrentPhase('dashboard-customization')}
+                onBack={() => setCurrentPhase(2)}
               />
             )}
           </motion.div>
