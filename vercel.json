@@ -1,7 +1,10 @@
 {
+  "name": "opsai-onboarding",
+  "version": 2,
+  "monorepo": false,
+  "installCommand": "cd apps/opsai-onboarding && npm install",
   "buildCommand": "cd apps/opsai-onboarding && npm run build",
   "outputDirectory": "apps/opsai-onboarding/.next",
-  "installCommand": "pnpm install --frozen-lockfile",
   "framework": "nextjs",
   "functions": {
     "apps/opsai-onboarding/app/api/**/*.ts": {
