@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd apps/opsai-onboarding && npm run build",
+  "outputDirectory": "apps/opsai-onboarding/.next",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "functions": {
+    "apps/opsai-onboarding/app/api/**/*.ts": {
+      "maxDuration": 60
+    }
+  }
+}
