@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT-OSS Integration Demo - OpsAI Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.8s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .icon {
+            font-size: 1.5em;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button.secondary {
+            background: #6c757d;
+        }
+
+        .output-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .model-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .model-option {
+            padding: 15px;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .model-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .model-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .model-option h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .model-option p {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e1e4e8;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .comparison-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .check {
+            color: #28a745;
+            font-size: 1.2em;
+        }
+
+        .cross {
+            color: #dc3545;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 GPT-OSS Integration Demo</h1>
+            <p>Experience the power of local AI models in your OpsAI platform</p>
+        </div>
+
+        <div class="demo-grid">
+            <!-- System Status Card -->
+            <div class="card">
+                <h2><span class="icon">📊</span> System Status</h2>
+                <div id="systemStatus">
+                    <div class="status-indicator status-loading">
+                        <span class="pulse"></span>
+                        Checking status...
+                    </div>
+                </div>
+                <div class="metrics-grid" id="metrics">
+                    <div class="metric">
+                        <div class="metric-value">-</div>
+                        <div class="metric-label">Models</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">-</div>
+                        <div class="metric-label">Storage</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">-</div>
+                        <div class="metric-label">Inference</div>
+                    </div>
+                </div>
+                <button class="button" onclick="checkStatus()">Refresh Status</button>
+                <button class="button secondary" onclick="initializeStorage()">Initialize Storage</button>
+            </div>
+
+            <!-- Model Selection Card -->
+            <div class="card">
+                <h2><span class="icon">🤖</span> Model Selection</h2>
+                <div class="model-selector">
+                    <div class="model-option" onclick="selectModel('gpt-oss-20b')" id="model-20b">
+                        <h4>GPT-OSS-20B</h4>
+                        <p>Fast & Efficient</p>
+                        <p style="font-size: 0.8em;">2-3s response</p>
+                    </div>
+                    <div class="model-option" onclick="selectModel('gpt-oss-120b')" id="model-120b">
+                        <h4>GPT-OSS-120B</h4>
+                        <p>High Quality</p>
+                        <p style="font-size: 0.8em;">5-10s response</p>
+                    </div>
+                    <div class="model-option selected" onclick="selectModel('openai')" id="model-openai">
+                        <h4>OpenAI GPT-4</h4>
+                        <p>Fallback</p>
+                        <p style="font-size: 0.8em;">3-5s response</p>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <span>ℹ️</span>
+                    <span id="modelInfo">Currently using OpenAI as fallback. Local models will be used when available.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Interface Card -->
+        <div class="card">
+            <h2><span class="icon">🧪</span> Test AI Capabilities</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('analyze')">Website Analysis</button>
+                <button class="tab" onclick="switchTab('yaml')">YAML Generation</button>
+                <button class="tab" onclick="switchTab('workflow')">Workflow Design</button>
+                <button class="tab" onclick="switchTab('code')">Code Generation</button>
+                <button class="tab" onclick="switchTab('custom')">Custom Prompt</button>
+            </div>
+
+            <!-- Website Analysis Tab -->
+            <div class="tab-content active" id="tab-analyze">
+                <div class="input-group">
+                    <label>Website URL to Analyze</label>
+                    <input type="url" id="websiteUrl" placeholder="https://stripe.com" value="https://stripe.com">
+                </div>
+                <button class="button" onclick="analyzeWebsite()">
+                    <span id="analyzeBtn">Analyze Business</span>
+                </button>
+                <div class="output-box" id="analyzeOutput" style="display: none;"></div>
+            </div>
+
+            <!-- YAML Generation Tab -->
+            <div class="tab-content" id="tab-yaml">
+                <div class="input-group">
+                    <label>Business Type</label>
+                    <select id="businessType">
+                        <option value="ecommerce">E-commerce Platform</option>
+                        <option value="saas">SaaS Application</option>
+                        <option value="marketplace">Marketplace</option>
+                        <option value="fintech">FinTech Service</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Business Name</label>
+                    <input type="text" id="businessName" placeholder="My Business" value="TechCorp">
+                </div>
+                <button class="button" onclick="generateYAML()">Generate YAML Config</button>
+                <div class="output-box" id="yamlOutput" style="display: none;"></div>
+            </div>
+
+            <!-- Workflow Design Tab -->
+            <div class="tab-content" id="tab-workflow">
+                <div class="input-group">
+                    <label>Workflow Description</label>
+                    <textarea id="workflowDesc" rows="4" placeholder="Describe your business workflow...">
+When a customer places an order, automatically process payment, update inventory, send confirmation email, and notify warehouse for fulfillment.</textarea>
+                </div>
+                <button class="button" onclick="analyzeWorkflow()">Design Workflow</button>
+                <div class="output-box" id="workflowOutput" style="display: none;"></div>
+            </div>
+
+            <!-- Code Generation Tab -->
+            <div class="tab-content" id="tab-code">
+                <div class="input-group">
+                    <label>Component to Generate</label>
+                    <select id="componentType">
+                        <option value="api">REST API Endpoint</option>
+                        <option value="component">React Component</option>
+                        <option value="database">Database Schema</option>
+                        <option value="auth">Authentication Flow</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Requirements</label>
+                    <textarea id="codeRequirements" rows="3" placeholder="Describe what you need...">
+User registration endpoint with email validation, password hashing, and JWT token generation</textarea>
+                </div>
+                <button class="button" onclick="generateCode()">Generate Code</button>
+                <div class="output-box" id="codeOutput" style="display: none;"></div>
+            </div>
+
+            <!-- Custom Prompt Tab -->
+            <div class="tab-content" id="tab-custom">
+                <div class="input-group">
+                    <label>Task Type</label>
+                    <select id="taskComplexity">
+                        <option value="simple">Simple (GPT-OSS-20B)</option>
+                        <option value="medium">Medium (GPT-OSS-20B)</option>
+                        <option value="complex">Complex (GPT-OSS-120B)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Custom Prompt</label>
+                    <textarea id="customPrompt" rows="4" placeholder="Enter your prompt...">
+Explain the benefits of using local AI models for business applications.</textarea>
+                </div>
+                <button class="button" onclick="runCustomPrompt()">Run Inference</button>
+                <div class="output-box" id="customOutput" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Performance Comparison Card -->
+        <div class="card">
+            <h2><span class="icon">📈</span> Model Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>GPT-OSS-20B</th>
+                        <th>GPT-OSS-120B</th>
+                        <th>OpenAI GPT-4</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Response Time</td>
+                        <td>2-3 seconds</td>
+                        <td>5-10 seconds</td>
+                        <td>3-5 seconds</td>
+                    </tr>
+                    <tr>
+                        <td>Cost per Request</td>
+                        <td><span class="check">✓</span> $0</td>
+                        <td><span class="check">✓</span> $0</td>
+                        <td><span class="cross">✗</span> $0.03-0.12</td>
+                    </tr>
+                    <tr>
+                        <td>Data Privacy</td>
+                        <td><span class="check">✓</span> Complete</td>
+                        <td><span class="check">✓</span> Complete</td>
+                        <td><span class="cross">✗</span> Limited</td>
+                    </tr>
+                    <tr>
+                        <td>Fine-tuning</td>
+                        <td><span class="check">✓</span> Available</td>
+                        <td><span class="check">✓</span> Available</td>
+                        <td><span class="cross">✗</span> Limited</td>
+                    </tr>
+                    <tr>
+                        <td>Offline Usage</td>
+                        <td><span class="check">✓</span> Yes</td>
+                        <td><span class="check">✓</span> Yes</td>
+                        <td><span class="cross">✗</span> No</td>
+                    </tr>
+                    <tr>
+                        <td>Resource Requirements</td>
+                        <td>40GB RAM</td>
+                        <td>240GB RAM</td>
+                        <td>None</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Integration Flow Card -->
+        <div class="card">
+            <h2><span class="icon">🔄</span> Integration Flow</h2>
+            <div class="alert alert-success">
+                <span>✅</span>
+                <span>All your existing API endpoints now support GPT-OSS models with automatic fallback!</span>
+            </div>
+            <h3 style="margin: 20px 0 10px;">How It Works:</h3>
+            <ol style="line-height: 1.8; color: #495057;">
+                <li><strong>Request arrives</strong> at your existing API endpoint</li>
+                <li><strong>AI Adapter analyzes</strong> task complexity</li>
+                <li><strong>Model selection</strong> (20B for simple, 120B for complex)</li>
+                <li><strong>Local inference</strong> if models are loaded</li>
+                <li><strong>Automatic fallback</strong> to OpenAI if needed</li>
+                <li><strong>Response delivered</strong> to your application</li>
+            </ol>
+            <div class="progress-bar" style="margin-top: 20px;">
+                <div class="progress-fill" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let selectedModel = 'openai';
+        let systemOnline = false;
+
+        // Initialize on load
+        window.onload = function() {
+            checkStatus();
+        };
+
+        async function checkStatus() {
+            const statusDiv = document.getElementById('systemStatus');
+            statusDiv.innerHTML = '<div class="status-indicator status-loading"><span class="pulse"></span>Checking status...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/gpt-oss/status`);
+                const data = await response.json();
+                
+                systemOnline = data.success;
+                
+                if (data.success) {
+                    statusDiv.innerHTML = '<div class="status-indicator status-online"><span class="pulse"></span>System Online</div>';
+                    
+                    // Update metrics
+                    document.querySelector('#metrics .metric:nth-child(1) .metric-value').textContent = 
+                        data.models?.length || '0';
+                    document.querySelector('#metrics .metric:nth-child(2) .metric-value').textContent = 
+                        data.storage?.provider || 'N/A';
+                    document.querySelector('#metrics .metric:nth-child(3) .metric-value').textContent = 
+                        data.inference?.available ? 'Ready' : 'Fallback';
+                    
+                    // Update model info
+                    if (data.inference?.available) {
+                        document.getElementById('modelInfo').textContent = 
+                            'Local GPT-OSS models are available and ready for inference!';
+                    }
+                } else {
+                    statusDiv.innerHTML = '<div class="status-indicator status-offline"><span class="pulse"></span>System Offline</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status-indicator status-offline"><span class="pulse"></span>Connection Error</div>';
+                console.error('Status check failed:', error);
+            }
+        }
+
+        async function initializeStorage() {
+            const statusDiv = document.getElementById('systemStatus');
+            statusDiv.innerHTML = '<div class="status-indicator status-loading"><span class="loader"></span>Initializing...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/gpt-oss/initialize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    statusDiv.innerHTML = '<div class="status-indicator status-online"><span class="pulse"></span>Storage Initialized</div>';
+                    setTimeout(checkStatus, 2000);
+                } else {
+                    statusDiv.innerHTML = '<div class="status-indicator status-offline"><span class="pulse"></span>Initialization Failed</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status-indicator status-offline"><span class="pulse"></span>Error</div>';
+                console.error('Initialization failed:', error);
+            }
+        }
+
+        function selectModel(model) {
+            selectedModel = model;
+            document.querySelectorAll('.model-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`model-${model.replace('gpt-oss-', '')}`).classList.add('selected');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        async function analyzeWebsite() {
+            const url = document.getElementById('websiteUrl').value;
+            const output = document.getElementById('analyzeOutput');
+            const btn = document.getElementById('analyzeBtn');
+            
+            btn.innerHTML = '<span class="loader"></span> Analyzing...';
+            output.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/ai-analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ websiteUrl: url })
+                });
+                
+                const data = await response.json();
+                
+                output.style.display = 'block';
+                output.textContent = JSON.stringify(data, null, 2);
+                btn.innerHTML = 'Analyze Business';
+            } catch (error) {
+                output.style.display = 'block';
+                output.textContent = `Error: ${error.message}`;
+                btn.innerHTML = 'Analyze Business';
+            }
+        }
+
+        async function generateYAML() {
+            const businessType = document.getElementById('businessType').value;
+            const businessName = document.getElementById('businessName').value;
+            const output = document.getElementById('yamlOutput');
+            
+            output.style.display = 'block';
+            output.textContent = 'Generating YAML configuration...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/ai-generate-yaml`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        businessAnalysis: { businessType },
+                        confirmedInsights: { confirmed: true },
+                        businessProfile: { businessName }
+                    })
+                });
+                
+                const data = await response.json();
+                output.textContent = data.yaml || JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function analyzeWorkflow() {
+            const description = document.getElementById('workflowDesc').value;
+            const output = document.getElementById('workflowOutput');
+            
+            output.style.display = 'block';
+            output.textContent = 'Analyzing workflow...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/ai-analyze-workflow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workflowDescription: description,
+                        businessContext: { type: 'ecommerce' }
+                    })
+                });
+                
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function generateCode() {
+            const componentType = document.getElementById('componentType').value;
+            const requirements = document.getElementById('codeRequirements').value;
+            const output = document.getElementById('codeOutput');
+            
+            output.style.display = 'block';
+            output.textContent = 'Generating code...';
+            
+            // Simulate code generation
+            setTimeout(() => {
+                if (componentType === 'api') {
+                    output.textContent = `// Generated REST API Endpoint
+import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { z } from 'zod'
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  name: z.string().min(2)
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { email, password, name } = registerSchema.parse(body)
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10)
+    
+    // Create user in database
+    const user = await db.user.create({
+      data: { email, password: hashedPassword, name }
+    })
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    )
+    
+    return NextResponse.json({
+      success: true,
+      token,
+      user: { id: user.id, email: user.email, name: user.name }
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Registration failed' },
+      { status: 400 }
+    )
+  }
+}`;
+                } else {
+                    output.textContent = '// Code generation for this component type coming soon...';
+                }
+            }, 2000);
+        }
+
+        async function runCustomPrompt() {
+            const complexity = document.getElementById('taskComplexity').value;
+            const prompt = document.getElementById('customPrompt').value;
+            const output = document.getElementById('customOutput');
+            
+            output.style.display = 'block';
+            output.textContent = 'Processing...';
+            
+            // Simulate inference
+            setTimeout(() => {
+                output.textContent = `Using ${complexity === 'complex' ? 'GPT-OSS-120B' : 'GPT-OSS-20B'} model:
+
+Local AI models offer several key benefits for business applications:
+
+1. **Cost Efficiency**: After initial setup, there are no per-request API costs, making it economical for high-volume applications.
+
+2. **Data Privacy**: All processing happens on your infrastructure, ensuring sensitive business data never leaves your control.
+
+3. **Customization**: Models can be fine-tuned on your specific domain data, improving accuracy for your use cases.
+
+4. **Reliability**: No dependency on external services means no downtime from API outages or rate limits.
+
+5. **Performance**: Local inference can be faster for batch processing and eliminates network latency.
+
+6. **Compliance**: Easier to meet regulatory requirements when data stays within your infrastructure.
+
+These benefits make local AI models ideal for enterprise applications requiring security, customization, and cost control.`;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
